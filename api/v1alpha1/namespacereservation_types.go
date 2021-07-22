@@ -25,17 +25,16 @@ import (
 
 // NamespaceReservationSpec defines the desired state of NamespaceReservation
 type NamespaceReservationSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of NamespaceReservation. Edit namespacereservation_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Duration is how long the reservation will last
+	Duration  *int64 `json:"duration,omitempty"`
+	Requester string `json:"requester"`
 }
 
 // NamespaceReservationStatus defines the observed state of NamespaceReservation
 type NamespaceReservationStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Expiration metav1.Time `json:"expiration"`
+	Ready      bool        `json:"ready"`
+	Namespace  string      `json:"namespace"`
 }
 
 //+kubebuilder:object:root=true
