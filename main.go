@@ -96,6 +96,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	go controllers.Poll(mgr.GetClient())
+
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")

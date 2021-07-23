@@ -19,16 +19,25 @@ package controllers
 import (
 	"context"
 
+	"container/list"
 	"fmt"
-	"k8s.io/apimachinery/pkg/runtime"
 	"math/rand"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"strings"
+	"time"
 
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+
+	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
+	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
 	core "k8s.io/api/core/v1"
+	rbac "k8s.io/api/rbac/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -76,20 +85,92 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	return ctrl.Result{}, nil
 }
 
-func (r *NamespaceReservationReconciler) createOnDeckNamespace(ctx context.Context, name string) error {
+var nsPool = list.List{}
+
+func Poll(client client.Client) error {
+	ctx := context.Background()
+
+	for {
+		// Check for expired reservations
+		// Ensure pool is desired size
+		for nsPool.Len() < 5 {
+			if err := createOnDeckNamespace(ctx, client); err != nil {
+				return err
+			}
+		}
+		time.Sleep(time.Duration(10 * time.Second))
+	}
+}
+
+func createOnDeckNamespace(ctx context.Context, cl client.Client) error {
 	// Create namespace
 	ns := core.Namespace{}
-	ns.Name = fmt.Sprintf("ephemeral-%s-%s", name, strings.ToLower(randString(6)))
-	err := r.Client.Create(ctx, &ns)
+	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
+	err := cl.Create(ctx, &ns)
 
 	if err != nil {
 		return err
 	}
 
 	// Create ClowdEnvironment
+
+	env := clowder.ClowdEnvironment{Spec: hardCodedEnvSpec()}
+	env.SetName(ns.Name)
+	env.Spec.TargetNamespace = ns.Name
+
+	cl.Create(ctx, &env)
+
 	// Assign permissions: clowder-edit and edit
 	// TODO: hard-coded list of users for now, but will want to do graphql queries later
+
+	roleNames := []string{"clowder-edit", "edit"}
+
+	for _, roleName := range roleNames {
+		binding := rbac.RoleBinding{
+			RoleRef: rbac.RoleRef{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "ClusterRole",
+				Name:     roleName,
+			},
+			Subjects: []rbac.Subject{},
+		}
+
+		for _, user := range hardCodedUserList() {
+			binding.Subjects = append(binding.Subjects, rbac.Subject{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "User",
+				Name:     user,
+			})
+		}
+
+		binding.SetName(roleName)
+		binding.SetNamespace(ns.Name)
+
+		cl.Create(ctx, &binding)
+	}
+
 	// Copy secrets
+
+	secrets := core.SecretList{}
+	err = cl.List(ctx, &secrets, client.InNamespace("ephemeral-base"))
+
+	if err != nil {
+		return err
+	}
+
+	for _, secret := range secrets.Items {
+		src := types.NamespacedName{
+			Name:      secret.Name,
+			Namespace: secret.Namespace,
+		}
+
+		dst := types.NamespacedName{
+			Name:      secret.Name,
+			Namespace: ns.Name,
+		}
+
+		utils.CopySecret(ctx, cl, src, dst)
+	}
 
 	return nil
 }
@@ -119,4 +200,78 @@ func randString(n int) string {
 	}
 
 	return string(b)
+}
+
+func hardCodedEnvSpec() clowder.ClowdEnvironmentSpec {
+	return clowder.ClowdEnvironmentSpec{
+		ResourceDefaults: core.ResourceRequirements{
+			Limits: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("300m"),
+				core.ResourceMemory: resource.MustParse("256Mi"),
+			},
+			Requests: core.ResourceList{
+				core.ResourceCPU:    resource.MustParse("30m"),
+				core.ResourceMemory: resource.MustParse("128Mi"),
+			},
+		},
+		Providers: clowder.ProvidersConfig{
+			Database:   clowder.DatabaseConfig{Mode: "local"},
+			InMemoryDB: clowder.InMemoryDBConfig{Mode: "redis"},
+			PullSecrets: []clowder.NamespacedName{{
+				Namespace: "ephemeral-base",
+				Name:      "quay-cloudservices-pull",
+			}},
+			FeatureFlags: clowder.FeatureFlagsConfig{Mode: "local"},
+			Metrics: clowder.MetricsConfig{
+				Port:       9000,
+				Path:       "/metrics",
+				Prometheus: clowder.PrometheusConfig{Deploy: true},
+				Mode:       "operator",
+			},
+			Logging:     clowder.LoggingConfig{Mode: "none"},
+			ObjectStore: clowder.ObjectStoreConfig{Mode: "minio"},
+			Web: clowder.WebConfig{
+				Port:        8000,
+				PrivatePort: 10000,
+				Mode:        "operator",
+			},
+			Kafka: clowder.KafkaConfig{
+				Mode:                "operator",
+				EnableLegacyStrimzi: true,
+				Cluster:             clowder.KafkaClusterConfig{Version: "2.6.0"},
+				Connect: clowder.KafkaConnectClusterConfig{
+					Version: "2.6.0",
+					Image:   "quay.io/cloudservices/xjoin-kafka-connect-strimzi:182ab8b",
+				},
+			},
+			Testing: clowder.TestingConfig{
+				K8SAccessLevel: "edit",
+				ConfigAccess:   "environment",
+				Iqe: clowder.IqeConfig{
+					VaultSecretRef: clowder.NamespacedName{
+						Namespace: "ephemeral-base",
+						Name:      "iqe-vault",
+					},
+					ImageBase: "quay.io/cloudservices/iqe-tests",
+					Resources: core.ResourceRequirements{
+						Limits: core.ResourceList{
+							core.ResourceCPU:    resource.MustParse("1"),
+							core.ResourceMemory: resource.MustParse("1Gi"),
+						},
+						Requests: core.ResourceList{
+							core.ResourceCPU:    resource.MustParse("200m"),
+							core.ResourceMemory: resource.MustParse("256Mi"),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func hardCodedUserList() []string {
+	return []string{
+		"kylape",
+		"BlakeHolifield",
+	}
 }
