@@ -62,7 +62,7 @@ func init() {
 	SchemeBuilder.Register(&NamespaceReservation{}, &NamespaceReservationList{})
 }
 
-// MakeOwnerReference defines the owner reference pointing to the ClowdApp resource.
+// MakeOwnerReference defines the owner reference pointing to the NamespaceReservation resource.
 func (i *NamespaceReservation) MakeOwnerReference() metav1.OwnerReference {
 	return metav1.OwnerReference{
 		APIVersion: i.APIVersion,

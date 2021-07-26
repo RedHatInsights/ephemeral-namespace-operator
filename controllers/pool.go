@@ -55,6 +55,9 @@ func Poll(client client.Client, pool *NamespacePool) error {
 				return err
 			}
 		}
+
+		// TODO: Check for expired namespaces
+
 		// Check for reserved namespace expirations
 		time.Sleep(time.Duration(POLL_CYCLE * time.Second))
 	}
