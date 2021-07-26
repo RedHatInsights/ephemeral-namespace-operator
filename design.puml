@@ -1,0 +1,17 @@
+@startuml
+title Ephemeral Namespace Management
+!include <C4/C4_Component>
+
+Person(user, "App Developer")
+Component(reso, "NamespaceReservation", "k8s custom resource", "Acts as interface for the lifecycle of an ephemeral namespace")
+Component(controller, "NamespaceReservation controller", "k8s controller", "Manages ephemeral namespaces.  Specifically, it creates ephemeral namespaces and populates them with common resources.")
+Component(pool, "Namespace pool", "k8s namespaces", "Pool of pre-populated namespaces ready to be reserved")
+Component(ns, "Checked out namesapce", "k8s namespace", "Namespace checked out to user.  Will be deleted at end of reservation")
+
+Rel(user, reso, "User creates reservation, and reads it to know which namespace to use")
+Rel(reso, controller, "Controller reads reservation to check out namespace and to know when to delete")
+Rel_R(pool, controller, "Controller keeps pool of 'on-deck' namespaces to speed up ephemeral environment initialization")
+Rel(controller, ns, "Checks out by setting name on status of reservation and adding RoleBindings")
+Rel(user, ns, "Interacts directly with namespace once checked out")
+
+@enduml
