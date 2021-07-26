@@ -1,0 +1,75 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: namespacereservations.cloud.redhat.com.cloud.redhat.com
+spec:
+  group: cloud.redhat.com.cloud.redhat.com
+  names:
+    kind: NamespaceReservation
+    listKind: NamespaceReservationList
+    plural: namespacereservations
+    singular: namespacereservation
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: NamespaceReservation is the Schema for the namespacereservations
+          API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: NamespaceReservationSpec defines the desired state of NamespaceReservation
+            properties:
+              duration:
+                description: Duration is how long the reservation will last
+                format: int64
+                type: integer
+              requester:
+                type: string
+            required:
+            - requester
+            type: object
+          status:
+            description: NamespaceReservationStatus defines the observed state of
+              NamespaceReservation
+            properties:
+              expiration:
+                format: date-time
+                type: string
+              namespace:
+                type: string
+              ready:
+                type: boolean
+            required:
+            - expiration
+            - namespace
+            - ready
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

@@ -61,3 +61,20 @@ type NamespaceReservationList struct {
 func init() {
 	SchemeBuilder.Register(&NamespaceReservation{}, &NamespaceReservationList{})
 }
+
+// MakeOwnerReference defines the owner reference pointing to the ClowdApp resource.
+func (i *NamespaceReservation) MakeOwnerReference() metav1.OwnerReference {
+	return metav1.OwnerReference{
+		APIVersion: i.APIVersion,
+		Kind:       i.Kind,
+		Name:       i.ObjectMeta.Name,
+		UID:        i.ObjectMeta.UID,
+		Controller: TruePtr(),
+	}
+}
+
+// TruePtr returns a pointer to True
+func TruePtr() *bool {
+	t := true
+	return &t
+}

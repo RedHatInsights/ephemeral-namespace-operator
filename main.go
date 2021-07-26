@@ -78,9 +78,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Should this auto populate to gather "eph" namespaces that are
+	// already OnDeck?
+	pool := controllers.NamespacePool{}
+
 	if err = (&controllers.NamespaceReservationReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+		NamespacePool: &pool,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NamespaceReservation")
 		os.Exit(1)
@@ -96,7 +101,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	go controllers.Poll(mgr.GetClient())
+	go controllers.Poll(mgr.GetClient(), &pool)
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

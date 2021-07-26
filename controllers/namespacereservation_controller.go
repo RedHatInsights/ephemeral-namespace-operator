@@ -19,31 +19,25 @@ package controllers
 import (
 	"context"
 
-	"container/list"
-	"fmt"
 	"math/rand"
-	"strings"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
-	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	// apps "k8s.io/api/apps/v1"
-	// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	// k8serr "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	// "k8s.io/apimachinery/pkg/runtime"
 	// "k8s.io/apimachinery/pkg/runtime/schema"
 	// "k8s.io/apimachinery/pkg/types"
@@ -54,8 +48,9 @@ import (
 // NamespaceReservationReconciler reconciles a NamespaceReservation object
 type NamespaceReservationReconciler struct {
 	client.Client
-	Scheme           *runtime.Scheme
-	OnDeckNamespaces []core.Namespace
+	Scheme        *runtime.Scheme
+	NamespacePool *NamespacePool
+	Log           logr.Logger
 }
 
 //+kubebuilder:rbac:groups=cloud.redhat.com.cloud.redhat.com,resources=namespacereservations,verbs=get;list;watch;create;update;patch;delete
@@ -63,66 +58,98 @@ type NamespaceReservationReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com.cloud.redhat.com,resources=namespacereservations/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=secrets;events;namespaces,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings;roles,verbs=get;list;watch;create;update;patch;delete
-
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the NamespaceReservation object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.8.3/pkg/reconcile
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
 
 	// Fetch the reservation
-	// Is there already a namespace assigned?
-	// if no, assign namespace from on-deck pool and create new on-deck ns
-	// update ready field
-	// update expiration timestamp (creation timestamp + duration)
-
-	return ctrl.Result{}, nil
-}
-
-var nsPool = list.List{}
-
-func Poll(client client.Client) error {
-	ctx := context.Background()
-
-	for {
-		// Check for expired reservations
-		// Ensure pool is desired size
-		for nsPool.Len() < 5 {
-			if err := createOnDeckNamespace(ctx, client); err != nil {
-				return err
-			}
+	res := crd.NamespaceReservation{}
+	if err := r.Client.Get(ctx, req.NamespacedName, &res); err != nil {
+		if k8serr.IsNotFound(err) {
+			// Must have been deleted
+			return ctrl.Result{}, nil
 		}
-		time.Sleep(time.Duration(10 * time.Second))
+		r.Log.Error(err, "Reservation Not Found")
+		return ctrl.Result{}, err
 	}
+
+	// Is there already a namespace assigned?
+	if res.Status.Namespace != "" {
+		// TODO: add support for CRD updates
+		return ctrl.Result{}, nil
+
+	} else { // if no, assign namespace from on-deck pool and create new on-deck ns
+		readyNsName := r.NamespacePool.GetOnDeckNS()
+		nsObject := core.Namespace{}
+		err := r.Client.Get(ctx, client.ObjectKey{Name: readyNsName, Namespace: readyNsName}, &nsObject)
+		if err != nil {
+			if k8serr.IsNotFound(err) {
+				// Must have been deleted
+				return ctrl.Result{}, nil
+			}
+			r.Log.Error(err, "Reservation Not Found")
+			return ctrl.Result{}, err
+		}
+
+		// Set Owner Reference on the ns we just reserved
+		nsObject.SetOwnerReferences([]metav1.OwnerReference{res.MakeOwnerReference()})
+
+		// update ready field
+		res.Status.Namespace = readyNsName
+		res.Status.Ready = true
+
+		// update expiration timestamp (creation timestamp + duration)
+		creationTS := res.ObjectMeta.CreationTimestamp
+
+		var duration time.Duration
+		if res.Spec.Duration != nil {
+			duration = time.Duration(*res.Spec.Duration)
+		} else {
+			// Defaults to 1 hour if not specified in spec
+			duration = time.Duration(1)
+		}
+
+		expirationTS := creationTS.Add(duration * time.Hour)
+		// Rebuild as metav1 time
+		res.Status.Expiration = metav1.Time{Time: expirationTS}
+
+		if err := r.NamespacePool.CreateOnDeckNamespace(ctx, r.Client, r.NamespacePool); err != nil {
+			r.Log.Error(err, "cannot create replacement ns")
+		}
+
+		if err := addRoleBindings(ctx, &nsObject, r.Client); err != nil {
+			r.Log.Error(err, "cannot apply RoleBindings")
+			return ctrl.Result{}, err
+		}
+
+		if err := r.Client.Create(ctx, &res); err != nil {
+			r.Log.Error(err, "cannot create NamespaceReservation")
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{}, nil
+	}
+
 }
 
-func createOnDeckNamespace(ctx context.Context, cl client.Client) error {
-	// Create namespace
-	ns := core.Namespace{}
-	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
-	err := cl.Create(ctx, &ns)
+// SetupWithManager sets up the controller with the Manager.
+func (r *NamespaceReservationReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&crd.NamespaceReservation{}).
+		Watches(
+			&source.Kind{Type: &core.Namespace{}},
+			handler.EnqueueRequestsFromMapFunc(r.enqueueRequestsForObject),
+		).
+		Complete(r)
+}
 
-	if err != nil {
-		return err
-	}
+func (r *NamespaceReservationReconciler) enqueueRequestsForObject(a client.Object) []reconcile.Request {
+	r.Log.Info("Reconciling stuff")
+	return []reconcile.Request{}
+}
 
-	// Create ClowdEnvironment
-
-	env := clowder.ClowdEnvironment{Spec: hardCodedEnvSpec()}
-	env.SetName(ns.Name)
-	env.Spec.TargetNamespace = ns.Name
-
-	cl.Create(ctx, &env)
+func addRoleBindings(ctx context.Context, ns *core.Namespace, client client.Client) error {
 
 	// Assign permissions: clowder-edit and edit
 	// TODO: hard-coded list of users for now, but will want to do graphql queries later
-
 	roleNames := []string{"clowder-edit", "edit"}
 
 	for _, roleName := range roleNames {
@@ -146,48 +173,11 @@ func createOnDeckNamespace(ctx context.Context, cl client.Client) error {
 		binding.SetName(roleName)
 		binding.SetNamespace(ns.Name)
 
-		cl.Create(ctx, &binding)
-	}
-
-	// Copy secrets
-
-	secrets := core.SecretList{}
-	err = cl.List(ctx, &secrets, client.InNamespace("ephemeral-base"))
-
-	if err != nil {
-		return err
-	}
-
-	for _, secret := range secrets.Items {
-		src := types.NamespacedName{
-			Name:      secret.Name,
-			Namespace: secret.Namespace,
+		if err := client.Create(ctx, &binding); err != nil {
+			return err
 		}
-
-		dst := types.NamespacedName{
-			Name:      secret.Name,
-			Namespace: ns.Name,
-		}
-
-		utils.CopySecret(ctx, cl, src, dst)
 	}
-
 	return nil
-}
-
-// SetupWithManager sets up the controller with the Manager.
-func (r *NamespaceReservationReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&crd.NamespaceReservation{}).
-		Watches(
-			&source.Kind{Type: &core.Namespace{}},
-			handler.EnqueueRequestsFromMapFunc(r.enqueueRequestsForObject),
-		).
-		Complete(r)
-}
-
-func (r *NamespaceReservationReconciler) enqueueRequestsForObject(a client.Object) []reconcile.Request {
-	return []reconcile.Request{}
 }
 
 const rCharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
