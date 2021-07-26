@@ -1,0 +1,33 @@
+= Ephemeral Namespace Operator
+
+The ephemeral namespace operator (ENO) manages namespace reservations.
+Given a `NamespaceReservation`, the ENO will provide the user a namespace with various resources created in it.
+
+== Why
+
+Why not e.g. give each user a static namespace and let them manage the resources themselves?  
+
+- Users tend to leave resources hanging around after they're done with them.
+  We want to ensure resources are cleaned up with minimal effort from users.
+- Long-running environments reqiure work to maintain.
+  Instead users are encouraged to create new environments from scracth often;
+  ephemeral environments should be treated as disposable.
+  The problem is that creating a new environment from scratch can take several minutes, which is a significant drag on development time (including PR check durations).
+  Thus the operator just needs to keep a few pre-populated namespaces "on deck" ready for the next reservation request.
+
+== How
+
+Each reservation has two optional fields:
+
+. Duration: how long (in hours) before the namespace is deleted
+. Requester: Only used to indicate who reserved the namespace.
+  This field is not used by any automation.
+
+Once a `NamespaceReservation` resource is created, the controller will pull a ready namespace from its pool of "on-deck" namespaces.
+Once the specified duration has expired, the namespace and corresponding `NamespaceReservation` will be deleted by the controller.
+
+When the controller needs to create a new namespace to be added to the "on-deck" pool, it adds the following resources:
+
+- `ClowdEnvironment`:  This will create deployments for Kafka, Kafka Connect, Minio, Prometheus, and feature flags.
+- `RoleBindings`: Access is granted to devs to edit resources in the namespace
+- Secrets are copied from the base namespace.
