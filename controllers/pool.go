@@ -69,10 +69,13 @@ func Poll(client client.Client, pool *NamespacePool) error {
 			stringName := fmt.Sprintf("%s", i.Value)
 			res, err := pool.getResFromNs(stringName, resList, ctx, client)
 			if err != nil {
-				fmt.Printf("Failed to delete reservation for %s", stringName)
+				fmt.Printf("Failed to get reservation for %s", stringName)
 			}
 			if pool.namespaceIsExpired(res) {
-				client.Delete(ctx, res)
+				err := client.Delete(ctx, res)
+				if err != nil {
+					fmt.Printf("Failed to delete reservation for %s", stringName)
+				}
 			}
 		}
 
