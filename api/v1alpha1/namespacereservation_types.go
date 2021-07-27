@@ -20,13 +20,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // NamespaceReservationSpec defines the desired state of NamespaceReservation
 type NamespaceReservationSpec struct {
 	// Duration is how long the reservation will last
-	Duration  *int64 `json:"duration,omitempty"`
+	Duration *int64 `json:"duration,omitempty"`
+	// Requester is the entity (bot or human) requesting the namespace
 	Requester string `json:"requester"`
 }
 

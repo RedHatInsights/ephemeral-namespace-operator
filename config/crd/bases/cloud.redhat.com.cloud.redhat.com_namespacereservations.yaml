@@ -54,6 +54,8 @@ spec:
                 format: int64
                 type: integer
               requester:
+                description: Requester is the entity (bot or human) requesting the
+                  namespace
                 type: string
             required:
             - requester

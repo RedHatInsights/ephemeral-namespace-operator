@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"container/list"
 	"flag"
 	"os"
 
@@ -31,7 +32,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	cloudredhatcomv1alpha1 "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
+	reservation "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -43,8 +45,8 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
-	utilruntime.Must(cloudredhatcomv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(reservation.AddToScheme(scheme))
+	utilruntime.Must(clowder.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -52,7 +54,7 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":9000", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
@@ -80,12 +82,15 @@ func main() {
 
 	// Should this auto populate to gather "eph" namespaces that are
 	// already OnDeck?
-	pool := controllers.NamespacePool{}
+	pool := controllers.NamespacePool{
+		ReadyNamespaces: list.New(),
+	}
 
 	if err = (&controllers.NamespaceReservationReconciler{
 		Client:        mgr.GetClient(),
 		Scheme:        mgr.GetScheme(),
 		NamespacePool: &pool,
+		Log:           ctrl.Log.WithName("controllers").WithName("NamespaceReservation"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NamespaceReservation")
 		os.Exit(1)

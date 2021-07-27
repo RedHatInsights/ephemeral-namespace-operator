@@ -4,4 +4,4 @@ metadata:
   name: hotel-california
 spec:
   duration: 1
-  requester : "insights"
+  requester: "insights"
