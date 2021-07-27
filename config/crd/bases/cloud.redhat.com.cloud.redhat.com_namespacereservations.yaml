@@ -13,10 +13,22 @@ spec:
     kind: NamespaceReservation
     listKind: NamespaceReservationList
     plural: namespacereservations
+    shortNames:
+    - reservation
     singular: namespacereservation
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.requester
+      name: Requester
+      type: string
+    - jsonPath: .status.ready
+      name: Ready
+      type: boolean
+    - jsonPath: .status.expiration
+      name: Expiration
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: NamespaceReservation is the Schema for the namespacereservations

@@ -3,5 +3,5 @@ kind: NamespaceReservation
 metadata:
   name: namespacereservation-sample
 spec:
-  # Add fields here
-  foo: bar
+  Duration: 1
+  Requester : "insights"

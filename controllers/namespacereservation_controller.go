@@ -99,6 +99,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		// update expiration timestamp (creation timestamp + duration)
 		creationTS := res.ObjectMeta.CreationTimestamp
 
+		// TODO: Add support for float hours (2.3) or 1h, 30m (like cpu requests)
 		var duration time.Duration
 		if res.Spec.Duration != nil {
 			duration = time.Duration(*res.Spec.Duration)
@@ -108,13 +109,14 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		}
 
 		expirationTS := creationTS.Add(duration * time.Hour)
-		// Rebuild as metav1 time
 		res.Status.Expiration = metav1.Time{Time: expirationTS}
 
-		if err := r.NamespacePool.CreateOnDeckNamespace(ctx, r.Client, r.NamespacePool); err != nil {
+		// Create a replacement NS for the one we just took from the pool
+		if err := r.NamespacePool.CreateOnDeckNamespace(ctx, r.Client); err != nil {
 			r.Log.Error(err, "cannot create replacement ns")
 		}
 
+		// Add rolebinding to the namespace only after it has been owned by the CRD.
 		if err := addRoleBindings(ctx, &nsObject, r.Client); err != nil {
 			r.Log.Error(err, "cannot apply RoleBindings")
 			return ctrl.Result{}, err
