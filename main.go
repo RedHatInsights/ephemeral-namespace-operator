@@ -84,6 +84,7 @@ func main() {
 	// already OnDeck?
 	pool := controllers.NamespacePool{
 		ReadyNamespaces: list.New(),
+		Log:             ctrl.Log.WithName("NamespacePool"),
 	}
 
 	if err = (&controllers.NamespaceReservationReconciler{

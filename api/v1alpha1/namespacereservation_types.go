@@ -40,6 +40,7 @@ type NamespaceReservationStatus struct {
 //+kubebuilder:resource:shortName=reservation
 //+kubebuilder:printcolumn:name="Requester",type="string",JSONPath=".spec.requester"
 //+kubebuilder:printcolumn:name="Ready",type="boolean",JSONPath=".status.ready"
+//+kubebuilder:printcolumn:name="Namespace",type="string",JSONPath=".status.namespace"
 //+kubebuilder:printcolumn:name="Expiration",type="date",JSONPath=".status.expiration"
 
 // NamespaceReservation is the Schema for the namespacereservations API

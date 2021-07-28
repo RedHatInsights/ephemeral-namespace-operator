@@ -25,6 +25,9 @@ spec:
     - jsonPath: .status.ready
       name: Ready
       type: boolean
+    - jsonPath: .status.namespace
+      name: Namespace
+      type: string
     - jsonPath: .status.expiration
       name: Expiration
       type: date

@@ -12,6 +12,7 @@ import (
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 	//k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -23,10 +24,11 @@ import (
 )
 
 const POLL_CYCLE time.Duration = 10
-const POOL_DEPTH int = 2
+const POOL_DEPTH int = 1
 
 type NamespacePool struct {
 	ReadyNamespaces *list.List
+	Log             logr.Logger
 }
 
 func (p *NamespacePool) AddOnDeckNS(ns string) {
@@ -66,6 +68,7 @@ func Poll(client client.Client, pool *NamespacePool) error {
 			if err := pool.CreateOnDeckNamespace(ctx, client); err != nil {
 				return err
 			}
+
 		}
 		// Check for expired reservations
 		// First pass is very unoptimized; this is O(n) every 10s
@@ -185,6 +188,7 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 
 	}
 
+	// TODO: Make sure name is ready before we add
 	p.AddOnDeckNS(ns.Name)
 
 	return nil
