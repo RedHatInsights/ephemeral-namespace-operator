@@ -36,9 +36,22 @@ IMAGE_TAG_BASE ?= cloud.redhat.com/ephemeral-namespace-operator
 BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+ifeq ($(findstring -minikube,${MAKECMDGOALS}), -minikube)
+IMG ?= 127.0.0.1:5000/ephemeral-namespace-operator:latest
+else
+IMG ?= quay.io/cloudservices/ephemeral-namespace-operator:latest
+endif
+
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
+
+# Use podman by default, docker as fallback
+ifeq (,$(shell which podman))
+$(info "no podman in $(PATH), using docker")
+RUNTIME ?= docker
+else
+RUNTIME ?= podman
+endif
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -84,6 +97,18 @@ fmt: ## Run go fmt against code.
 
 vet: ## Run go vet against code.
 	go vet ./...
+
+# Build the docker image
+docker-build-no-test-quick:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/manager-cgo main.go
+	$(RUNTIME) build -f Dockerfile-local . -t ${IMG}
+
+# Push the docker image
+docker-push-minikube:
+	$(RUNTIME) push ${IMG} $(shell minikube ip):5000/ephemeral-namespace-operator:latest --tls-verify=false
+
+
+deploy-minikube-quick: docker-build-no-test-quick bundle docker-push-minikube deploy
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 test: manifests generate fmt vet ## Run tests.
