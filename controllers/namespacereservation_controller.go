@@ -34,6 +34,7 @@ import (
 
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
+
 	//"sigs.k8s.io/controller-runtime/pkg/handler"
 	// "sigs.k8s.io/controller-runtime/pkg/reconcile"
 	// "sigs.k8s.io/controller-runtime/pkg/source"
@@ -144,6 +145,12 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		r.Log.Info("Set ownerrefs")
 		// Set Owner Reference on the ns we just reserved
 		nsObject.SetOwnerReferences([]metav1.OwnerReference{res.MakeOwnerReference()})
+		fmt.Println("NS Owner References: ", nsObject.OwnerReferences)
+
+		err = r.Client.Update(ctx, &nsObject)
+		if err != nil {
+			fmt.Printf("Could not update namespace ownerReference")
+		}
 
 		r.Log.Info("Checkout new NS")
 		// Remove the namespace from the pool
@@ -374,5 +381,6 @@ func hardCodedUserList() []string {
 	return []string{
 		"kylape",
 		"BlakeHolifield",
+		"Jason-RH",
 	}
 }
