@@ -14,6 +14,7 @@ import (
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
+
 	//k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -188,8 +189,12 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 
 	}
 
-	// TODO: Make sure name is ready before we add
+	fmt.Printf("Verifying that the ClowdEnv is ready for ns %s\n", ns.Name)
+	for !env.IsReady() {
+		time.Sleep(2 * time.Second)
+	}
 	p.AddOnDeckNS(ns.Name)
+	fmt.Printf("Namespace %s added to the pool\n", ns.Name)
 
 	return nil
 }

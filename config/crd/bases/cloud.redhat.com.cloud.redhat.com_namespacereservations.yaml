@@ -16,7 +16,7 @@ spec:
     shortNames:
     - reservation
     singular: namespacereservation
-  scope: Namespaced
+  scope: Cluster
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.requester
