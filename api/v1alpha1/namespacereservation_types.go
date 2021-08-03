@@ -23,7 +23,7 @@ import (
 // NamespaceReservationSpec defines the desired state of NamespaceReservation
 type NamespaceReservationSpec struct {
 	// Duration is how long the reservation will last
-	Duration *int64 `json:"duration,omitempty"`
+	Duration *string `json:"duration,omitempty"`
 	// Requester is the entity (bot or human) requesting the namespace
 	Requester string `json:"requester"`
 }

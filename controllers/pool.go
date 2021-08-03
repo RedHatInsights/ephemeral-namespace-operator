@@ -71,27 +71,27 @@ func Poll(client client.Client, pool *NamespacePool) error {
 			}
 
 		}
+
 		// Check for expired reservations
 		// First pass is very unoptimized; this is O(n) every 10s
 		// We can add the expiration time to the pool and check that as a map
 		// Or we can investiage time.After() for each namespace
-		// resList, err := pool.getExistingReservations(client, ctx)
-		// if err != nil {
-		// 	return err
-		// }
-		// for i := pool.ReadyNamespaces.Front(); i != nil; i.Next() {
-		// 	stringName := fmt.Sprintf("%s", i.Value)
-		// 	res, err := pool.getResFromNs(stringName, resList, ctx, client)
-		// 	if err != nil {
-		// 		fmt.Printf("Failed to get reservation for %s\n", stringName)
-		// 	}
-		// 	if pool.namespaceIsExpired(res) {
-		// 		err := client.Delete(ctx, res)
-		// 		if err != nil {
-		// 			fmt.Printf("Failed to delete reservation for %s\n", stringName)
-		// 		}
-		// 	}
-		// }
+		resList, err := pool.getExistingReservations(client, ctx)
+		if err != nil {
+			fmt.Println("Unable to retrieve list of active reservations")
+			return err
+		}
+
+		for _, res := range resList.Items {
+			if pool.namespaceIsExpired(&res) {
+				err := client.Delete(ctx, &res)
+				if err != nil {
+					fmt.Println("Unable to delete expired reservation")
+					return err
+				}
+				fmt.Printf("Reservation for namespace %s has expired. Deleting.\n", res.Status.Namespace)
+			}
+		}
 
 		// Check for reserved namespace expirations
 		time.Sleep(time.Duration(POLL_CYCLE * time.Second))

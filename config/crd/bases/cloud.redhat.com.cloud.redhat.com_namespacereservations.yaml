@@ -54,8 +54,7 @@ spec:
             properties:
               duration:
                 description: Duration is how long the reservation will last
-                format: int64
-                type: integer
+                type: string
               requester:
                 description: Requester is the entity (bot or human) requesting the
                   namespace

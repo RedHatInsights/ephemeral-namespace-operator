@@ -62,7 +62,6 @@ type NamespaceReservationReconciler struct {
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings;roles,verbs=get;list;watch;create;update;patch;delete
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// TODO: Update status of namespaces to show reserved
-	// TODO: Only have ready envs in pool?
 	// TODO: Determine flow of reconciliations
 	// TODO: Determine actions of first time spin up
 	// TODO: Determine actions for enqueue on ns events
@@ -161,17 +160,16 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		// update expiration timestamp (creation timestamp + duration)
 		creationTS := res.ObjectMeta.CreationTimestamp
 
-		// TODO: Add support for float hours (2.3) or 1h, 30m (like cpu requests)
 		var duration time.Duration
 		if res.Spec.Duration != nil {
-			duration = time.Duration(*res.Spec.Duration)
+			duration, err = time.ParseDuration(*res.Spec.Duration)
 		} else {
 			// Defaults to 1 hour if not specified in spec
-			duration = time.Duration(1)
+			duration, err = time.ParseDuration("1h")
 		}
 
-		r.Log.Info("Add Expiraiton date")
-		expirationTS := creationTS.Add(duration * time.Hour)
+		r.Log.Info("Add Expiration date")
+		expirationTS := creationTS.Add(duration)
 
 		// update ready field
 		r.Log.Info("Set CRD Status")
