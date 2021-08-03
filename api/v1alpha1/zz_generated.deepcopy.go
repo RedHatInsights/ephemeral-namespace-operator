@@ -88,7 +88,7 @@ func (in *NamespaceReservationSpec) DeepCopyInto(out *NamespaceReservationSpec) 
 	*out = *in
 	if in.Duration != nil {
 		in, out := &in.Duration, &out.Duration
-		*out = new(int64)
+		*out = new(string)
 		**out = **in
 	}
 }
