@@ -80,8 +80,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Should this auto populate to gather "eph" namespaces that are
-	// already OnDeck?
 	pool := controllers.NamespacePool{
 		ReadyNamespaces: list.New(),
 		Log:             ctrl.Log.WithName("NamespacePool"),
