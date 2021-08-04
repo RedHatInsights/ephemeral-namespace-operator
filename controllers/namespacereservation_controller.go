@@ -146,6 +146,11 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		nsObject.SetOwnerReferences([]metav1.OwnerReference{res.MakeOwnerReference()})
 		fmt.Println("NS Owner References: ", nsObject.OwnerReferences)
 
+		// Set namespace reserved
+		nsObject.SetAnnotations(map[string]string{
+			"reserved": "true",
+		})
+
 		err = r.Client.Update(ctx, &nsObject)
 		if err != nil {
 			fmt.Printf("Could not update namespace ownerReference")
@@ -173,12 +178,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		// update ready field
 		r.Log.Info("Set CRD Status")
-		//res.Name = readyNsName
-		// res.Status = crd.NamespaceReservationStatus{
-		// 	Namespace:  readyNsName,
-		// 	Ready:      true,
-		// 	Expiration: metav1.Time{Time: expirationTS},
-		// }
 		res.Status.Namespace = readyNsName
 		res.Status.Ready = true
 		res.Status.Expiration = metav1.Time{Time: expirationTS}
@@ -197,11 +196,10 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
-		// r.Log.Info("Create Replacement NS")
-		// // Create a replacement NS for the one we just took from the pool
-		// if err := r.NamespacePool.CreateOnDeckNamespace(ctx, r.Client); err != nil {
-		// 	r.Log.Error(err, "cannot create replacement ns")
-		// }
+		if err := r.NamespacePool.CreateOnDeckNamespace(ctx, r.Client); err != nil {
+			r.Log.Error(err, "Cannot create replacement namespace")
+			return ctrl.Result{}, err
+		}
 
 		return ctrl.Result{}, nil
 	}

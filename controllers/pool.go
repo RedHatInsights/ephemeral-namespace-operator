@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"context"
 	"fmt"
+	"regexp"
 
 	"errors"
 	"strings"
@@ -63,15 +64,12 @@ func (p *NamespacePool) Len() int {
 func Poll(client client.Client, pool *NamespacePool) error {
 	ctx := context.Background()
 
+	if err := pool.populateOnDeckNs(ctx, client); err != nil {
+		fmt.Println("Unable to populate namespace pool with existing namespaces: ", err)
+		return err
+	}
+
 	for {
-		// Ensure pool is desired size
-		for pool.Len() < POOL_DEPTH {
-			if err := pool.CreateOnDeckNamespace(ctx, client); err != nil {
-				return err
-			}
-
-		}
-
 		// Check for expired reservations
 		// First pass is very unoptimized; this is O(n) every 10s
 		// We can add the expiration time to the pool and check that as a map
@@ -96,6 +94,39 @@ func Poll(client client.Client, pool *NamespacePool) error {
 		// Check for reserved namespace expirations
 		time.Sleep(time.Duration(POLL_CYCLE * time.Second))
 	}
+}
+
+func (p *NamespacePool) populateOnDeckNs(ctx context.Context, client client.Client) error {
+	nsList := core.NamespaceList{}
+
+	// TODO: Revisit method of determining cache readiness
+	// Cannot retrieve list of namespaces right away
+	cacheReady := false
+	for !cacheReady {
+		if err := client.List(ctx, &nsList); err == nil {
+			cacheReady = true
+		}
+		time.Sleep(time.Duration(2 * time.Second))
+	}
+
+	for _, ns := range nsList.Items {
+		matched, _ := regexp.MatchString(`ephemeral-\w{6}`, ns.Name)
+		if matched {
+			if _, ok := ns.ObjectMeta.Annotations["reserved"]; !ok {
+				p.AddOnDeckNS(ns.Name)
+			}
+		}
+	}
+
+	// Ensure pool is desired size
+	for p.Len() < POOL_DEPTH {
+		if err := p.CreateOnDeckNamespace(ctx, client); err != nil {
+			return err
+		}
+
+	}
+
+	return nil
 }
 
 func (p *NamespacePool) namespaceIsExpired(res *crd.NamespaceReservation) bool {
