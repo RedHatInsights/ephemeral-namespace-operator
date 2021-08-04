@@ -101,6 +101,7 @@ func (p *NamespacePool) populateOnDeckNs(ctx context.Context, client client.Clie
 
 	// TODO: Revisit method of determining cache readiness
 	// Cannot retrieve list of namespaces right away
+	// TODO: Max retries or timeout waiting for cache
 	cacheReady := false
 	for !cacheReady {
 		if err := client.List(ctx, &nsList); err == nil {
