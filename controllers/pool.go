@@ -71,7 +71,6 @@ func Poll(client client.Client, pool *NamespacePool) error {
 			// First pass is very unoptimized; this is O(n) every 10s
 			// We can add the expiration time to the pool and check that as a map
 			// Or we can investiage time.After() for each namespace
-			fmt.Println("Checking reservations -- polling")
 			resList, err := pool.getExistingReservations(client, ctx)
 			if err != nil {
 				fmt.Println("Unable to retrieve list of active reservations: ", err)
@@ -101,17 +100,6 @@ func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Clie
 		fmt.Println("Unable to retrieve list of existing ready namespaces")
 		return err
 	}
-
-	// TODO: Revisit method of determining cache readiness
-	// Cannot retrieve list of namespaces right away
-	// TODO: Max retries or timeout waiting for cache
-	// cacheReady := false
-	// for !cacheReady {
-	// 	if err := client.List(ctx, &nsList); err == nil {
-	// 		cacheReady = true
-	// 	}
-	// 	time.Sleep(time.Duration(2 * time.Second))
-	// }
 
 	for _, ns := range nsList.Items {
 		matched, _ := regexp.MatchString(`ephemeral-\w{6}`, ns.Name)
