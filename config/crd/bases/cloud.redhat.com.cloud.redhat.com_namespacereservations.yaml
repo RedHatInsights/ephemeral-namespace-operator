@@ -28,9 +28,10 @@ spec:
     - jsonPath: .status.namespace
       name: Namespace
       type: string
-    - jsonPath: .status.expiration
+    - format: date-time
+      jsonPath: .status.expiration
       name: Expiration
-      type: date
+      type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -67,7 +68,6 @@ spec:
               NamespaceReservation
             properties:
               expiration:
-                format: date-time
                 type: string
               namespace:
                 type: string

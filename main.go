@@ -82,6 +82,7 @@ func main() {
 
 	pool := controllers.NamespacePool{
 		ReadyNamespaces: list.New(),
+		Initialized:     false,
 		Log:             ctrl.Log.WithName("NamespacePool"),
 	}
 

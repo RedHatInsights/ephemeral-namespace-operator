@@ -67,6 +67,16 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	// TODO: Determine actions for enqueue on ns events
 	// TODO: Determine actions for an unready ns
 
+	// On first reconcile populate pool of ready namespaces
+	if !r.NamespacePool.Initialized {
+		if err := r.NamespacePool.PopulateOnDeckNs(ctx, r.Client); err != nil {
+			fmt.Println("Unable to populate namespace pool with existing namespaces: ", err)
+			return ctrl.Result{}, err
+		}
+
+		r.NamespacePool.Initialized = true
+	}
+
 	// Fetch the reservation
 	res := crd.NamespaceReservation{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &res); err != nil {
@@ -77,7 +87,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		r.Log.Error(err, "Reservation Not Found")
 		return ctrl.Result{}, err
 	}
-	fmt.Printf("%+v", res)
+
 	// TODO: Figure when/why the reconciler is called on already created CRDs
 	if res.Status.Namespace != "" {
 		// TODO: add support for CRD updates
@@ -117,11 +127,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{Requeue: true}, nil
 		}
 
-		// nsName := metav1.ObjectMeta{
-		// 	Name:      req.Name,
-		// 	Namespace: req.Namespace,
-		// }
-		// res.ObjectMeta = nsName
 		fmt.Printf("%+v", res)
 		if err := r.Client.Update(ctx, &res); err != nil {
 			r.Log.Error(err, "cannot create NamespaceReservation")
@@ -180,7 +185,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		r.Log.Info("Set CRD Status")
 		res.Status.Namespace = readyNsName
 		res.Status.Ready = true
-		res.Status.Expiration = metav1.Time{Time: expirationTS}
+		res.Status.Expiration = expirationTS.Local().Format(time.RFC822)
 
 		r.Log.Info("Add rolebinding to NS")
 		// Add rolebinding to the namespace only after it has been owned by the CRD.
