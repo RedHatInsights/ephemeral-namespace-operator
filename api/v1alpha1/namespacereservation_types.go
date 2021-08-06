@@ -30,9 +30,9 @@ type NamespaceReservationSpec struct {
 
 // NamespaceReservationStatus defines the observed state of NamespaceReservation
 type NamespaceReservationStatus struct {
-	Expiration string `json:"expiration"`
-	Ready      bool   `json:"ready"`
-	Namespace  string `json:"namespace"`
+	Expiration metav1.Time `json:"expiration"`
+	Ready      bool        `json:"ready"`
+	Namespace  string      `json:"namespace"`
 }
 
 //+kubebuilder:object:root=true
