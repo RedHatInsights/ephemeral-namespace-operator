@@ -68,6 +68,7 @@ spec:
               NamespaceReservation
             properties:
               expiration:
+                format: date-time
                 type: string
               namespace:
                 type: string

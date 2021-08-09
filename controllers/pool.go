@@ -73,7 +73,7 @@ func Poll(client client.Client, pool *NamespacePool) error {
 			// Or we can investiage time.After() for each namespace
 			resList, err := pool.getExistingReservations(client, ctx)
 			if err != nil {
-				fmt.Println("Unable to retrieve list of active reservations: ", err)
+				pool.Log.Error(err, "Unable to retrieve list of active reservations")
 				return err
 			}
 
@@ -81,10 +81,10 @@ func Poll(client client.Client, pool *NamespacePool) error {
 				if pool.namespaceIsExpired(&res) {
 					err := client.Delete(ctx, &res)
 					if err != nil {
-						fmt.Println("Unable to delete expired reservation")
+						pool.Log.Error(err, "Unable to delete expired reservation")
 						return err
 					}
-					fmt.Printf("Reservation for namespace %s has expired. Deleting.\n", res.Status.Namespace)
+					pool.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
 				}
 			}
 		}
@@ -97,7 +97,7 @@ func Poll(client client.Client, pool *NamespacePool) error {
 func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Client) error {
 	nsList := core.NamespaceList{}
 	if err := client.List(ctx, &nsList); err != nil {
-		fmt.Println("Unable to retrieve list of existing ready namespaces")
+		p.Log.Error(err, "Unable to retrieve list of existing ready namespaces")
 		return err
 	}
 
@@ -106,7 +106,7 @@ func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Clie
 		if matched {
 			if _, ok := ns.ObjectMeta.Annotations["reserved"]; !ok {
 				p.AddOnDeckNS(ns.Name)
-				fmt.Printf("Added namespace %s to pool\n", ns.Name)
+				p.Log.Info("Added namespace to pool", "ns-name", ns.Name)
 			}
 		}
 	}
@@ -123,11 +123,7 @@ func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Clie
 }
 
 func (p *NamespacePool) namespaceIsExpired(res *crd.NamespaceReservation) bool {
-	expirationTime, err := time.Parse(time.RFC822, res.Status.Expiration)
-	if err != nil {
-		fmt.Println("Couldn't parse expiration time")
-	}
-	remainingTime := expirationTime.Sub(time.Now())
+	remainingTime := res.Status.Expiration.Sub(time.Now())
 	if remainingTime <= 0 {
 		return true
 	}
@@ -138,7 +134,7 @@ func (p *NamespacePool) getExistingReservations(client client.Client, ctx contex
 	resList := crd.NamespaceReservationList{}
 	err := client.List(ctx, &resList)
 	if err != nil {
-		fmt.Println("Cannot get reservations")
+		p.Log.Error(err, "Cannot get reservations")
 		return &resList, err
 	}
 	return &resList, nil
@@ -159,7 +155,7 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	// Create namespace
 	ns := core.Namespace{}
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
-	fmt.Printf("Creating on deck ns for %s\n", ns.Name)
+	p.Log.Info("Creating on deck namespace", "ns-name", ns.Name)
 	err := cl.Create(ctx, &ns)
 
 	if err != nil {
@@ -174,8 +170,7 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	env.Spec.TargetNamespace = ns.Name
 
 	if err := cl.Create(ctx, &env); err != nil {
-		fmt.Printf("Cannot Create ClowdEnv in Namespace %s\n", ns.Name)
-		fmt.Printf("Error: %s", err)
+		p.Log.Error(err, "Cannot Create ClowdEnv in Namespace", "ns-name", ns.Name)
 		return err
 	}
 
@@ -187,13 +182,13 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		return err
 	}
 
-	fmt.Printf("Copying secrets from eph-base\n")
+	p.Log.Info("Copying secrets from eph-base to new namespace", "ns-name", ns.Name)
 
 	for _, secret := range secrets.Items {
 		if strings.Contains(secret.Name, "default-token") {
 			continue
 		}
-		fmt.Printf("Copying secret %s\n", secret.Name)
+		p.Log.Info("Copying secret", "secret-name", secret.Name)
 		src := types.NamespacedName{
 			Name:      secret.Name,
 			Namespace: secret.Namespace,
@@ -206,23 +201,23 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 
 		err, newNsSecret := utils.CopySecret(ctx, cl, src, dst)
 		if err != nil {
-			fmt.Printf("Unable to copy secret from source namespace: %s\n", err)
+			p.Log.Error(err, "Unable to copy secret from source namespace")
 			return err
 		}
 
 		if err := cl.Create(ctx, newNsSecret); err != nil {
-			fmt.Printf("Unable to apply secret from source namespace: %s\n", err)
+			p.Log.Error(err, "Unable to apply secret from source namespace")
 			return err
 		}
 
 	}
 
-	fmt.Printf("Verifying that the ClowdEnv is ready for ns %s\n", ns.Name)
+	p.Log.Info("Verifying that the ClowdEnv is ready for namespace", "ns-name", ns.Name)
 	for !env.IsReady() {
 		time.Sleep(2 * time.Second)
 	}
 	p.AddOnDeckNS(ns.Name)
-	fmt.Printf("Namespace %s added to the pool\n", ns.Name)
+	p.Log.Info("Namespace added to the ready pool", "ns-name", ns.Name)
 
 	return nil
 }

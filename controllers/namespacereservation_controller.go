@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 
 	"fmt"
 	"math/rand"
@@ -31,6 +32,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -61,7 +64,6 @@ type NamespaceReservationReconciler struct {
 //+kubebuilder:rbac:groups="",resources=secrets;events;namespaces,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings;roles,verbs=get;list;watch;create;update;patch;delete
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	// TODO: Update status of namespaces to show reserved
 	// TODO: Determine flow of reconciliations
 	// TODO: Determine actions of first time spin up
 	// TODO: Determine actions for enqueue on ns events
@@ -70,7 +72,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	// On first reconcile populate pool of ready namespaces
 	if !r.NamespacePool.Initialized {
 		if err := r.NamespacePool.PopulateOnDeckNs(ctx, r.Client); err != nil {
-			fmt.Println("Unable to populate namespace pool with existing namespaces: ", err)
+			r.Log.Error(err, "Unable to populate namespace pool with existing namespaces: ")
 			return ctrl.Result{}, err
 		}
 
@@ -89,113 +91,73 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	}
 
 	// TODO: Figure when/why the reconciler is called on already created CRDs
+	// TODO: Is this the best way to check for an update event?
 	if res.Status.Namespace != "" {
 		// TODO: add support for CRD updates
+		// TODO: this is a super basic example of an update - requires update event
+		// TODO: what else can be updated besides expiration?
+		r.Log.Info("Reconciling existing NamespaceReservation")
+		expirationTS, err := getExpirationTime(res.Status.Expiration, &res)
+		if err != nil {
+			r.Log.Error(err, "Could not set expiration time on reservation")
+			return ctrl.Result{}, err
+		}
+
+		res.Status.Expiration = expirationTS
+
+		if err := r.Status().Update(ctx, &res); err != nil {
+			r.Log.Error(err, "Cannot update status")
+			return ctrl.Result{}, err
+		}
 		return ctrl.Result{}, nil
 
 	} else {
-		r.Log.Info("Reconciling for NamespaceReservation")
-		output := fmt.Sprintf("Name: %s Namepsace: %s", req.Name, req.Namespace)
-		r.Log.Info(output)
-		// if no, assign namespace from on-deck pool and create new on-deck ns
+		r.Log.Info("Reconciling newly created NamespaceReservation", "name", req.Name)
+
+		// if no, requeue and wait for pool to populate
 		r.Log.Info("Checking pool for ready namespaces")
 		if r.NamespacePool.Len() < 1 {
 			r.Log.Info("Requeue to wait for namespace pool population")
 			return ctrl.Result{Requeue: true}, nil
 		}
 
-		// Is there already a namespace assigned?
-		r.Log.Info("Checking Reservation status")
-
 		// Check to see if there's an error with the Get
 		readyNsName := r.NamespacePool.GetOnDeckNs()
 		r.Log.Info("Found namespace in pool; checking for ready status")
 
-		env := clowder.ClowdEnvironment{}
-		envErr := r.Client.Get(ctx, types.NamespacedName{
-			Name:      readyNsName,
-			Namespace: readyNsName,
-		}, &env)
-		if envErr != nil {
-			// Don't requeue, the events in the ns will requeue
-			return ctrl.Result{}, envErr
+		// Verify that the ClowdEnv has been set up for the requested namespace
+		if err := verifyClowdEnvForReadyNs(ctx, r.Client, readyNsName); err != nil {
+			r.Log.Error(err, err.Error(), "ns-name", readyNsName)
+			return ctrl.Result{Requeue: true}, err
 		}
 
-		if !env.IsReady() {
-			str := fmt.Sprintf("Namespace %s not yet ready, requeue\n", readyNsName)
-			r.Log.Info(str)
-			return ctrl.Result{Requeue: true}, nil
-		}
-
-		fmt.Printf("%+v", res)
-		if err := r.Client.Update(ctx, &res); err != nil {
-			r.Log.Error(err, "cannot create NamespaceReservation")
-			return ctrl.Result{}, err
-		}
-
-		r.Log.Info("Resolve new NS")
-		nsObject := core.Namespace{}
-		err := r.Client.Get(ctx, types.NamespacedName{Name: readyNsName}, &nsObject)
-		if err != nil {
-			if k8serr.IsNotFound(err) {
-				// Must have been deleted
-				r.Log.Info("Namespace Not Found")
-				return ctrl.Result{}, nil
-			}
-			r.Log.Error(err, "Namespace Not Found")
-			return ctrl.Result{}, err
-		}
-
-		r.Log.Info("Set ownerrefs")
-		// Set Owner Reference on the ns we just reserved
-		nsObject.SetOwnerReferences([]metav1.OwnerReference{res.MakeOwnerReference()})
-		fmt.Println("NS Owner References: ", nsObject.OwnerReferences)
-
-		// Set namespace reserved
-		nsObject.SetAnnotations(map[string]string{
-			"reserved": "true",
-		})
-
-		err = r.Client.Update(ctx, &nsObject)
-		if err != nil {
-			fmt.Printf("Could not update namespace ownerReference")
-		}
-
-		r.Log.Info("Checkout new NS")
-		// Remove the namespace from the pool
-		if err := r.NamespacePool.CheckoutNs(readyNsName); err != nil {
-			fmt.Printf("Cannot checkout ns")
+		// Resolve the requested namespace and remove it from the pool
+		if err := r.reserveNamespace(ctx, readyNsName, &res); err != nil {
+			r.Log.Error(err, "Could not reserve namespace", "ns-name", readyNsName)
+			return ctrl.Result{Requeue: true}, err
 		}
 
 		// update expiration timestamp (creation timestamp + duration)
 		creationTS := res.ObjectMeta.CreationTimestamp
-
-		var duration time.Duration
-		if res.Spec.Duration != nil {
-			duration, err = time.ParseDuration(*res.Spec.Duration)
-		} else {
-			// Defaults to 1 hour if not specified in spec
-			duration, err = time.ParseDuration("1h")
-		}
-
-		r.Log.Info("Add Expiration date")
-		expirationTS := creationTS.Add(duration)
-
-		// update ready field
-		r.Log.Info("Set CRD Status")
-		res.Status.Namespace = readyNsName
-		res.Status.Ready = true
-		res.Status.Expiration = expirationTS.Local().Format(time.RFC822)
-
-		r.Log.Info("Add rolebinding to NS")
-		// Add rolebinding to the namespace only after it has been owned by the CRD.
-		if err := addRoleBindings(ctx, &nsObject, r.Client); err != nil {
-			r.Log.Error(err, "cannot apply RoleBindings")
+		expirationTS, err := getExpirationTime(creationTS, &res)
+		if err != nil {
+			r.Log.Error(err, "Could not set expiration time on reservation")
 			return ctrl.Result{}, err
 		}
 
-		r.Log.Info("Create Update status")
-		fmt.Printf("%+v", res)
+		// Update reservation status fields
+		res.Status.Namespace = readyNsName
+		res.Status.Expiration = expirationTS
+		res.Status.Ready = true
+
+		r.Log.Info("Updating NamespaceReservation status")
+		r.Log.Info("Reservation details",
+			"res-name", res.Name,
+			"res-uuid", res.ObjectMeta.UID,
+			"created", res.ObjectMeta.CreationTimestamp,
+			"spec", res.Spec,
+			"status", res.Status,
+		)
 		if err := r.Status().Update(ctx, &res); err != nil {
 			r.Log.Error(err, "Cannot update status")
 			return ctrl.Result{}, err
@@ -211,59 +173,106 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 }
 
+func eventFilter(log logr.Logger) predicate.Predicate {
+	return predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			oldObject := e.ObjectOld.(*crd.NamespaceReservation)
+			newObject := e.ObjectNew.(*crd.NamespaceReservation)
+
+			if oldObject.Status != newObject.Status {
+				return false
+			}
+			return true
+		},
+		CreateFunc: func(e event.CreateEvent) bool {
+			object := e.Object.(*crd.NamespaceReservation)
+			if object.Status.Namespace != "" {
+				return false
+			}
+			return true
+		},
+	}
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *NamespaceReservationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&crd.NamespaceReservation{}).
-		// Watches(
-		// 	&source.Kind{Type: &core.Namespace{}},
-		// 	handler.EnqueueRequestsFromMapFunc(r.enqueueNamespaceEvent),
-		// ).
+		WithEventFilter(eventFilter(r.Log)).
 		Complete(r)
 }
 
-// func (r *NamespaceReservationReconciler) enqueueNamespaceEvent(a client.Object) []reconcile.Request {
-// 	// TODO: FILTERSSSSSS
-// 	reqs := []reconcile.Request{}
-// r.Log.Info("Enqueued ns event")
-// // TODO: Determine what needs to be handled here
-// ctx := context.Background()
-// obj := types.NamespacedName{
-// 	Name:      a.GetName(),
-// 	Namespace: a.GetNamespace(),
-// }
-// ns := core.Namespace{}
-// err := r.Client.Get(ctx, obj, &ns)
-// if err != nil {
-// 	if k8serr.IsNotFound(err) {
-// 		// Must have been deleted
-// 		return reqs
-// 	}
-// 	r.Log.Error(err, "Failed to fetch Namespace")
-// 	return nil
-// }
+func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, readyNsName string, res *crd.NamespaceReservation) error {
+	nsObject := core.Namespace{}
+	err := r.Client.Get(ctx, types.NamespacedName{Name: readyNsName}, &nsObject)
+	if err != nil {
+		r.Log.Error(err, "Could not retrieve namespace", "name", readyNsName)
+		return err
+	}
 
-// res := crd.NamespaceReservation{}
-// err = r.Client.Get(ctx, obj, &res)
-// if err != nil {
-// 	if k8serr.IsNotFound(err) {
-// 		// Must have been deleted
-// 		return reqs
-// 	}
-// 	r.Log.Info("No reservation for Namespace")
-// 	return nil
-// } else {
-// 	reqs = append(reqs, reconcile.Request{
-// 		NamespacedName: types.NamespacedName{
-// 			Name:      res.Name,
-// 			Namespace: res.Namespace,
-// 		},
-// 	})
+	// Set Owner Reference on the ns we just reserved to ensure
+	// the namespace is deleted when the reservation is deleted
+	nsObject.SetOwnerReferences([]metav1.OwnerReference{res.MakeOwnerReference()})
 
-// }
+	// Set namespace reserved
+	nsObject.SetAnnotations(map[string]string{
+		"reserved": "true",
+	})
 
-// return reqs
-// }
+	err = r.Client.Update(ctx, &nsObject)
+	if err != nil {
+		r.Log.Error(err, "Could not update namespace", "ns-name", readyNsName)
+		return err
+	}
+
+	// Remove the namespace from the pool
+	if err := r.NamespacePool.CheckoutNs(readyNsName); err != nil {
+		r.Log.Error(err, "Could not checkout namespace", "ns-name", readyNsName)
+		return err
+	}
+
+	// Add rolebinding to the namespace only after it has been owned by the CRD.
+	if err := addRoleBindings(ctx, &nsObject, r.Client); err != nil {
+		r.Log.Error(err, "Could not apply rolebindings for namespace", "ns-name", readyNsName)
+		return err
+	}
+
+	return nil
+}
+
+func getExpirationTime(start metav1.Time, res *crd.NamespaceReservation) (metav1.Time, error) {
+	var duration time.Duration
+	var err error
+	if res.Spec.Duration != nil {
+		duration, err = time.ParseDuration(*res.Spec.Duration)
+	} else {
+		// Defaults to 1 hour if not specified in spec
+		duration, err = time.ParseDuration("1h")
+	}
+	if err != nil {
+		return metav1.Time{}, err
+	}
+
+	expirationTS := start.Add(duration)
+
+	return metav1.Time{Time: expirationTS}, err
+}
+
+func verifyClowdEnvForReadyNs(ctx context.Context, client client.Client, readyNsName string) error {
+	env := clowder.ClowdEnvironment{}
+	if err := client.Get(ctx, types.NamespacedName{
+		Name:      readyNsName,
+		Namespace: readyNsName,
+	}, &env); err != nil {
+		return err
+	}
+
+	if !env.IsReady() {
+		return errors.New(fmt.Sprintf("ClowdEnvironment is not ready for namespace: %s", readyNsName))
+	}
+
+	return nil
+}
 
 func addRoleBindings(ctx context.Context, ns *core.Namespace, client client.Client) error {
 
