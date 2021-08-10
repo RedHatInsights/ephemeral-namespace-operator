@@ -94,10 +94,10 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 
 # Create a new manifest for release
 release: manifests kustomize controller-gen
-        echo "---" > manifest.yaml
-        cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-        cd ../..
-        $(KUSTOMIZE) build config/default >> manifest.yaml
+	echo "---" > manifest.yaml
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	cd ../..
+	$(KUSTOMIZE) build config/default >> manifest.yaml
 
 fmt: ## Run go fmt against code.
 	go fmt ./...
