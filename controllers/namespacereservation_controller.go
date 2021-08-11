@@ -58,9 +58,9 @@ type NamespaceReservationReconciler struct {
 	Log           logr.Logger
 }
 
-//+kubebuilder:rbac:groups=cloud.redhat.com.cloud.redhat.com,resources=namespacereservations,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cloud.redhat.com.cloud.redhat.com,resources=namespacereservations/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cloud.redhat.com.cloud.redhat.com,resources=namespacereservations/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=secrets;events;namespaces,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings;roles,verbs=get;list;watch;create;update;patch;delete
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
