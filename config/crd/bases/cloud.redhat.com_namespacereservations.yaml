@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
-  name: namespacereservations.cloud.redhat.com.cloud.redhat.com
+  name: namespacereservations.cloud.redhat.com
 spec:
-  group: cloud.redhat.com.cloud.redhat.com
+  group: cloud.redhat.com
   names:
     kind: NamespaceReservation
     listKind: NamespaceReservationList
