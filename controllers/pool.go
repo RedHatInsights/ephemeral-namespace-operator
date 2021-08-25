@@ -109,7 +109,7 @@ func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Clie
 	}
 
 	for _, ns := range nsList.Items {
-		matched, _ := regexp.MatchString(`ephemeral-\w{6}`, ns.Name)
+		matched, _ := regexp.MatchString(`ephemeral-\w{6}$`, ns.Name)
 		if matched {
 			if _, ok := ns.ObjectMeta.Annotations["reserved"]; !ok {
 				p.AddOnDeckNS(ns.Name)
