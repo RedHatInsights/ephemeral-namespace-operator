@@ -69,16 +69,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	// TODO: Determine actions for enqueue on ns events
 	// TODO: Determine actions for an unready ns
 
-	// On first reconcile populate pool of ready namespaces
-	if !r.NamespacePool.Initialized {
-		if err := r.NamespacePool.PopulateOnDeckNs(ctx, r.Client); err != nil {
-			r.Log.Error(err, "Unable to populate namespace pool with existing namespaces: ")
-			return ctrl.Result{}, err
-		}
-
-		r.NamespacePool.Initialized = true
-	}
-
 	// Fetch the reservation
 	res := crd.NamespaceReservation{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &res); err != nil {
@@ -163,10 +153,14 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
-		if err := r.NamespacePool.CreateOnDeckNamespace(ctx, r.Client); err != nil {
-			r.Log.Error(err, "Cannot create replacement namespace")
-			return ctrl.Result{}, err
-		}
+		// Creating a new namespace takes a while
+		// The reconciler should not wait to consume new events while
+		// creating new namespaces
+		go func() {
+			if err := r.NamespacePool.CreateOnDeckNamespace(ctx, r.Client); err != nil {
+				r.Log.Error(err, "Cannot create replacement namespace")
+			}
+		}()
 
 		return ctrl.Result{}, nil
 	}

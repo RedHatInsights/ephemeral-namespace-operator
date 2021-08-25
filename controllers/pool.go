@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"sync"
 
 	"errors"
 	"strings"
@@ -26,11 +27,10 @@ import (
 )
 
 const POLL_CYCLE time.Duration = 10
-const POOL_DEPTH int = 1
 
 type NamespacePool struct {
 	ReadyNamespaces *list.List
-	Initialized     bool
+	PoolSize        int
 	Log             logr.Logger
 }
 
@@ -65,27 +65,34 @@ func (p *NamespacePool) Len() int {
 func Poll(client client.Client, pool *NamespacePool) error {
 	ctx := context.Background()
 
-	for {
-		if pool.Initialized {
-			// Check for expired reservations
-			// First pass is very unoptimized; this is O(n) every 10s
-			// We can add the expiration time to the pool and check that as a map
-			// Or we can investiage time.After() for each namespace
-			resList, err := pool.getExistingReservations(client, ctx)
-			if err != nil {
-				pool.Log.Error(err, "Unable to retrieve list of active reservations")
-				return err
-			}
+	// Wait a period before beginning to poll
+	// TODO workaround due to checking k8s objects too soon - revisit
+	time.Sleep(time.Duration(POLL_CYCLE * time.Second))
 
-			for _, res := range resList.Items {
-				if pool.namespaceIsExpired(&res) {
-					err := client.Delete(ctx, &res)
-					if err != nil {
-						pool.Log.Error(err, "Unable to delete expired reservation")
-						return err
-					}
-					pool.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
+	if err := pool.PopulateOnDeckNs(ctx, client); err != nil {
+		pool.Log.Error(err, "Unable to populate namespace pool with existing namespaces: ")
+		return err
+	}
+
+	for {
+		// Check for expired reservations
+		// First pass is very unoptimized; this is O(n) every 10s
+		// We can add the expiration time to the pool and check that as a map
+		// Or we can investiage time.After() for each namespace
+		resList, err := pool.getExistingReservations(client, ctx)
+		if err != nil {
+			pool.Log.Error(err, "Unable to retrieve list of active reservations")
+			return err
+		}
+
+		for _, res := range resList.Items {
+			if pool.namespaceIsExpired(&res) {
+				err := client.Delete(ctx, &res)
+				if err != nil {
+					pool.Log.Error(err, "Unable to delete expired reservation")
+					return err
 				}
+				pool.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
 			}
 		}
 
@@ -111,12 +118,22 @@ func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Clie
 		}
 	}
 
-	// Ensure pool is desired size
-	for p.Len() < POOL_DEPTH {
-		if err := p.CreateOnDeckNamespace(ctx, client); err != nil {
-			return err
+	// Ensure pool is desired size at startup
+	if p.Len() < p.PoolSize {
+		var wg sync.WaitGroup
+		wg.Add(p.PoolSize - p.Len())
+
+		for i := p.Len(); i < p.PoolSize; i++ {
+			go func() {
+				defer wg.Done()
+				if err := p.CreateOnDeckNamespace(ctx, client); err != nil {
+					p.Log.Error(err, "Unable to create on deck namespace")
+				}
+			}()
 		}
 
+		// Wait for pool to be filled
+		wg.Wait()
 	}
 
 	return nil
@@ -124,7 +141,7 @@ func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Clie
 
 func (p *NamespacePool) namespaceIsExpired(res *crd.NamespaceReservation) bool {
 	remainingTime := res.Status.Expiration.Sub(time.Now())
-	if remainingTime <= 0 {
+	if res.Status.Expiration.String() != "" && remainingTime <= 0 {
 		return true
 	}
 	return false
@@ -212,10 +229,22 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 
 	}
 
+	// TODO: revisit this check
+	// We need to wait a bit before checking the clowdEnv isReady method
 	p.Log.Info("Verifying that the ClowdEnv is ready for namespace", "ns-name", ns.Name)
-	for !env.IsReady() {
-		time.Sleep(2 * time.Second)
+	for env.Status.Deployments.ReadyDeployments < 3 {
+		p.Log.Info("Waiting on environment to be ready for namespace", "namespace", ns.Name)
+
+		time.Sleep(10 * time.Second)
+
+		if err := cl.Get(ctx, types.NamespacedName{
+			Name:      ns.Name,
+			Namespace: ns.Name,
+		}, &env); err != nil {
+			return err
+		}
 	}
+
 	p.AddOnDeckNS(ns.Name)
 	p.Log.Info("Namespace added to the ready pool", "ns-name", ns.Name)
 
