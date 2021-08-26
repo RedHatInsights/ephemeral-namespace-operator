@@ -251,6 +251,19 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  name: ephemeral-namespace-operator-admin-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+- kind: ServiceAccount
+  name: ephemeral-namespace-operator-controller-manager
+  namespace: ephemeral-namespace-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
   name: ephemeral-namespace-operator-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
