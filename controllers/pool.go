@@ -67,8 +67,9 @@ func Poll(client client.Client, pool *NamespacePool) error {
 
 	// Wait a period before beginning to poll
 	// TODO workaround due to checking k8s objects too soon - revisit
-	time.Sleep(time.Duration(POLL_CYCLE * time.Second))
+	time.Sleep(time.Duration(30 * time.Second))
 
+	pool.Log.Info("Populating namespace list with existing namespaces")
 	if err := pool.PopulateOnDeckNs(ctx, client); err != nil {
 		pool.Log.Error(err, "Unable to populate namespace pool with existing namespaces: ")
 		return err
@@ -202,10 +203,23 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	p.Log.Info("Copying secrets from eph-base to new namespace", "ns-name", ns.Name)
 
 	for _, secret := range secrets.Items {
-		if strings.Contains(secret.Name, "default-token") {
+		// Filter which secrets should be copied
+		// All secrets with the "qontract" annotations are defined in app-interface
+		if val, ok := secret.Annotations["qontract.integration"]; !ok {
 			continue
+		} else {
+			if val != "openshift-vault-secrets" {
+				continue
+			}
 		}
-		p.Log.Info("Copying secret", "secret-name", secret.Name)
+
+		if val, ok := secret.Annotations["bonfire.ignore"]; ok {
+			if val == "true" {
+				continue
+			}
+		}
+
+		p.Log.Info("Copying secret", "secret-name", secret.Name, "ns-name", ns.Name)
 		src := types.NamespacedName{
 			Name:      secret.Name,
 			Namespace: secret.Namespace,
