@@ -18,12 +18,15 @@ import (
 	core "k8s.io/api/core/v1"
 
 	//k8serr "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	// apps "k8s.io/api/apps/v1"
 	// "k8s.io/apimachinery/pkg/runtime"
 	// "k8s.io/apimachinery/pkg/runtime/schema"
-	// "k8s.io/apimachinery/pkg/types" "k8s.io/client-go/tools/record" "k8s.io/client-go/util/workqueue"
+	// "k8s.io/client-go/tools/record" "k8s.io/client-go/util/workqueue"
 )
 
 const POLL_CYCLE time.Duration = 10
@@ -186,6 +189,30 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	}
 	env.SetName(ns.Name)
 	env.Spec.TargetNamespace = ns.Name
+
+	// Retrieve namespace to populate APIVersion and Kind values
+	// Use retry in case object retrieval is attempted before creation is done
+	err = retry.OnError(
+		wait.Backoff(retry.DefaultBackoff),
+		func(error) bool { return true }, // hack - return true if err is notFound
+		func() error {
+			err := cl.Get(ctx, types.NamespacedName{Name: ns.Name}, &ns)
+			return err
+		},
+	)
+	if err != nil {
+		p.Log.Error(err, "Cannot get namespace", "ns-name", ns.Name)
+		return err
+	}
+
+	env.SetOwnerReferences([]metav1.OwnerReference{
+		{
+			APIVersion: ns.APIVersion,
+			Kind:       ns.Kind,
+			Name:       ns.Name,
+			UID:        ns.UID,
+		},
+	})
 
 	if err := cl.Create(ctx, &env); err != nil {
 		p.Log.Error(err, "Cannot Create ClowdEnv in Namespace", "ns-name", ns.Name)
