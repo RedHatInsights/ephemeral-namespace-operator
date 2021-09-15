@@ -352,9 +352,9 @@ func hardCodedEnvSpec() clowder.ClowdEnvironmentSpec {
 			Kafka: clowder.KafkaConfig{
 				Mode:                "operator",
 				EnableLegacyStrimzi: true,
-				Cluster:             clowder.KafkaClusterConfig{Version: "2.6.0"},
+				Cluster:             clowder.KafkaClusterConfig{Version: "2.7.0"},
 				Connect: clowder.KafkaConnectClusterConfig{
-					Version: "2.6.0",
+					Version: "2.7.0",
 					Image:   "quay.io/cloudservices/xjoin-kafka-connect-strimzi:182ab8b",
 				},
 			},
