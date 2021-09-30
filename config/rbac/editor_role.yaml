@@ -1,0 +1,22 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    managed.openshift.io/aggregate-to-dedicated-admins: cluster
+  creationTimestamp: null
+  name: editor
+rules:
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - namespacereservations
+  - clowdenvironments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

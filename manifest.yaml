@@ -138,6 +138,28 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
+  labels:
+    managed.openshift.io/aggregate-to-dedicated-admins: cluster
+  name: ephemeral-namespace-operator-editor
+rules:
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - namespacereservations
+  - clowdenvironments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
   name: ephemeral-namespace-operator-manager-role
 rules:
 - apiGroups:

@@ -46,6 +46,10 @@ func (p *NamespacePool) GetOnDeckNs() string {
 	return fmt.Sprintf("%s", front.Value)
 }
 
+func (p *NamespacePool) CycleFrontToBack() {
+	p.ReadyNamespaces.MoveToBack(p.ReadyNamespaces.Front())
+}
+
 func (p *NamespacePool) CheckoutNs(name string) error {
 	for i := p.ReadyNamespaces.Front(); i != nil; i.Next() {
 		stringName := fmt.Sprintf("%s", i.Value)
@@ -116,8 +120,18 @@ func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Clie
 		matched, _ := regexp.MatchString(`ephemeral-\w{6}$`, ns.Name)
 		if matched {
 			if _, ok := ns.ObjectMeta.Annotations["reserved"]; !ok {
-				p.AddOnDeckNS(ns.Name)
-				p.Log.Info("Added namespace to pool", "ns-name", ns.Name)
+				ready, err := p.VerifyClowdEnv(ctx, client, ns)
+				if ready {
+					p.AddOnDeckNS(ns.Name)
+					p.Log.Info("Added namespace to pool", "ns-name", ns.Name)
+				} else {
+					if err != nil {
+						p.Log.Error(err, "Error retrieving clowdenv", "ns-name", ns.Name)
+					} else {
+						p.Log.Info("Existing namespace clowdenv is not ready. Recreating", "ns-name", ns.Name)
+					}
+					client.Delete(ctx, &ns)
+				}
 			}
 		}
 	}
@@ -170,6 +184,29 @@ func (p *NamespacePool) getResFromNs(nsName string, resList *crd.NamespaceReserv
 	}
 	errString := fmt.Sprintf("No reservation found for %s\n", nsName)
 	return &crd.NamespaceReservation{}, errors.New(errString)
+}
+
+func (p *NamespacePool) VerifyClowdEnv(ctx context.Context, cl client.Client, ns core.Namespace) (bool, error) {
+	env := clowder.ClowdEnvironment{}
+
+	if err := cl.Get(ctx, types.NamespacedName{
+		Name:      ns.Name,
+		Namespace: ns.Name,
+	}, &env); err != nil {
+		return false, err
+	}
+
+	conditions := env.Status.Conditions
+
+	for i := range conditions {
+		if conditions[i].Type == "DeploymentsReady" {
+			if conditions[i].Status != "True" {
+				return false, nil
+			}
+		}
+	}
+
+	return true, nil
 }
 
 func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Client) error {
@@ -271,19 +308,15 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	}
 
 	// TODO: revisit this check
-	// We need to wait a bit before checking the clowdEnv isReady method
+	// We need to wait a bit before checking the clowdEnv
 	p.Log.Info("Verifying that the ClowdEnv is ready for namespace", "ns-name", ns.Name)
-	for env.Status.Deployments.ReadyDeployments < 3 {
-		p.Log.Info("Waiting on environment to be ready for namespace", "namespace", ns.Name)
+	time.Sleep(10 * time.Second)
 
+	ready, _ := p.VerifyClowdEnv(ctx, cl, ns)
+	for !ready {
+		p.Log.Info("Waiting on environment to be ready", "ns-name", ns.Name)
 		time.Sleep(10 * time.Second)
-
-		if err := cl.Get(ctx, types.NamespacedName{
-			Name:      ns.Name,
-			Namespace: ns.Name,
-		}, &env); err != nil {
-			return err
-		}
+		ready, _ = p.VerifyClowdEnv(ctx, cl, ns)
 	}
 
 	p.AddOnDeckNS(ns.Name)
