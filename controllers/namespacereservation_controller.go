@@ -67,7 +67,6 @@ type NamespaceReservationReconciler struct {
 
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// TODO: Determine flow of reconciliations
-	// TODO: Determine actions of first time spin up
 	// TODO: Determine actions for enqueue on ns events
 	// TODO: Determine actions for an unready ns
 
@@ -82,12 +81,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{}, err
 	}
 
-	// TODO: Figure when/why the reconciler is called on already created CRDs
-	// TODO: Is this the best way to check for an update event?
 	if res.Status.Namespace != "" {
-		// TODO: add support for CRD updates
-		// TODO: this is a super basic example of an update - requires update event
-		// TODO: what else can be updated besides expiration?
 		r.Log.Info("Reconciling existing NamespaceReservation")
 		expirationTS, err := getExpirationTime(res.Status.Expiration, &res)
 		if err != nil {
@@ -118,8 +112,9 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		r.Log.Info("Found namespace in pool; checking for ready status")
 
 		// Verify that the ClowdEnv has been set up for the requested namespace
-		if err := verifyClowdEnvForReadyNs(ctx, r.Client, readyNsName); err != nil {
+		if err := r.verifyClowdEnvForReadyNs(ctx, readyNsName); err != nil {
 			r.Log.Error(err, err.Error(), "ns-name", readyNsName)
+			r.NamespacePool.CycleFrontToBack()
 			return ctrl.Result{Requeue: true}, err
 		}
 
@@ -228,6 +223,7 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 	}
 
 	// Add rolebinding to the namespace only after it has been owned by the CRD.
+	// We need to skip this on minikube
 	if err := addRoleBindings(ctx, &nsObject, r.Client); err != nil {
 		r.Log.Error(err, "Could not apply rolebindings for namespace", "ns-name", readyNsName)
 		return err
@@ -254,16 +250,15 @@ func getExpirationTime(start metav1.Time, res *crd.NamespaceReservation) (metav1
 	return metav1.Time{Time: expirationTS}, err
 }
 
-func verifyClowdEnvForReadyNs(ctx context.Context, client client.Client, readyNsName string) error {
-	env := clowder.ClowdEnvironment{}
-	if err := client.Get(ctx, types.NamespacedName{
-		Name:      readyNsName,
-		Namespace: readyNsName,
-	}, &env); err != nil {
+func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Context, readyNsName string) error {
+	ns := core.Namespace{}
+	err := r.Client.Get(ctx, types.NamespacedName{Name: readyNsName}, &ns)
+	if err != nil {
 		return err
 	}
 
-	if !env.IsReady() {
+	ready, _ := r.NamespacePool.VerifyClowdEnv(ctx, r.Client, ns)
+	if !ready {
 		return errors.New(fmt.Sprintf("ClowdEnvironment is not ready for namespace: %s", readyNsName))
 	}
 
@@ -274,7 +269,7 @@ func addRoleBindings(ctx context.Context, ns *core.Namespace, client client.Clie
 
 	// Assign permissions: clowder-edit and edit
 	// TODO: hard-coded list of users for now, but will want to do graphql queries later
-	roleNames := []string{"clowder-edit", "edit"}
+	roleNames := []string{"edit"}
 
 	for _, roleName := range roleNames {
 		binding := rbac.RoleBinding{
@@ -289,7 +284,7 @@ func addRoleBindings(ctx context.Context, ns *core.Namespace, client client.Clie
 		for _, user := range hardCodedUserList() {
 			binding.Subjects = append(binding.Subjects, rbac.Subject{
 				APIGroup: "rbac.authorization.k8s.io",
-				Kind:     "User",
+				Kind:     "Group",
 				Name:     user,
 			})
 		}
@@ -385,8 +380,6 @@ func hardCodedEnvSpec() clowder.ClowdEnvironmentSpec {
 
 func hardCodedUserList() []string {
 	return []string{
-		"kylape",
-		"BlakeHolifield",
-		"Jason-RH",
+		"ephemeral-users",
 	}
 }

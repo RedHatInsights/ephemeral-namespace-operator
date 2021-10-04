@@ -82,7 +82,7 @@ func main() {
 
 	pool := controllers.NamespacePool{
 		ReadyNamespaces: list.New(),
-		PoolSize:        2, // Make this an env/config variable
+		PoolSize:        5, // Make this an env/config variable
 		Log:             ctrl.Log.WithName("NamespacePool"),
 	}
 
