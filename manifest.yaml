@@ -147,6 +147,7 @@ rules:
   resources:
   - namespacereservations
   - clowdenvironments
+  - namespaces
   verbs:
   - create
   - delete
