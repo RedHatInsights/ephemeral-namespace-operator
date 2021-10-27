@@ -17,6 +17,8 @@ import (
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 
+	projectv1 "github.com/openshift/api/project/v1"
+
 	//k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -34,6 +36,7 @@ const POLL_CYCLE time.Duration = 10
 type NamespacePool struct {
 	ReadyNamespaces *list.List
 	PoolSize        int
+	Local           bool
 	Log             logr.Logger
 }
 
@@ -210,14 +213,21 @@ func (p *NamespacePool) VerifyClowdEnv(ctx context.Context, cl client.Client, ns
 }
 
 func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Client) error {
-	// Create namespace
+	// Create project or namespace depending on environment
 	ns := core.Namespace{}
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
 	p.Log.Info("Creating on deck namespace", "ns-name", ns.Name)
-	err := cl.Create(ctx, &ns)
 
-	if err != nil {
-		return err
+	if p.Local {
+		if err := cl.Create(ctx, &ns); err != nil {
+			return err
+		}
+	} else {
+		project := projectv1.ProjectRequest{}
+		project.Name = ns.Name
+		if err := cl.Create(ctx, &project); err != nil {
+			return err
+		}
 	}
 
 	// Create ClowdEnvironment
@@ -229,7 +239,7 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 
 	// Retrieve namespace to populate APIVersion and Kind values
 	// Use retry in case object retrieval is attempted before creation is done
-	err = retry.OnError(
+	err := retry.OnError(
 		wait.Backoff(retry.DefaultBackoff),
 		func(error) bool { return true }, // hack - return true if err is notFound
 		func() error {

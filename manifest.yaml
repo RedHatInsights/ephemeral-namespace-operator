@@ -225,6 +225,19 @@ rules:
   - patch
   - update
 - apiGroups:
+  - project.openshift.io
+  resources:
+  - projectrequests
+  - projects
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - rbac.authorization.k8s.io
   resources:
   - rolebindings
