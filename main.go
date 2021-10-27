@@ -35,6 +35,7 @@ import (
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	reservation "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers"
+	projectv1 "github.com/openshift/api/project/v1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -47,6 +48,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(reservation.AddToScheme(scheme))
 	utilruntime.Must(clowder.AddToScheme(scheme))
+	utilruntime.Must(projectv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -82,7 +84,8 @@ func main() {
 
 	pool := controllers.NamespacePool{
 		ReadyNamespaces: list.New(),
-		PoolSize:        5, // Make this an env/config variable
+		PoolSize:        5,     // Make this an env/config variable
+		Local:           false, // Make this an env/config variable
 		Log:             ctrl.Log.WithName("NamespacePool"),
 	}
 
