@@ -4,6 +4,7 @@ kind: ClusterRole
 metadata:
   labels:
     managed.openshift.io/aggregate-to-dedicated-admins: cluster
+    rbac.authorization.k8s.io/aggregate-to-edit: 'true'
   creationTimestamp: null
   name: editor
 rules:

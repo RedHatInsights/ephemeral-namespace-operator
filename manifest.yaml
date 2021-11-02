@@ -140,6 +140,7 @@ metadata:
   creationTimestamp: null
   labels:
     managed.openshift.io/aggregate-to-dedicated-admins: cluster
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
   name: ephemeral-namespace-operator-editor
 rules:
 - apiGroups:
