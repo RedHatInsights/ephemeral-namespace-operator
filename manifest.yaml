@@ -28,9 +28,9 @@ spec:
     - jsonPath: .spec.requester
       name: Requester
       type: string
-    - jsonPath: .status.ready
-      name: Ready
-      type: boolean
+    - jsonPath: .status.state
+      name: State
+      type: string
     - jsonPath: .status.namespace
       name: Namespace
       type: string
@@ -71,12 +71,12 @@ spec:
                 type: string
               namespace:
                 type: string
-              ready:
-                type: boolean
+              state:
+                type: string
             required:
             - expiration
             - namespace
-            - ready
+            - state
             type: object
         type: object
     served: true

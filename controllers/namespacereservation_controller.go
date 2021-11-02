@@ -91,6 +91,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		}
 
 		res.Status.Expiration = expirationTS
+		r.NamespacePool.ActiveReservations[res.Name] = expirationTS
 
 		if err := r.Status().Update(ctx, &res); err != nil {
 			r.Log.Error(err, "Cannot update status")
@@ -105,6 +106,16 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		r.Log.Info("Checking pool for ready namespaces")
 		if r.NamespacePool.Len() < 1 {
 			r.Log.Info("Requeue to wait for namespace pool population")
+			if res.Status.State == "" {
+				res.Status.State = "waiting"
+				res.Status.Namespace = ""
+				res.Status.Expiration, _ = getExpirationTime(res.ObjectMeta.CreationTimestamp, &res)
+				err := r.Status().Update(ctx, &res)
+				if err != nil {
+					r.Log.Error(err, "Cannot update status")
+					return ctrl.Result{}, err
+				}
+			}
 			return ctrl.Result{Requeue: true}, nil
 		}
 
@@ -136,7 +147,9 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		// Update reservation status fields
 		res.Status.Namespace = readyNsName
 		res.Status.Expiration = expirationTS
-		res.Status.Ready = true
+		res.Status.State = "active"
+
+		r.NamespacePool.ActiveReservations[res.Name] = expirationTS
 
 		r.Log.Info("Updating NamespaceReservation status")
 		r.Log.Info("Reservation details",

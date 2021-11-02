@@ -34,10 +34,11 @@ import (
 const POLL_CYCLE time.Duration = 10
 
 type NamespacePool struct {
-	ReadyNamespaces *list.List
-	PoolSize        int
-	Local           bool
-	Log             logr.Logger
+	ReadyNamespaces    *list.List
+	ActiveReservations map[string]metav1.Time
+	PoolSize           int
+	Local              bool
+	Log                logr.Logger
 }
 
 func (p *NamespacePool) AddOnDeckNS(ns string) {
@@ -85,29 +86,47 @@ func Poll(client client.Client, pool *NamespacePool) error {
 		return err
 	}
 
+	pool.Log.Info("Populating pool with active reservations")
+	if err := pool.populateActiveReservations(ctx, client); err != nil {
+		pool.Log.Error(err, "Unable to populate pool with active reservations")
+		return err
+	}
+
 	for {
 		// Check for expired reservations
-		// First pass is very unoptimized; this is O(n) every 10s
-		// We can add the expiration time to the pool and check that as a map
-		// Or we can investiage time.After() for each namespace
-		resList, err := pool.getExistingReservations(client, ctx)
-		if err != nil {
-			pool.Log.Error(err, "Unable to retrieve list of active reservations")
-			return err
-		}
+		for k, v := range pool.ActiveReservations {
+			if pool.namespaceIsExpired(v) {
+				delete(pool.ActiveReservations, k)
 
-		for _, res := range resList.Items {
-			if pool.namespaceIsExpired(&res) {
-				err := client.Delete(ctx, &res)
+				res := crd.NamespaceReservation{}
+				if err := client.Get(ctx, types.NamespacedName{Name: k}, &res); err != nil {
+					pool.Log.Error(err, "Unable to retrieve reservation")
+					return err
+				}
+
+				ns := core.Namespace{}
+				err := client.Get(ctx, types.NamespacedName{Name: res.Status.Namespace}, &ns)
 				if err != nil {
-					pool.Log.Error(err, "Unable to delete expired reservation")
+					pool.Log.Error(err, "Unable to retrieve namespace of expired reservation")
+					return err
+				}
+
+				err = client.Delete(ctx, &ns)
+				if err != nil {
+					pool.Log.Error(err, "Unable to delete namespace")
+					return err
+				}
+
+				res.Status.State = "expired"
+				err = client.Status().Update(ctx, &res)
+				if err != nil {
+					pool.Log.Error(err, "Cannot update status")
 					return err
 				}
 				pool.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
 			}
 		}
 
-		// Check for reserved namespace expirations
 		time.Sleep(time.Duration(POLL_CYCLE * time.Second))
 	}
 }
@@ -160,15 +179,32 @@ func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Clie
 	return nil
 }
 
-func (p *NamespacePool) namespaceIsExpired(res *crd.NamespaceReservation) bool {
-	remainingTime := res.Status.Expiration.Sub(time.Now())
-	if res.Status.Expiration.String() != "" && remainingTime <= 0 {
+func (p *NamespacePool) populateActiveReservations(ctx context.Context, client client.Client) error {
+	resList, err := p.getExistingReservations(ctx, client)
+	if err != nil {
+		p.Log.Error(err, "Error retrieving list of reservations")
+		return err
+	}
+
+	for _, res := range resList.Items {
+		if res.Status.State == "active" {
+			p.ActiveReservations[res.Name] = res.Status.Expiration
+			p.Log.Info("Added active reservation to pool", "res-name", res.Name)
+		}
+	}
+
+	return nil
+}
+
+func (p *NamespacePool) namespaceIsExpired(expiration metav1.Time) bool {
+	remainingTime := expiration.Sub(time.Now())
+	if !expiration.IsZero() && remainingTime <= 0 {
 		return true
 	}
 	return false
 }
 
-func (p *NamespacePool) getExistingReservations(client client.Client, ctx context.Context) (*crd.NamespaceReservationList, error) {
+func (p *NamespacePool) getExistingReservations(ctx context.Context, client client.Client) (*crd.NamespaceReservationList, error) {
 	resList := crd.NamespaceReservationList{}
 	err := client.List(ctx, &resList)
 	if err != nil {

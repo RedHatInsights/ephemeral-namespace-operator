@@ -31,7 +31,7 @@ type NamespaceReservationSpec struct {
 // NamespaceReservationStatus defines the observed state of NamespaceReservation
 type NamespaceReservationStatus struct {
 	Expiration metav1.Time `json:"expiration"`
-	Ready      bool        `json:"ready"`
+	State      string      `json:"state"`
 	Namespace  string      `json:"namespace"`
 }
 
@@ -39,7 +39,7 @@ type NamespaceReservationStatus struct {
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:scope=Cluster,shortName=reservation
 //+kubebuilder:printcolumn:name="Requester",type="string",JSONPath=".spec.requester"
-//+kubebuilder:printcolumn:name="Ready",type="boolean",JSONPath=".status.ready"
+//+kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 //+kubebuilder:printcolumn:name="Namespace",type="string",JSONPath=".status.namespace"
 //+kubebuilder:printcolumn:name="Expiration",type="string",format="date-time",JSONPath=".status.expiration"
 

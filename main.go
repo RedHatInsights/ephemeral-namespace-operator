@@ -36,6 +36,7 @@ import (
 	reservation "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers"
 	projectv1 "github.com/openshift/api/project/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -83,10 +84,11 @@ func main() {
 	}
 
 	pool := controllers.NamespacePool{
-		ReadyNamespaces: list.New(),
-		PoolSize:        5,     // Make this an env/config variable
-		Local:           false, // Make this an env/config variable
-		Log:             ctrl.Log.WithName("NamespacePool"),
+		ReadyNamespaces:    list.New(),
+		ActiveReservations: make(map[string]metav1.Time),
+		PoolSize:           5,     // Make this an env/config variable
+		Local:              false, // Make this an env/config variable
+		Log:                ctrl.Log.WithName("NamespacePool"),
 	}
 
 	if err = (&controllers.NamespaceReservationReconciler{
