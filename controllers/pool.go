@@ -261,17 +261,13 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		"operator-ns": "true",
 	}
 
-	p.Log.Info("Setting initial annotations", "ns-name", ns.Name)
-
 	if p.Local {
-		ns.SetAnnotations(initialAnnotations)
 		if err := cl.Create(ctx, &ns); err != nil {
 			return err
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
 		project.Name = ns.Name
-		project.SetAnnotations(initialAnnotations)
 		if err := cl.Create(ctx, &project); err != nil {
 			return err
 		}
@@ -296,6 +292,14 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	)
 	if err != nil {
 		p.Log.Error(err, "Cannot get namespace", "ns-name", ns.Name)
+		return err
+	}
+
+	p.Log.Info("Setting initial annotations on ns", "ns-name", ns.Name)
+	ns.SetAnnotations(initialAnnotations)
+	err = cl.Update(ctx, &ns)
+	if err != nil {
+		p.Log.Error(err, "Could not update namespace annotations", "ns-name", ns.Name)
 		return err
 	}
 
