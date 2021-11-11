@@ -220,9 +220,7 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 	nsObject.SetOwnerReferences([]metav1.OwnerReference{res.MakeOwnerReference()})
 
 	// Set namespace reserved
-	nsObject.SetAnnotations(map[string]string{
-		"reserved": "true",
-	})
+	nsObject.Annotations["reserved"] = "true"
 
 	err = r.Client.Update(ctx, &nsObject)
 	if err != nil {

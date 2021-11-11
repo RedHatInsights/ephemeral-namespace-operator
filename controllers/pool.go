@@ -109,6 +109,12 @@ func Poll(client client.Client, pool *NamespacePool) error {
 					pool.Log.Error(err, "Unable to retrieve namespace of expired reservation")
 				}
 
+				ns.Annotations["status"] = "deleting"
+				err = client.Update(ctx, &ns)
+				if err != nil {
+					pool.Log.Error(err, "Could not update namespace", "ns-name", ns.Name)
+				}
+
 				err = client.Delete(ctx, &ns)
 				if err != nil {
 					pool.Log.Error(err, "Unable to delete namespace")
@@ -250,13 +256,20 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
 	p.Log.Info("Creating on deck namespace", "ns-name", ns.Name)
 
+	initialAnnotations := map[string]string{
+		"status":      "creating",
+		"operator-ns": "true",
+	}
+
 	if p.Local {
+		ns.SetAnnotations(initialAnnotations)
 		if err := cl.Create(ctx, &ns); err != nil {
 			return err
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
 		project.Name = ns.Name
+		project.SetAnnotations(initialAnnotations)
 		if err := cl.Create(ctx, &project); err != nil {
 			return err
 		}
@@ -363,6 +376,13 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 
 	p.AddOnDeckNS(ns.Name)
 	p.Log.Info("Namespace added to the ready pool", "ns-name", ns.Name)
+
+	ns.Annotations["status"] = "ready"
+	err = cl.Update(ctx, &ns)
+	if err != nil {
+		p.Log.Error(err, "Could not update namespace", "ns-name", ns.Name)
+		return err
+	}
 
 	return nil
 }
