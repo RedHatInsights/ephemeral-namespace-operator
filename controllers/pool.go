@@ -261,6 +261,8 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		"operator-ns": "true",
 	}
 
+	p.Log.Info("Setting initial annotations", "ns-name", ns.Name)
+
 	if p.Local {
 		ns.SetAnnotations(initialAnnotations)
 		if err := cl.Create(ctx, &ns); err != nil {
@@ -374,8 +376,10 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		ready, _ = p.VerifyClowdEnv(ctx, cl, ns)
 	}
 
-	p.AddOnDeckNS(ns.Name)
-	p.Log.Info("Namespace added to the ready pool", "ns-name", ns.Name)
+	err = cl.Get(ctx, types.NamespacedName{Name: ns.Name}, &ns)
+	if err != nil {
+		p.Log.Error(err, "Unable to retrieve namespace to update annotations")
+	}
 
 	ns.Annotations["status"] = "ready"
 	err = cl.Update(ctx, &ns)
@@ -383,6 +387,9 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		p.Log.Error(err, "Could not update namespace", "ns-name", ns.Name)
 		return err
 	}
+
+	p.AddOnDeckNS(ns.Name)
+	p.Log.Info("Namespace added to the ready pool", "ns-name", ns.Name)
 
 	return nil
 }
