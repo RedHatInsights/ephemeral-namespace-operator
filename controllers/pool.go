@@ -262,14 +262,12 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	}
 
 	if p.Local {
-		ns.SetAnnotations(initialAnnotations)
 		if err := cl.Create(ctx, &ns); err != nil {
 			return err
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
 		project.Name = ns.Name
-		project.SetAnnotations(initialAnnotations)
 		if err := cl.Create(ctx, &project); err != nil {
 			return err
 		}
@@ -294,6 +292,14 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	)
 	if err != nil {
 		p.Log.Error(err, "Cannot get namespace", "ns-name", ns.Name)
+		return err
+	}
+
+	p.Log.Info("Setting initial annotations on ns", "ns-name", ns.Name)
+	ns.SetAnnotations(initialAnnotations)
+	err = cl.Update(ctx, &ns)
+	if err != nil {
+		p.Log.Error(err, "Could not update namespace annotations", "ns-name", ns.Name)
 		return err
 	}
 
@@ -374,8 +380,10 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		ready, _ = p.VerifyClowdEnv(ctx, cl, ns)
 	}
 
-	p.AddOnDeckNS(ns.Name)
-	p.Log.Info("Namespace added to the ready pool", "ns-name", ns.Name)
+	err = cl.Get(ctx, types.NamespacedName{Name: ns.Name}, &ns)
+	if err != nil {
+		p.Log.Error(err, "Unable to retrieve namespace to update annotations")
+	}
 
 	ns.Annotations["status"] = "ready"
 	err = cl.Update(ctx, &ns)
@@ -383,6 +391,9 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		p.Log.Error(err, "Could not update namespace", "ns-name", ns.Name)
 		return err
 	}
+
+	p.AddOnDeckNS(ns.Name)
+	p.Log.Info("Namespace added to the ready pool", "ns-name", ns.Name)
 
 	return nil
 }
