@@ -236,7 +236,7 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 
 	// Add rolebinding to the namespace only after it has been owned by the CRD.
 	// We need to skip this on minikube
-	if err := addRoleBindings(ctx, &nsObject, r.Client); err != nil {
+	if err := r.addRoleBindings(ctx, &nsObject, r.Client); err != nil {
 		r.Log.Error(err, "Could not apply rolebindings for namespace", "ns-name", readyNsName)
 		return err
 	}
@@ -277,7 +277,7 @@ func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Co
 	return nil
 }
 
-func addRoleBindings(ctx context.Context, ns *core.Namespace, client client.Client) error {
+func (r *NamespaceReservationReconciler) addRoleBindings(ctx context.Context, ns *core.Namespace, client client.Client) error {
 
 	// Assign permissions: clowder-edit and edit
 	// TODO: hard-coded list of users for now, but will want to do graphql queries later
@@ -293,11 +293,12 @@ func addRoleBindings(ctx context.Context, ns *core.Namespace, client client.Clie
 			Subjects: []rbac.Subject{},
 		}
 
-		for _, user := range hardCodedUserList() {
+		for name, kind := range hardCodedUserList() {
+			r.Log.Info(fmt.Sprintf("Creating rolebinding %s for %s: %s", roleName, kind, name), "ns-name", ns.Name)
 			binding.Subjects = append(binding.Subjects, rbac.Subject{
 				APIGroup: "rbac.authorization.k8s.io",
-				Kind:     "Group",
-				Name:     user,
+				Kind:     kind,
+				Name:     name,
 			})
 		}
 
@@ -390,8 +391,9 @@ func hardCodedEnvSpec() clowder.ClowdEnvironmentSpec {
 	}
 }
 
-func hardCodedUserList() []string {
-	return []string{
-		"ephemeral-users",
+func hardCodedUserList() map[string]string {
+	return map[string]string{
+		"ephemeral-users": "Group",
+		"system:serviceaccount:ephemeral-base:ephemeral-bot": "User",
 	}
 }

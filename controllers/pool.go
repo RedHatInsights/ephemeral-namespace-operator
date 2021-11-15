@@ -231,7 +231,7 @@ func (p *NamespacePool) VerifyClowdEnv(ctx context.Context, cl client.Client, ns
 	env := clowder.ClowdEnvironment{}
 
 	if err := cl.Get(ctx, types.NamespacedName{
-		Name:      ns.Name,
+		Name:      fmt.Sprintf("env-%s", ns.Name),
 		Namespace: ns.Name,
 	}, &env); err != nil {
 		return false, err
@@ -277,7 +277,7 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	env := clowder.ClowdEnvironment{
 		Spec: hardCodedEnvSpec(),
 	}
-	env.SetName(ns.Name)
+	env.SetName(fmt.Sprintf("env-%s", ns.Name))
 	env.Spec.TargetNamespace = ns.Name
 
 	// Retrieve namespace to populate APIVersion and Kind values
