@@ -83,10 +83,16 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	}
 
 	if res.Status.Namespace != "" {
-		r.Log.Info("Reconciling existing NamespaceReservation")
+		r.Log.Info("Reconciling existing NamespaceReservation", "name", res.Name)
+
+		if res.Status.State == "expired" {
+			r.Log.Info("Cannot extend expired reservation", "name", res.Name)
+			return ctrl.Result{}, nil
+		}
+
 		expirationTS, err := getExpirationTime(res.Status.Expiration, &res)
 		if err != nil {
-			r.Log.Error(err, "Could not set expiration time on reservation")
+			r.Log.Error(err, "Could not set expiration time on reservation", "name", res.Name)
 			return ctrl.Result{}, err
 		}
 
@@ -187,6 +193,11 @@ func eventFilter(log logr.Logger) predicate.Predicate {
 			if oldObject.Status != newObject.Status {
 				return false
 			}
+
+			if oldObject.Annotations["extensionId"] == newObject.Annotations["extensionId"] {
+				return false
+			}
+
 			return true
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
@@ -257,9 +268,11 @@ func getExpirationTime(start metav1.Time, res *crd.NamespaceReservation) (metav1
 		return metav1.Time{}, err
 	}
 
-	expirationTS := start.Add(duration)
+	if duration == 0 {
+		return metav1.Time{Time: time.Now()}, err
+	}
 
-	return metav1.Time{Time: expirationTS}, err
+	return metav1.Time{Time: start.Add(duration)}, err
 }
 
 func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Context, readyNsName string) error {
