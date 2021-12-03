@@ -391,11 +391,11 @@ func hardCodedEnvSpec() clowder.ClowdEnvironmentSpec {
 					Resources: core.ResourceRequirements{
 						Limits: core.ResourceList{
 							core.ResourceCPU:    resource.MustParse("1"),
-							core.ResourceMemory: resource.MustParse("1Gi"),
+							core.ResourceMemory: resource.MustParse("2Gi"),
 						},
 						Requests: core.ResourceList{
 							core.ResourceCPU:    resource.MustParse("200m"),
-							core.ResourceMemory: resource.MustParse("256Mi"),
+							core.ResourceMemory: resource.MustParse("1Gi"),
 						},
 					},
 				},
