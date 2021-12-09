@@ -1,0 +1,143 @@
+{
+    "pool": {
+        "size": 10,
+        "local": false
+    },
+    "clowdEnv": {
+        "providers": {
+            "db": {
+                "mode": "local"
+            },
+            "inMemoryDb": {
+                "mode": "redis"
+            },
+            "kafka": {
+                "mode": "operator",
+                "enableLegacyStrimzi": true,
+                "cluster": {
+                    "version": "2.7.0"
+                },
+                "connect": {
+                    "version": "2.7.0",
+                    "image": "quay.io/cloudservices/xjoin-kafka-connect-strimzi:182ab8b"
+                }
+            },
+            "logging": {
+                "mode": "none"
+            },
+            "metrics": {
+                "port": 9000,
+                "path": "/metrics",
+                "prometheus": {
+                    "deploy": true
+                },
+                "mode": "operator"
+            },
+            "objectStore": {
+                "mode": "minio"
+            },
+            "web": {
+                "mode": "operator",
+                "port": 8000,
+                "privatePort": 10000
+            },
+            "featureFlags": {
+                "mode": "local"
+            },
+            "pullSecrets": [{
+                "namespace": "ephemeral-base",
+                "name": "quay-cloudservices-pull"
+            }],
+            "testing": {
+                "k8sAccessLevel": "edit",
+                "configAccess": "environment",
+                "iqe": {
+                    "vaultSecretRef": {
+                        "namespace": "ephemeral-base",
+                        "name": "iqe-vault"
+                    },
+                    "imageBase": "quay.io/cloudservices/iqe-tests",
+                    "resources": {
+                        "limits": {
+                            "cpu": "1",
+                            "memory": "2Gi"
+                        },
+                        "requests": {
+                            "cpu": "200m",
+                            "memory": "1Gi"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "limitRange": {
+        "spec": {
+            "limits": [
+                {
+                    "type": "Container",
+                    "default": {
+                        "cpu": "200m",
+                        "memory": "512Mi"
+                    },
+                    "defaultRequest": {
+                        "cpu": "100m",
+                        "memory": "384Mi"
+                    }
+                },
+                {
+                    "type": "Pod",
+                    "maxLimitRequestRatio": {
+                        "cpu": "10",
+                        "memory": "2"
+                    }
+                }
+            ]
+        },
+        "metadata": {
+            "name": "resource-limits"
+        }
+    },
+    "resourceQuotas": {
+        "items": [
+            {
+                "spec": {
+                    "hard": {
+                        "limits.cpu": "24",
+                        "limits.memory": "48Gi",
+                        "requests.cpu": "12",
+                        "requests.memory": "24Gi"
+                    },
+                    "scopes": ["NotTerminating"]
+                },
+                "metadata": {
+                    "name": "compute-resources-non-terminating"
+                }
+            },
+            {
+                "spec": {
+                    "hard": {
+                        "limits.cpu": "6",
+                        "limits.memory": "24Gi",
+                        "requests.cpu": "3",
+                        "requests.memory": "12Gi"
+                    },
+                    "scopes": ["Terminating"]
+                },
+                "metadata": {
+                    "name": "compute-resources-terminating"
+                }
+            },
+            {
+                "spec": {
+                    "hard": {
+                        "pods": "200"
+                    }
+                },
+                "metadata": {
+                    "name": "pod-count"
+                }
+            }
+        ]
+    }
+}

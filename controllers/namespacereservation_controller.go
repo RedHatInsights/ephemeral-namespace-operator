@@ -24,7 +24,6 @@ import (
 	"math/rand"
 	"time"
 
-	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
@@ -36,7 +35,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 
 	//"sigs.k8s.io/controller-runtime/pkg/handler"
 	// "sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -335,73 +333,6 @@ func randString(n int) string {
 	}
 
 	return string(b)
-}
-
-func hardCodedEnvSpec() clowder.ClowdEnvironmentSpec {
-	return clowder.ClowdEnvironmentSpec{
-		ResourceDefaults: core.ResourceRequirements{
-			Limits: core.ResourceList{
-				core.ResourceCPU:    resource.MustParse("300m"),
-				core.ResourceMemory: resource.MustParse("256Mi"),
-			},
-			Requests: core.ResourceList{
-				core.ResourceCPU:    resource.MustParse("30m"),
-				core.ResourceMemory: resource.MustParse("128Mi"),
-			},
-		},
-		Providers: clowder.ProvidersConfig{
-			Database:   clowder.DatabaseConfig{Mode: "local"},
-			InMemoryDB: clowder.InMemoryDBConfig{Mode: "redis"},
-			PullSecrets: []clowder.NamespacedName{{
-				Namespace: "ephemeral-base",
-				Name:      "quay-cloudservices-pull",
-			}},
-			FeatureFlags: clowder.FeatureFlagsConfig{Mode: "local"},
-			Metrics: clowder.MetricsConfig{
-				Port:       9000,
-				Path:       "/metrics",
-				Prometheus: clowder.PrometheusConfig{Deploy: true},
-				Mode:       "operator",
-			},
-			Logging:     clowder.LoggingConfig{Mode: "none"},
-			ObjectStore: clowder.ObjectStoreConfig{Mode: "minio"},
-			Web: clowder.WebConfig{
-				Port:        8000,
-				PrivatePort: 10000,
-				Mode:        "operator",
-			},
-			Kafka: clowder.KafkaConfig{
-				Mode:                "operator",
-				EnableLegacyStrimzi: true,
-				Cluster:             clowder.KafkaClusterConfig{Version: "2.7.0"},
-				Connect: clowder.KafkaConnectClusterConfig{
-					Version: "2.7.0",
-					Image:   "quay.io/cloudservices/xjoin-kafka-connect-strimzi:182ab8b",
-				},
-			},
-			Testing: clowder.TestingConfig{
-				K8SAccessLevel: "edit",
-				ConfigAccess:   "environment",
-				Iqe: clowder.IqeConfig{
-					VaultSecretRef: clowder.NamespacedName{
-						Namespace: "ephemeral-base",
-						Name:      "iqe-vault",
-					},
-					ImageBase: "quay.io/cloudservices/iqe-tests",
-					Resources: core.ResourceRequirements{
-						Limits: core.ResourceList{
-							core.ResourceCPU:    resource.MustParse("1"),
-							core.ResourceMemory: resource.MustParse("2Gi"),
-						},
-						Requests: core.ResourceList{
-							core.ResourceCPU:    resource.MustParse("200m"),
-							core.ResourceMemory: resource.MustParse("1Gi"),
-						},
-					},
-				},
-			},
-		},
-	}
 }
 
 func hardCodedUserList() map[string]string {

@@ -86,8 +86,7 @@ func main() {
 	pool := controllers.NamespacePool{
 		ReadyNamespaces:    list.New(),
 		ActiveReservations: make(map[string]metav1.Time),
-		PoolSize:           10,    // Make this an env/config variable
-		Local:              false, // Make this an env/config variable
+		Config:             controllers.LoadedOperatorConfig,
 		Log:                ctrl.Log.WithName("NamespacePool"),
 	}
 
