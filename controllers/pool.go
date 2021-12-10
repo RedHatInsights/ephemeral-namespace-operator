@@ -36,8 +36,7 @@ const POLL_CYCLE time.Duration = 10
 type NamespacePool struct {
 	ReadyNamespaces    *list.List
 	ActiveReservations map[string]metav1.Time
-	PoolSize           int
-	Local              bool
+	Config             OperatorConfig
 	Log                logr.Logger
 }
 
@@ -161,11 +160,11 @@ func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Clie
 	}
 
 	// Ensure pool is desired size at startup
-	if p.Len() < p.PoolSize {
+	if p.Len() < p.Config.PoolConfig.Size {
 		var wg sync.WaitGroup
-		wg.Add(p.PoolSize - p.Len())
+		wg.Add(p.Config.PoolConfig.Size - p.Len())
 
-		for i := p.Len(); i < p.PoolSize; i++ {
+		for i := p.Len(); i < p.Config.PoolConfig.Size; i++ {
 			go func() {
 				defer wg.Done()
 				if err := p.CreateOnDeckNamespace(ctx, client); err != nil {
@@ -261,7 +260,7 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		"operator-ns": "true",
 	}
 
-	if p.Local {
+	if p.Config.PoolConfig.Local {
 		if err := cl.Create(ctx, &ns); err != nil {
 			return err
 		}
@@ -275,7 +274,7 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 
 	// Create ClowdEnvironment
 	env := clowder.ClowdEnvironment{
-		Spec: hardCodedEnvSpec(),
+		Spec: p.Config.ClowdEnvSpec,
 	}
 	env.SetName(fmt.Sprintf("env-%s", ns.Name))
 	env.Spec.TargetNamespace = ns.Name
@@ -295,14 +294,6 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		return err
 	}
 
-	p.Log.Info("Setting initial annotations on ns", "ns-name", ns.Name)
-	ns.SetAnnotations(initialAnnotations)
-	err = cl.Update(ctx, &ns)
-	if err != nil {
-		p.Log.Error(err, "Could not update namespace annotations", "ns-name", ns.Name)
-		return err
-	}
-
 	env.SetOwnerReferences([]metav1.OwnerReference{
 		{
 			APIVersion: ns.APIVersion,
@@ -312,9 +303,36 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		},
 	})
 
+	p.Log.Info("Creating ClowdEnv for ns", "ns-name", ns.Name)
 	if err := cl.Create(ctx, &env); err != nil {
 		p.Log.Error(err, "Cannot Create ClowdEnv in Namespace", "ns-name", ns.Name)
 		return err
+	}
+
+	p.Log.Info("Setting initial annotations on ns", "ns-name", ns.Name)
+	ns.SetAnnotations(initialAnnotations)
+	err = cl.Update(ctx, &ns)
+	if err != nil {
+		p.Log.Error(err, "Could not update namespace annotations", "ns-name", ns.Name)
+		return err
+	}
+
+	// Create LimitRange
+	limitRange := p.Config.LimitRange
+	limitRange.SetNamespace(ns.Name)
+	if err := cl.Create(ctx, &limitRange); err != nil {
+		p.Log.Error(err, "Cannot create LimitRange in Namespace", "ns-name", ns.Name)
+		return err
+	}
+
+	// Create ResourceQuotas
+	resourceQuotas := p.Config.ResourceQuotas
+	for _, quota := range resourceQuotas.Items {
+		quota.SetNamespace(ns.Name)
+		if err := cl.Create(ctx, &quota); err != nil {
+			p.Log.Error(err, "Cannot create ResourceQuota in Namespace", "ns-name", ns.Name)
+			return err
+		}
 	}
 
 	// Copy secrets
