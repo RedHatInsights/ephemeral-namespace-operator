@@ -23,7 +23,7 @@ type PoolConfig struct {
 }
 
 func getConfig() OperatorConfig {
-	configPath := "./config/ephemeral_config.json"
+	configPath := "ephemeral_config.json"
 
 	if path := os.Getenv("NS_OPERATOR_CONFIG"); path != "" {
 		configPath = path
