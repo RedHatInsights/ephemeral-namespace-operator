@@ -177,7 +177,9 @@ rules:
   - ""
   resources:
   - events
+  - limitranges
   - namespaces
+  - resourcequotas
   - secrets
   verbs:
   - create
@@ -401,7 +403,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: quay.io/cloudservices/ephemeral-namespace-operator:c92da37
+        image: quay.io/cloudservices/ephemeral-namespace-operator:d4f8d9c
         livenessProbe:
           httpGet:
             path: /healthz
