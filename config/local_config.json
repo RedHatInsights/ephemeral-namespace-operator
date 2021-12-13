@@ -79,6 +79,16 @@
                     }
                 }
             }
+        },
+        "resourceDefaults": {
+            "limits": {
+                "cpu": "300m",
+                "memory": "256Mi"
+            },
+            "requests": {
+                "cpu": "30m",
+                "memory": "128Mi"
+            }
         }
     },
     "limitRange": {
