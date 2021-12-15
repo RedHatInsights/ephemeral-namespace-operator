@@ -36,16 +36,8 @@ import (
 
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 
-	//"sigs.k8s.io/controller-runtime/pkg/handler"
-	// "sigs.k8s.io/controller-runtime/pkg/reconcile"
-	// "sigs.k8s.io/controller-runtime/pkg/source"
-	// apps "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	// "k8s.io/apimachinery/pkg/runtime"
-	// "k8s.io/apimachinery/pkg/runtime/schema"
-	// "k8s.io/client-go/tools/record"
-	// "k8s.io/client-go/util/workqueue"
 )
 
 // NamespaceReservationReconciler reconciles a NamespaceReservation object
