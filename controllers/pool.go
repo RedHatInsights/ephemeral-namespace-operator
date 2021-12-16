@@ -101,17 +101,17 @@ func Poll(client client.Client, pool *NamespacePool) error {
 				err := client.Get(ctx, types.NamespacedName{Name: res.Status.Namespace}, &ns)
 				if err != nil {
 					pool.Log.Error(err, "Unable to retrieve namespace of expired reservation")
-				}
+				} else {
+					ns.Annotations["status"] = "deleting"
+					err = client.Update(ctx, &ns)
+					if err != nil {
+						pool.Log.Error(err, "Could not update namespace", "ns-name", ns.Name)
+					}
 
-				ns.Annotations["status"] = "deleting"
-				err = client.Update(ctx, &ns)
-				if err != nil {
-					pool.Log.Error(err, "Could not update namespace", "ns-name", ns.Name)
-				}
-
-				err = client.Delete(ctx, &ns)
-				if err != nil {
-					pool.Log.Error(err, "Unable to delete namespace")
+					err = client.Delete(ctx, &ns)
+					if err != nil {
+						pool.Log.Error(err, "Unable to delete namespace")
+					}
 				}
 
 				res.Status.State = "expired"
