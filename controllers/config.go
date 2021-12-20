@@ -7,14 +7,16 @@ import (
 	"os"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
+	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	core "k8s.io/api/core/v1"
 )
 
 type OperatorConfig struct {
-	PoolConfig     PoolConfig                   `json:"pool"`
-	ClowdEnvSpec   clowder.ClowdEnvironmentSpec `json:"clowdEnv"`
-	LimitRange     core.LimitRange              `json:"limitRange"`
-	ResourceQuotas core.ResourceQuotaList       `json:"resourceQuotas"`
+	PoolConfig      PoolConfig                       `json:"pool"`
+	ClowdEnvSpec    clowder.ClowdEnvironmentSpec     `json:"clowdEnv"`
+	FrontendEnvSpec frontend.FrontendEnvironmentSpec `json:"frontendEnv"`
+	LimitRange      core.LimitRange                  `json:"limitRange"`
+	ResourceQuotas  core.ResourceQuotaList           `json:"resourceQuotas"`
 }
 
 type PoolConfig struct {

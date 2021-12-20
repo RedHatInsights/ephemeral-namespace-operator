@@ -126,6 +126,7 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdko
 github.com/RedHatInsights/clowder v0.27.2 h1:LHqkePo5mVpQc/f2gvtsdXML2dl1UtlpWws2LDxg52c=
 github.com/RedHatInsights/clowder v0.27.2/go.mod h1:vlsB8e5UrFqBE5kLSliWbRBgOg3cwoUBfgwKH4OVBUU=
 github.com/RedHatInsights/cyndi-operator v0.1.4/go.mod h1:lHxzGinQkZvGzGnTWT6X39CihCrOpTIt9YCsyymuowI=
+github.com/RedHatInsights/frontend-operator v0.0.1 h1:gkfn2jFzbL1zgRwUjTKO0ue4dRW6QuCCbwiTb3LTdYE=
 github.com/RedHatInsights/frontend-operator v0.0.1/go.mod h1:vlf833Jby5OXMq+fGxfaeDNtYZMLQRN3f6IJ8x1mDQ0=
 github.com/RedHatInsights/go-difflib v1.0.0/go.mod h1:UMKOFdypYfrKT1B1nbGodM09nhOiAmcjes8qWP7Myrs=
 github.com/RedHatInsights/rhc-osdk-utils v0.3.2 h1:9gVkXeAWxddHd0t+fjUDb1ZxPeTS4+Ag4GwOXF1NbnY=
