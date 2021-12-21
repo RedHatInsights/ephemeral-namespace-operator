@@ -69,6 +69,7 @@ func (p *NamespacePool) Len() int {
 // and that expired namespaces are cleaned up
 func Poll(client client.Client, pool *NamespacePool) error {
 	ctx := context.Background()
+	pool.Log.Info("Starting pool...")
 
 	// Wait a period before beginning to poll
 	// TODO workaround due to checking k8s objects too soon - revisit
