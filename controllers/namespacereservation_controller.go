@@ -31,8 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 
@@ -80,7 +78,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, nil
 		}
 
-		expirationTS, err := getExpirationTime(res.Status.Expiration, &res)
+		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
 			r.Log.Error(err, "Could not set expiration time on reservation", "name", res.Name)
 			return ctrl.Result{}, err
@@ -105,7 +103,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			if res.Status.State == "" {
 				res.Status.State = "waiting"
 				res.Status.Namespace = ""
-				res.Status.Expiration, _ = getExpirationTime(res.ObjectMeta.CreationTimestamp, &res)
+				res.Status.Expiration, _ = getExpirationTime(&res)
 				err := r.Status().Update(ctx, &res)
 				if err != nil {
 					r.Log.Error(err, "Cannot update status")
@@ -133,8 +131,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		}
 
 		// update expiration timestamp (creation timestamp + duration)
-		creationTS := res.ObjectMeta.CreationTimestamp
-		expirationTS, err := getExpirationTime(creationTS, &res)
+		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
 			r.Log.Error(err, "Could not set expiration time on reservation")
 			return ctrl.Result{}, err
@@ -174,37 +171,10 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 }
 
-func eventFilter(log logr.Logger) predicate.Predicate {
-	return predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			oldObject := e.ObjectOld.(*crd.NamespaceReservation)
-			newObject := e.ObjectNew.(*crd.NamespaceReservation)
-
-			if oldObject.Status != newObject.Status {
-				return false
-			}
-
-			if oldObject.Annotations["extensionId"] == newObject.Annotations["extensionId"] {
-				return false
-			}
-
-			return true
-		},
-		CreateFunc: func(e event.CreateEvent) bool {
-			object := e.Object.(*crd.NamespaceReservation)
-			if object.Status.Namespace != "" {
-				return false
-			}
-			return true
-		},
-	}
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *NamespaceReservationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&crd.NamespaceReservation{}).
-		WithEventFilter(eventFilter(r.Log)).
 		Complete(r)
 }
 
@@ -245,7 +215,7 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 	return nil
 }
 
-func getExpirationTime(start metav1.Time, res *crd.NamespaceReservation) (metav1.Time, error) {
+func getExpirationTime(res *crd.NamespaceReservation) (metav1.Time, error) {
 	var duration time.Duration
 	var err error
 	if res.Spec.Duration != nil {
@@ -262,7 +232,7 @@ func getExpirationTime(start metav1.Time, res *crd.NamespaceReservation) (metav1
 		return metav1.Time{Time: time.Now()}, err
 	}
 
-	return metav1.Time{Time: start.Add(duration)}, err
+	return metav1.Time{Time: res.CreationTimestamp.Time.Add(duration)}, err
 }
 
 func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Context, readyNsName string) error {
