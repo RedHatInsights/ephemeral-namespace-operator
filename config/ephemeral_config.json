@@ -101,6 +101,9 @@
             }
         }
     },
+    "frontendEnv": {
+        "ingressClass": "openshift-default"
+    },
     "limitRange": {
         "spec": {
             "limits": [

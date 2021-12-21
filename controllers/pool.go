@@ -14,9 +14,11 @@ import (
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 
+	configv1 "github.com/openshift/api/config/v1"
 	projectv1 "github.com/openshift/api/project/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -245,6 +247,44 @@ func (p *NamespacePool) VerifyClowdEnv(ctx context.Context, cl client.Client, ns
 	return true, nil
 }
 
+func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client, ns core.Namespace) error {
+	// look up default ingress domain on cluster to set FrontendEnvironment's hostname/sso attributes
+	ingressConfig := configv1.Ingress{}
+	err := cl.Get(ctx, types.NamespacedName{Name: "cluster"}, &ingressConfig)
+	if err != nil {
+		p.Log.Error(err, "Unable to fetch 'config.ingresses' named 'cluster' to determine default domain")
+	}
+
+	if ingressConfig.Spec.Domain == "" {
+		// we're likely not running on OpenShift, just make up a default local domain
+		ingressConfig.Spec.Domain = "k8s.local"
+	}
+
+	p.Config.FrontendEnvSpec.Hostname = fmt.Sprintf("%s.%s", ns.Name, ingressConfig.Spec.Domain)
+	p.Config.FrontendEnvSpec.SSO = fmt.Sprintf("https://%s/auth/", p.Config.FrontendEnvSpec.Hostname)
+
+	frontendEnv := frontend.FrontendEnvironment{
+		Spec: p.Config.FrontendEnvSpec,
+	}
+
+	frontendEnv.SetOwnerReferences([]metav1.OwnerReference{
+		{
+			APIVersion: ns.APIVersion,
+			Kind:       ns.Kind,
+			Name:       ns.Name,
+			UID:        ns.UID,
+		},
+	})
+
+	p.Log.Info("Creating FrontendEnvironment for ns", "ns-name", ns.Name)
+	if err := cl.Create(ctx, &frontendEnv); err != nil {
+		p.Log.Error(err, "Cannot create FrontendEnvironment for ns", "ns-name", ns.Name)
+		return err
+	}
+
+	return nil
+}
+
 func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Client) error {
 	// Create project or namespace depending on environment
 	ns := core.Namespace{}
@@ -305,6 +345,12 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		return err
 	}
 
+	// Create FrontendEnvironment
+	if err := p.createFrontendEnv(ctx, cl, ns); err != nil {
+		return err
+	}
+
+	// Set initial annotations on ns
 	p.Log.Info("Setting initial annotations on ns", "ns-name", ns.Name)
 	ns.SetAnnotations(initialAnnotations)
 	err = cl.Update(ctx, &ns)
