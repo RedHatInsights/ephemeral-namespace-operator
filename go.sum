@@ -127,6 +127,7 @@ github.com/RedHatInsights/clowder v0.27.2 h1:LHqkePo5mVpQc/f2gvtsdXML2dl1UtlpWws
 github.com/RedHatInsights/clowder v0.27.2/go.mod h1:vlsB8e5UrFqBE5kLSliWbRBgOg3cwoUBfgwKH4OVBUU=
 github.com/RedHatInsights/cyndi-operator v0.1.4/go.mod h1:lHxzGinQkZvGzGnTWT6X39CihCrOpTIt9YCsyymuowI=
 github.com/RedHatInsights/go-difflib v1.0.0/go.mod h1:UMKOFdypYfrKT1B1nbGodM09nhOiAmcjes8qWP7Myrs=
+github.com/RedHatInsights/rhc-osdk-utils v0.3.2 h1:9gVkXeAWxddHd0t+fjUDb1ZxPeTS4+Ag4GwOXF1NbnY=
 github.com/RedHatInsights/rhc-osdk-utils v0.3.2/go.mod h1:zjAoNLox+wOInRpI5Mx+yKiavzgJbmqxySTRVLQRVTo=
 github.com/RedHatInsights/strimzi-client-go v0.24.0-1 h1:2qMravs3qx6W7ZIKLyo9a6m8uYfILDSQ/fA7L/Yw/jc=
 github.com/RedHatInsights/strimzi-client-go v0.24.0-1/go.mod h1:Z488n7yGdCVT3AFYuamQ9F7b6c99OSMr4lPYzgEEpzY=

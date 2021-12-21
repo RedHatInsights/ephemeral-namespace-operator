@@ -17,20 +17,27 @@ limitations under the License.
 package controllers
 
 import (
+	"container/list"
+	"context"
 	"path/filepath"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"k8s.io/client-go/kubernetes/scheme"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	cloudredhatcomv1alpha1 "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	"github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
+	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -40,6 +47,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var stopController context.CancelFunc
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -54,7 +62,10 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
+		CRDDirectoryPaths: []string{
+			filepath.Join("..", "config", "crd", "bases"),
+			filepath.Join("..", "config", "crd", "static"), // added to the project manually
+		},
 		ErrorIfCRDPathMissing: true,
 	}
 
@@ -62,19 +73,107 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = cloudredhatcomv1alpha1.AddToScheme(scheme.Scheme)
+	k8sscheme := runtime.NewScheme()
+	clientgoscheme.AddToScheme(k8sscheme)
+	v1alpha1.AddToScheme(k8sscheme)
+
+	err = crd.AddToScheme(k8sscheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	k8sClient, err = client.New(cfg, client.Options{Scheme: k8sscheme})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
+
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: k8sscheme,
+	})
+	Expect(err).ToNot(HaveOccurred())
+
+	pool := NamespacePool{
+		ReadyNamespaces:    list.New(),
+		ActiveReservations: make(map[string]metav1.Time),
+		Config: OperatorConfig{
+			PoolConfig: PoolConfig{
+				Size:  5,
+				Local: true,
+			},
+			ClowdEnvSpec: v1alpha1.ClowdEnvironmentSpec{
+				Providers: v1alpha1.ProvidersConfig{
+					Kafka: v1alpha1.KafkaConfig{
+						Mode: "operator",
+						Cluster: v1alpha1.KafkaClusterConfig{
+							Name:      "kafka",
+							Namespace: "kafka",
+							Replicas:  5,
+						},
+					},
+					Database: v1alpha1.DatabaseConfig{
+						Mode: "local",
+					},
+					Logging: v1alpha1.LoggingConfig{
+						Mode: "app-interface",
+					},
+					ObjectStore: v1alpha1.ObjectStoreConfig{
+						Mode: "app-interface",
+					},
+					InMemoryDB: v1alpha1.InMemoryDBConfig{
+						Mode: "redis",
+					},
+					Web: v1alpha1.WebConfig{
+						Port: int32(8000),
+						Mode: "none",
+					},
+					Metrics: v1alpha1.MetricsConfig{
+						Port: int32(9000),
+						Path: "/metrics",
+						Mode: "none",
+					},
+					FeatureFlags: v1alpha1.FeatureFlagsConfig{
+						Mode: "none",
+					},
+					Testing: v1alpha1.TestingConfig{
+						ConfigAccess:   "environment",
+						K8SAccessLevel: "edit",
+						Iqe: v1alpha1.IqeConfig{
+							ImageBase: "quay.io/cloudservices/iqe-tests",
+						},
+					},
+					AutoScaler: v1alpha1.AutoScalerConfig{
+						Mode: "keda",
+					},
+				},
+			},
+			LimitRange:     v1.LimitRange{},
+			ResourceQuotas: v1.ResourceQuotaList{},
+		},
+		Log: ctrl.Log.WithName("NamespacePool"),
+	}
+
+	err = (&NamespaceReservationReconciler{
+		Client:        k8sManager.GetClient(),
+		Scheme:        k8sManager.GetScheme(),
+		NamespacePool: &pool,
+		Log:           ctrl.Log.WithName("controllers").WithName("NamespaceReconciler"),
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	ctx, cancel := context.WithCancel(context.Background())
+	stopController = cancel
+
+	go Poll(k8sManager.GetClient(), &pool)
+
+	go func() {
+		err = k8sManager.Start(ctx)
+		Expect(err).ToNot(HaveOccurred())
+	}()
 
 }, 60)
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
+	stopController()
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
