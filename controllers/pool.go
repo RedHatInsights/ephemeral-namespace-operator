@@ -248,15 +248,20 @@ func (p *NamespacePool) VerifyClowdEnv(ctx context.Context, cl client.Client, ns
 }
 
 func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client, ns core.Namespace) error {
-	// look up default ingress domain on cluster to set FrontendEnvironment's hostname/sso attributes
 	ingressConfig := configv1.Ingress{}
-	err := cl.Get(ctx, types.NamespacedName{Name: "cluster"}, &ingressConfig)
-	if err != nil {
-		p.Log.Error(err, "Unable to fetch 'config.ingresses' named 'cluster' to determine default domain")
+
+	if !p.Config.PoolConfig.Local {
+		// if on OpenShift, look up default ingress domain on cluster to set FrontendEnvironment's
+		// hostname/sso attributes
+		err := cl.Get(ctx, types.NamespacedName{Name: "cluster"}, &ingressConfig)
+		if err != nil {
+			p.Log.Error(err, "Unable to fetch 'config.ingresses' named 'cluster' to determine default domain")
+			return err
+		}
 	}
 
 	if ingressConfig.Spec.Domain == "" {
-		// we're likely not running on OpenShift, just make up a default local domain
+		// if no default domain, or if we're in local mode, just make use a default local domain
 		ingressConfig.Spec.Domain = "k8s.local"
 	}
 
@@ -267,6 +272,7 @@ func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client,
 		Spec: p.Config.FrontendEnvSpec,
 	}
 
+	frontendEnv.SetName(fmt.Sprintf("env-%s", ns.Name))
 	frontendEnv.SetOwnerReferences([]metav1.OwnerReference{
 		{
 			APIVersion: ns.APIVersion,
