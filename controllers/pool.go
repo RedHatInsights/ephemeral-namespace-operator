@@ -261,7 +261,7 @@ func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client,
 	}
 
 	if ingressConfig.Spec.Domain == "" {
-		// if no default domain, or if we're in local mode, just make use a default local domain
+		// if no default domain, or if we're in local mode, just make use of a default local domain
 		ingressConfig.Spec.Domain = "k8s.local"
 	}
 
