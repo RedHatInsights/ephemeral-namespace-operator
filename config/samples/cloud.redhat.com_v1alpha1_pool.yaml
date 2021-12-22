@@ -1,0 +1,7 @@
+apiVersion: cloud.redhat.com/v1alpha1
+kind: Pool
+metadata:
+  name: pool-sample
+spec:
+  # Add fields here
+  foo: bar

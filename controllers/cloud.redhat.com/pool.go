@@ -13,7 +13,7 @@ import (
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
-	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
@@ -58,8 +58,7 @@ func (p *NamespacePool) CheckoutNs(name string) error {
 		}
 
 	}
-	errStr := fmt.Sprintf("Error, ns %s not found\n", name)
-	return errors.New(errStr)
+	return fmt.Errorf("error, ns %s not found", name)
 }
 
 func (p *NamespacePool) Len() int {

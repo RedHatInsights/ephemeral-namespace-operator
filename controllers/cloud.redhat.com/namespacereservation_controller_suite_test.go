@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/rhc-osdk-utils/utils"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

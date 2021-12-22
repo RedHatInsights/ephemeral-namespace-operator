@@ -33,12 +33,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
-	reservation "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
-	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers"
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	configv1 "github.com/openshift/api/config/v1"
 	projectv1 "github.com/openshift/api/project/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
+	controllers "github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -49,11 +50,11 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(reservation.AddToScheme(scheme))
 	utilruntime.Must(clowder.AddToScheme(scheme))
 	utilruntime.Must(frontend.AddToScheme(scheme))
 	utilruntime.Must(projectv1.AddToScheme(scheme))
 	utilruntime.Must(configv1.AddToScheme(scheme))
+	utilruntime.Must(crd.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -101,6 +102,13 @@ func main() {
 		Log:           ctrl.Log.WithName("controllers").WithName("NamespaceReservation"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NamespaceReservation")
+		os.Exit(1)
+	}
+	if err = (&controllers.PoolReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Pool")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

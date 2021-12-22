@@ -81,6 +81,32 @@ rules:
   - list
   - watch
 - apiGroups:
+  - cloud.redhat.com
+  resources:
+  - pools
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - pools/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - pools/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - project.openshift.io
   resources:
   - projectrequests

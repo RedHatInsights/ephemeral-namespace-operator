@@ -39,7 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
-	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	core "k8s.io/api/core/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -105,8 +105,8 @@ var _ = BeforeSuite(func() {
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{
-			filepath.Join("..", "config", "crd", "bases"),
-			filepath.Join("..", "config", "crd", "static"), // added to the project manually
+			filepath.Join("..", "..", "config", "crd", "bases"),
+			filepath.Join("..", "..", "config", "crd", "static"), // added to the project manually
 		},
 		ErrorIfCRDPathMissing: true,
 	}

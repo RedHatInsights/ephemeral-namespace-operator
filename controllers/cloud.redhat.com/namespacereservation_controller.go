@@ -23,7 +23,7 @@ import (
 	"math/rand"
 	"time"
 
-	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
@@ -239,10 +239,10 @@ func getExpirationTime(res *crd.NamespaceReservation) (metav1.Time, error) {
 	}
 
 	if duration == 0 {
-		return metav1.Time{Time: time.Now()}, err
+		return metav1.Time{Time: time.Now()}, err // If these are not error states, we want to return nil
 	}
 
-	return metav1.Time{Time: res.CreationTimestamp.Time.Add(duration)}, err
+	return metav1.Time{Time: res.CreationTimestamp.Time.Add(duration)}, err // Same here
 }
 
 func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Context, readyNsName string) error {
@@ -254,7 +254,7 @@ func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Co
 
 	ready, _, _ := r.NamespacePool.GetClowdEnv(ctx, r.Client, ns)
 	if !ready {
-		return fmt.Errorf("ClowdEnvironment is not ready for namespace: %s", readyNsName)
+		return fmt.Errorf("ClowdEnvironment is not ready for namespace: %s", readyNsName) // No need to wrap the string when fmt does errors for us
 	}
 
 	return nil

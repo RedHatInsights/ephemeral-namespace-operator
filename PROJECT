@@ -1,6 +1,7 @@
 domain: cloud.redhat.com
 layout:
 - go.kubebuilder.io/v3
+multigroup: true
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
@@ -15,5 +16,14 @@ resources:
   group: cloud.redhat.com
   kind: NamespaceReservation
   path: github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: cloud.redhat.com
+  group: cloud.redhat.com
+  kind: Pool
+  path: github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1
   version: v1alpha1
 version: "3"
