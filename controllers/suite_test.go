@@ -38,6 +38,7 @@ import (
 
 	"github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -76,6 +77,7 @@ var _ = BeforeSuite(func() {
 	k8sscheme := runtime.NewScheme()
 	clientgoscheme.AddToScheme(k8sscheme)
 	v1alpha1.AddToScheme(k8sscheme)
+	frontend.AddToScheme(k8sscheme)
 
 	err = crd.AddToScheme(k8sscheme)
 	Expect(err).NotTo(HaveOccurred())
