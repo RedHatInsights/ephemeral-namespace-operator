@@ -248,24 +248,32 @@ func (p *NamespacePool) VerifyClowdEnv(ctx context.Context, cl client.Client, ns
 }
 
 func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client, ns core.Namespace) error {
-	ingressConfig := configv1.Ingress{}
+	// first determine ingress domain to set on FrontendEnvironment's hostname/sso attributes
+	defaultLocalDomain := "k8s.local"
+	ingressDomain := ""
 
-	if !p.Config.PoolConfig.Local {
-		// if on OpenShift, look up default ingress domain on cluster to set FrontendEnvironment's
-		// hostname/sso attributes
+	if p.Config.PoolConfig.Local {
+		// if we're in local mode, just make use of a default local domain
+		ingressDomain = defaultLocalDomain
+	} else {
+		// if on OpenShift, look up default ingress domain on cluster
+		ingressConfig := configv1.Ingress{}
+
 		err := cl.Get(ctx, types.NamespacedName{Name: "cluster"}, &ingressConfig)
 		if err != nil {
 			p.Log.Error(err, "Unable to fetch 'config.ingresses' named 'cluster' to determine default domain")
 			return err
 		}
+		if ingressConfig.Spec.Domain == "" {
+			err = errors.New("cluster ingress domain is unset")
+			p.Log.Error(err, "Unable to determine cluster default domain")
+			return err
+		}
+
+		ingressDomain = ingressConfig.Spec.Domain
 	}
 
-	if ingressConfig.Spec.Domain == "" {
-		// if no default domain, or if we're in local mode, just make use of a default local domain
-		ingressConfig.Spec.Domain = "k8s.local"
-	}
-
-	p.Config.FrontendEnvSpec.Hostname = fmt.Sprintf("%s.%s", ns.Name, ingressConfig.Spec.Domain)
+	p.Config.FrontendEnvSpec.Hostname = fmt.Sprintf("%s.%s", ns.Name, ingressDomain)
 	p.Config.FrontendEnvSpec.SSO = fmt.Sprintf("https://%s/auth/", p.Config.FrontendEnvSpec.Hostname)
 
 	frontendEnv := frontend.FrontendEnvironment{
