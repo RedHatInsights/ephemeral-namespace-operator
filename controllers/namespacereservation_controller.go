@@ -254,7 +254,7 @@ func (r *NamespaceReservationReconciler) addRoleBindings(ctx context.Context, ns
 
 	// Assign permissions: clowder-edit and edit
 	// TODO: hard-coded list of users for now, but will want to do graphql queries later
-	roleNames := []string{"edit"}
+	roleNames := []string{"admin"}
 
 	for _, roleName := range roleNames {
 		binding := rbac.RoleBinding{
