@@ -251,8 +251,6 @@ func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Co
 }
 
 func (r *NamespaceReservationReconciler) addRoleBindings(ctx context.Context, ns *core.Namespace, client client.Client) error {
-
-	// Assign permissions: clowder-edit and edit
 	// TODO: hard-coded list of users for now, but will want to do graphql queries later
 	roleNames := []string{"admin"}
 
@@ -275,7 +273,7 @@ func (r *NamespaceReservationReconciler) addRoleBindings(ctx context.Context, ns
 			})
 		}
 
-		binding.SetName(roleName)
+		binding.SetName(fmt.Sprintf("%s-%s", ns.Name, roleName))
 		binding.SetNamespace(ns.Name)
 
 		if err := client.Create(ctx, &binding); err != nil {
