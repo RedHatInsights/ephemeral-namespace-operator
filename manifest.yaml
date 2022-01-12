@@ -194,6 +194,17 @@ rules:
   - cloud.redhat.com
   resources:
   - clowdenvironments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.redhat.com
+  resources:
   - frontendenvironments
   verbs:
   - create
@@ -229,6 +240,14 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - project.openshift.io
   resources:
@@ -405,7 +424,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: quay.io/cloudservices/ephemeral-namespace-operator:99fe6a4
+        image: quay.io/cloudservices/ephemeral-namespace-operator:e54119a
         livenessProbe:
           httpGet:
             path: /healthz
