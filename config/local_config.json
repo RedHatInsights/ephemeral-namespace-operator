@@ -101,6 +101,9 @@
             }
         }
     },
+    "frontendEnv": {
+        "ingressClass": "nginx"
+    },
     "limitRange": {
         "spec": {
             "limits": [

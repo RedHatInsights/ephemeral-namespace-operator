@@ -148,6 +148,7 @@ rules:
   resources:
   - namespacereservations
   - clowdenvironments
+  - frontendenvironments
   verbs:
   - create
   - delete
@@ -193,6 +194,7 @@ rules:
   - cloud.redhat.com
   resources:
   - clowdenvironments
+  - frontendenvironments
   verbs:
   - create
   - delete

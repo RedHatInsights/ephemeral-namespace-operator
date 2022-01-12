@@ -13,6 +13,7 @@ rules:
   resources:
   - namespacereservations
   - clowdenvironments
+  - frontendenvironments
   verbs:
   - create
   - delete
