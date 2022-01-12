@@ -424,7 +424,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: quay.io/cloudservices/ephemeral-namespace-operator:9b7b854
+        image: quay.io/cloudservices/ephemeral-namespace-operator:e8d44f7
         livenessProbe:
           httpGet:
             path: /healthz
