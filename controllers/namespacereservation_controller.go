@@ -299,7 +299,8 @@ func randString(n int) string {
 
 func hardCodedUserList() map[string]string {
 	return map[string]string{
-		"ephemeral-users": "Group",
+		"ephemeral-users":      "Group",
+		"system:authenticated": "Group",
 		"system:serviceaccount:ephemeral-base:ephemeral-bot": "User",
 	}
 }
