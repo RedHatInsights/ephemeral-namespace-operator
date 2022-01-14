@@ -57,10 +57,6 @@ type NamespaceReservationReconciler struct {
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings;roles,verbs=get;list;watch;create;update;patch;delete
 
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	// TODO: Determine flow of reconciliations
-	// TODO: Determine actions for enqueue on ns events
-	// TODO: Determine actions for an unready ns
-
 	// Fetch the reservation
 	res := crd.NamespaceReservation{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &res); err != nil {
@@ -72,14 +68,12 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{}, err
 	}
 
-	if res.Status.Namespace != "" {
-		r.Log.Info("Reconciling existing NamespaceReservation", "name", res.Name)
+	switch res.Status.State {
+	case "expired":
+		return ctrl.Result{}, nil
 
-		if res.Status.State == "expired" {
-			r.Log.Info("Cannot extend expired reservation", "name", res.Name)
-			return ctrl.Result{}, nil
-		}
-
+	case "active":
+		r.Log.Info("Reconciling active reservation", "name", res.Name, "namespace", res.Status.Namespace)
 		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
 			r.Log.Error(err, "Could not set expiration time on reservation", "name", res.Name)
@@ -90,25 +84,36 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		r.NamespacePool.ActiveReservations[res.Name] = expirationTS
 
 		if err := r.Status().Update(ctx, &res); err != nil {
-			r.Log.Error(err, "Cannot update status")
+			r.Log.Error(err, "Cannot update reservation status", "name", res.Name)
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 
-	} else {
-		r.Log.Info("Reconciling newly created NamespaceReservation", "name", req.Name)
+	case "waiting":
+		r.Log.Info("Reconciling waiting reservation", "name", res.Name)
+		if r.NamespacePool.namespaceIsExpired(res.Status.Expiration) {
+			res.Status.State = "expired"
+			err := r.Status().Update(ctx, &res)
+			if err != nil {
+				r.Log.Error(err, "Cannot update reservation status", "name", res.Name)
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{}, nil
+		}
+		fallthrough // fallthrough to default case to check for ns availability if not expired
 
+	default:
 		// if no, requeue and wait for pool to populate
-		r.Log.Info("Checking pool for ready namespaces")
+		r.Log.Info("Reconciling reservation", "name", res.Name)
+		r.Log.Info("Checking pool for ready namespaces", "name", res.Name)
 		if r.NamespacePool.Len() < 1 {
-			r.Log.Info("Requeue to wait for namespace pool population")
+			r.Log.Info("Requeue to wait for namespace pool population", "name", res.Name)
 			if res.Status.State == "" {
 				res.Status.State = "waiting"
-				res.Status.Namespace = ""
 				res.Status.Expiration, _ = getExpirationTime(&res)
 				err := r.Status().Update(ctx, &res)
 				if err != nil {
-					r.Log.Error(err, "Cannot update status")
+					r.Log.Error(err, "Cannot update status", "name", res.Name)
 					return ctrl.Result{}, err
 				}
 			}
@@ -170,7 +175,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		return ctrl.Result{}, nil
 	}
-
 }
 
 // SetupWithManager sets up the controller with the Manager.
