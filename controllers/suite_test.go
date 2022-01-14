@@ -98,7 +98,7 @@ var _ = BeforeSuite(func() {
 		ActiveReservations: make(map[string]metav1.Time),
 		Config: OperatorConfig{
 			PoolConfig: PoolConfig{
-				Size:  5,
+				Size:  2,
 				Local: true,
 			},
 			ClowdEnvSpec: v1alpha1.ClowdEnvironmentSpec{
