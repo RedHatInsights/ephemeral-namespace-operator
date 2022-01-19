@@ -273,7 +273,8 @@ func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client,
 		ingressDomain = ingressConfig.Spec.Domain
 	}
 
-	p.Config.FrontendEnvSpec.Hostname = fmt.Sprintf("%s.%s", ns.Name, ingressDomain)
+	clowdEnvironmentName := fmt.Sprintf("env-%s", ns.Name)
+	p.Config.FrontendEnvSpec.Hostname = fmt.Sprintf("%s.%s", clowdEnvironmentName, ingressDomain)
 	p.Config.FrontendEnvSpec.SSO = fmt.Sprintf("https://%s/auth/", p.Config.FrontendEnvSpec.Hostname)
 
 	frontendEnv := frontend.FrontendEnvironment{
