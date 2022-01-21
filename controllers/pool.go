@@ -432,7 +432,10 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 
 	}
 
+	// TODO: revisit this check
+	// We need to wait a bit before checking the clowdEnv
 	p.Log.Info("Verifying that the ClowdEnv is ready for namespace", "ns-name", ns.Name)
+	time.Sleep(10 * time.Second)
 	ready, clowdEnv, _ := p.GetClowdEnv(ctx, cl, ns)
 	for !ready || clowdEnv == nil {
 		p.Log.Info("Waiting on environment to be ready", "ns-name", ns.Name)
