@@ -18,7 +18,6 @@ import (
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 
-	configv1 "github.com/openshift/api/config/v1"
 	projectv1 "github.com/openshift/api/project/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -141,7 +140,7 @@ func (p *NamespacePool) PopulateOnDeckNs(ctx context.Context, client client.Clie
 		matched, _ := regexp.MatchString(`ephemeral-\w{6}$`, ns.Name)
 		if matched {
 			if _, ok := ns.ObjectMeta.Annotations["reserved"]; !ok {
-				ready, err := p.VerifyClowdEnv(ctx, client, ns)
+				ready, _, err := p.GetClowdEnv(ctx, client, ns)
 				if ready {
 					p.AddOnDeckNS(ns.Name)
 					p.Log.Info("Added namespace to pool", "ns-name", ns.Name)
@@ -224,61 +223,57 @@ func (p *NamespacePool) getResFromNs(nsName string, resList *crd.NamespaceReserv
 	return &crd.NamespaceReservation{}, errors.New(errString)
 }
 
-func (p *NamespacePool) VerifyClowdEnv(ctx context.Context, cl client.Client, ns core.Namespace) (bool, error) {
-	env := clowder.ClowdEnvironment{}
-
-	if err := cl.Get(ctx, types.NamespacedName{
-		Name:      fmt.Sprintf("env-%s", ns.Name),
-		Namespace: ns.Name,
-	}, &env); err != nil {
-		return false, err
+func (p *NamespacePool) verifyClowdEnvReady(env clowder.ClowdEnvironment) (bool, error) {
+	// check that hostname is populated if ClowdEnvironment is operating in 'local' web mode
+	if env.Spec.Providers.Web.Mode == "local" && env.Status.Hostname == "" {
+		return false, errors.New("hostname not populated")
 	}
 
+	// check that all deployments are ready
 	conditions := env.Status.Conditions
-
 	for i := range conditions {
 		if conditions[i].Type == "DeploymentsReady" {
-			if conditions[i].Status != "True" {
-				return false, nil
+			if conditions[i].Status == "True" {
+				return true, nil
 			}
 		}
 	}
 
-	return true, nil
+	return false, errors.New("deployments not ready")
 }
 
-func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client, ns core.Namespace) error {
-	// first determine ingress domain to set on FrontendEnvironment's hostname/sso attributes
-	defaultLocalDomain := "k8s.local"
-	ingressDomain := ""
-
-	if p.Config.PoolConfig.Local {
-		// if we're in local mode, just make use of a default local domain
-		ingressDomain = defaultLocalDomain
-	} else {
-		// if on OpenShift, look up default ingress domain on cluster
-		ingressConfig := configv1.Ingress{}
-
-		err := cl.Get(ctx, types.NamespacedName{Name: "cluster"}, &ingressConfig)
-		if err != nil {
-			p.Log.Error(err, "Unable to fetch 'config.ingresses' named 'cluster' to determine default domain")
-			return err
-		}
-		if ingressConfig.Spec.Domain == "" {
-			err = errors.New("cluster ingress domain is unset")
-			p.Log.Error(err, "Unable to determine cluster default domain")
-			return err
-		}
-
-		ingressDomain = ingressConfig.Spec.Domain
+func (p *NamespacePool) GetClowdEnv(ctx context.Context, cl client.Client, ns core.Namespace) (bool, *clowder.ClowdEnvironment, error) {
+	env := clowder.ClowdEnvironment{}
+	nn := types.NamespacedName{
+		Name:      fmt.Sprintf("env-%s", ns.Name),
+		Namespace: ns.Name,
 	}
 
-	clowdEnvironmentName := fmt.Sprintf("env-%s", ns.Name)
-	p.Config.FrontendEnvSpec.Hostname = fmt.Sprintf("%s.%s", clowdEnvironmentName, ingressDomain)
-	p.Config.FrontendEnvSpec.SSO = fmt.Sprintf("https://%s/auth/", p.Config.FrontendEnvSpec.Hostname)
+	err := cl.Get(ctx, nn, &env)
+	if err != nil {
+		return false, nil, err
+	}
 
+	ready, err := p.verifyClowdEnvReady(env)
+
+	if err != nil {
+		p.Log.Error(err, "Hit error checking ClowdEnvironment ready status", "ns-name", ns.Name)
+	}
+
+	return ready, &env, err
+}
+
+func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client, ns core.Namespace, clowdEnv clowder.ClowdEnvironment) error {
+	p.Log.Info("Creating FrontendEnvironment for ns", "ns-name", ns.Name)
+
+	// make the hostnames and ingress class on the FrontendEnvironment match that of the ClowdEnvironment
+	// we already verified that the hostname was present in the ClowdEnvironment's status via 'verifyClowdEnvReady'
 	frontendEnv := frontend.FrontendEnvironment{
-		Spec: p.Config.FrontendEnvSpec,
+		Spec: frontend.FrontendEnvironmentSpec{
+			Hostname:     clowdEnv.Status.Hostname,
+			SSO:          fmt.Sprintf("https://%s/auth/", clowdEnv.Status.Hostname),
+			IngressClass: clowdEnv.Spec.Providers.Web.IngressClass,
+		},
 	}
 
 	frontendEnv.SetName(fmt.Sprintf("env-%s", ns.Name))
@@ -291,7 +286,6 @@ func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client,
 		},
 	})
 
-	p.Log.Info("Creating FrontendEnvironment for ns", "ns-name", ns.Name)
 	if err := cl.Create(ctx, &frontendEnv); err != nil {
 		p.Log.Error(err, "Cannot create FrontendEnvironment for ns", "ns-name", ns.Name)
 		return err
@@ -357,11 +351,6 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	p.Log.Info("Creating ClowdEnv for ns", "ns-name", ns.Name)
 	if err := cl.Create(ctx, &env); err != nil {
 		p.Log.Error(err, "Cannot Create ClowdEnv in Namespace", "ns-name", ns.Name)
-		return err
-	}
-
-	// Create FrontendEnvironment
-	if err := p.createFrontendEnv(ctx, cl, ns); err != nil {
 		return err
 	}
 
@@ -443,16 +432,19 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 
 	}
 
-	// TODO: revisit this check
-	// We need to wait a bit before checking the clowdEnv
 	p.Log.Info("Verifying that the ClowdEnv is ready for namespace", "ns-name", ns.Name)
-	time.Sleep(10 * time.Second)
-
-	ready, _ := p.VerifyClowdEnv(ctx, cl, ns)
-	for !ready {
+	ready, clowdEnv, _ := p.GetClowdEnv(ctx, cl, ns)
+	for !ready || clowdEnv == nil {
 		p.Log.Info("Waiting on environment to be ready", "ns-name", ns.Name)
 		time.Sleep(10 * time.Second)
-		ready, _ = p.VerifyClowdEnv(ctx, cl, ns)
+		ready, clowdEnv, _ = p.GetClowdEnv(ctx, cl, ns)
+	}
+
+	// Create FrontendEnvironment if ClowdEnvironment's web provider is set to 'local' mode
+	if clowdEnv.Spec.Providers.Web.Mode == "local" {
+		if err := p.createFrontendEnv(ctx, cl, ns, *clowdEnv); err != nil {
+			return err
+		}
 	}
 
 	err = cl.Get(ctx, types.NamespacedName{Name: ns.Name}, &ns)

@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 
 	"fmt"
 	"math/rand"
@@ -248,9 +247,9 @@ func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Co
 		return err
 	}
 
-	ready, _ := r.NamespacePool.VerifyClowdEnv(ctx, r.Client, ns)
+	ready, _, _ := r.NamespacePool.GetClowdEnv(ctx, r.Client, ns)
 	if !ready {
-		return errors.New(fmt.Sprintf("ClowdEnvironment is not ready for namespace: %s", readyNsName))
+		return fmt.Errorf("ClowdEnvironment is not ready for namespace: %s", readyNsName)
 	}
 
 	return nil
