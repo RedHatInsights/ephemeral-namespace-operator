@@ -233,13 +233,13 @@ func (p *NamespacePool) verifyClowdEnvReady(env clowder.ClowdEnvironment) (bool,
 	conditions := env.Status.Conditions
 	for i := range conditions {
 		if conditions[i].Type == "DeploymentsReady" {
-			if conditions[i].Status == "True" {
-				return true, nil
+			if conditions[i].Status != "True" {
+				return false, errors.New("deployments not ready")
 			}
 		}
 	}
 
-	return false, errors.New("deployments not ready")
+	return true, nil
 }
 
 func (p *NamespacePool) GetClowdEnv(ctx context.Context, cl client.Client, ns core.Namespace) (bool, *clowder.ClowdEnvironment, error) {
