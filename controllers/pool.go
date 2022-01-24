@@ -268,10 +268,11 @@ func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client,
 
 	// make the hostnames and ingress class on the FrontendEnvironment match that of the ClowdEnvironment
 	// we already verified that the hostname was present in the ClowdEnvironment's status via 'verifyClowdEnvReady'
+	splitHostname := strings.Split(clowdEnv.Status.Hostname, ".")
 	frontendEnv := frontend.FrontendEnvironment{
 		Spec: frontend.FrontendEnvironmentSpec{
 			Hostname:     clowdEnv.Status.Hostname,
-			SSO:          fmt.Sprintf("https://%s/auth/", clowdEnv.Status.Hostname),
+			SSO:          fmt.Sprintf("https://%s-auth.%s/auth/", splitHostname[0], splitHostname[1:]),
 			IngressClass: clowdEnv.Spec.Providers.Web.IngressClass,
 		},
 	}
