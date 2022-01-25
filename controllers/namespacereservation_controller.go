@@ -76,7 +76,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		r.Log.Info("Reconciling active reservation", "name", res.Name, "namespace", res.Status.Namespace)
 		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
-			r.Log.Error(err, "Could not set expiration time on reservation", "name", res.Name)
+			r.Log.Error(err, "Could not get expiration time for reservation", "name", res.Name)
 			return ctrl.Result{}, err
 		}
 
@@ -91,7 +91,12 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 	case "waiting":
 		r.Log.Info("Reconciling waiting reservation", "name", res.Name)
-		if r.NamespacePool.namespaceIsExpired(res.Status.Expiration) {
+		expirationTS, err := getExpirationTime(&res)
+		if err != nil {
+			r.Log.Error(err, "Could not get expiration time for reservation", "name", res.Name)
+			return ctrl.Result{}, err
+		}
+		if r.NamespacePool.namespaceIsExpired(expirationTS) {
 			res.Status.State = "expired"
 			err := r.Status().Update(ctx, &res)
 			if err != nil {
