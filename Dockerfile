@@ -24,6 +24,7 @@ FROM gcr.io/distroless/static:nonroot
 WORKDIR /
 COPY --from=builder /workspace/manager .
 COPY --from=builder /workspace/config/ephemeral_config.json .
+COPY --from=builder /workspace/config/dev_config.json .
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]
