@@ -256,10 +256,6 @@ func (p *NamespacePool) GetClowdEnv(ctx context.Context, cl client.Client, ns co
 
 	ready, err := p.verifyClowdEnvReady(env)
 
-	if err != nil {
-		p.Log.Error(err, "Hit error checking ClowdEnvironment ready status", "ns-name", ns.Name)
-	}
-
 	return ready, &env, err
 }
 
@@ -268,11 +264,24 @@ func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client,
 
 	// make the hostnames and ingress class on the FrontendEnvironment match that of the ClowdEnvironment
 	// we already verified that the hostname was present in the ClowdEnvironment's status via 'verifyClowdEnvReady'
-	splitHostname := strings.Split(clowdEnv.Status.Hostname, ".")
+	splitFqdn := strings.Split(clowdEnv.Status.Hostname, ".")
+	host := splitFqdn[0]
+	var domain string
+	if len(splitFqdn) > 1 {
+		domain = strings.Join(splitFqdn[1:], ".")
+	}
+
+	var ssoUrl string
+	if domain == "" {
+		ssoUrl = fmt.Sprintf("https://%s-auth/auth/", host)
+	} else {
+		ssoUrl = fmt.Sprintf("https://%s-auth.%s/auth/", host, domain)
+	}
+
 	frontendEnv := frontend.FrontendEnvironment{
 		Spec: frontend.FrontendEnvironmentSpec{
 			Hostname:     clowdEnv.Status.Hostname,
-			SSO:          fmt.Sprintf("https://%s-auth.%s/auth/", splitHostname[0], splitHostname[1:]),
+			SSO:          ssoUrl,
 			IngressClass: clowdEnv.Spec.Providers.Web.IngressClass,
 		},
 	}
@@ -436,12 +445,22 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 	// TODO: revisit this check
 	// We need to wait a bit before checking the clowdEnv
 	p.Log.Info("Verifying that the ClowdEnv is ready for namespace", "ns-name", ns.Name)
-	time.Sleep(10 * time.Second)
-	ready, clowdEnv, _ := p.GetClowdEnv(ctx, cl, ns)
-	for !ready || clowdEnv == nil {
-		p.Log.Info("Waiting on environment to be ready", "ns-name", ns.Name)
+	var clowdEnv *clowder.ClowdEnvironment
+	var ready bool
+	for {
 		time.Sleep(10 * time.Second)
-		ready, clowdEnv, _ = p.GetClowdEnv(ctx, cl, ns)
+
+		ready, clowdEnv, err = p.GetClowdEnv(ctx, cl, ns)
+		if ready && clowdEnv != nil {
+			break
+		}
+
+		// env is not ready
+		msg := "ClowdEnvironment is not yet ready for namespace"
+		if err != nil {
+			msg = msg + fmt.Sprintf("(%s)", err)
+		}
+		p.Log.Info(msg, "ns-name", ns.Name)
 	}
 
 	// Create FrontendEnvironment if ClowdEnvironment's web provider is set to 'local' mode
