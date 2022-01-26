@@ -57,7 +57,8 @@
                 "mode": "minio"
             },
             "web": {
-                "mode": "operator",
+                "mode": "local",
+                "ingressClass": "nginx",
                 "port": 8000,
                 "privatePort": 10000
             },
@@ -100,9 +101,6 @@
                 "memory": "128Mi"
             }
         }
-    },
-    "frontendEnv": {
-        "ingressClass": "nginx"
     },
     "limitRange": {
         "spec": {
