@@ -57,7 +57,8 @@
                 "mode": "minio"
             },
             "web": {
-                "mode": "operator",
+                "mode": "local",
+                "ingressClass": "openshift-default",
                 "port": 8000,
                 "privatePort": 10000
             },
