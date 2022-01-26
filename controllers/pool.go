@@ -458,7 +458,7 @@ func (p *NamespacePool) CreateOnDeckNamespace(ctx context.Context, cl client.Cli
 		// env is not ready
 		msg := "ClowdEnvironment is not yet ready for namespace"
 		if err != nil {
-			msg = msg + fmt.Sprintf("(%s)", err)
+			msg = msg + fmt.Sprintf(" (%s)", err)
 		}
 		p.Log.Info(msg, "ns-name", ns.Name)
 	}
