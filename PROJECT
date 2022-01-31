@@ -15,7 +15,7 @@ resources:
   domain: cloud.redhat.com
   group: cloud.redhat.com
   kind: NamespaceReservation
-  path: github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1
+  path: github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1
   version: v1alpha1
 - api:
     crdVersion: v1
