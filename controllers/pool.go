@@ -231,12 +231,22 @@ func (p *NamespacePool) verifyClowdEnvReady(env clowder.ClowdEnvironment) (bool,
 
 	// check that all deployments are ready
 	conditions := env.Status.Conditions
+	reconciliationSuccessful := false
+	deploymentsReady := false
 	for i := range conditions {
-		if conditions[i].Type == "DeploymentsReady" {
-			if conditions[i].Status != "True" {
-				return false, errors.New("deployments not ready")
-			}
+		if conditions[i].Type == "ReconciliationSuccessful" && conditions[i].Status == "True" {
+			reconciliationSuccessful = true
 		}
+		if conditions[i].Type == "DeploymentsReady" && conditions[i].Status == "True" {
+			deploymentsReady = true
+		}
+	}
+
+	if !reconciliationSuccessful {
+		return false, errors.New("reconciliation not successful")
+	}
+	if !deploymentsReady {
+		return false, errors.New("deployments not ready")
 	}
 
 	return true, nil
