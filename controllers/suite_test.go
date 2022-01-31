@@ -195,7 +195,7 @@ var _ = BeforeSuite(func() {
 
 	go Poll(k8sManager.GetClient(), &pool)
 
-	go populateClowdEnvStatus(k8sManager.GetClient(), &pool)
+	go populateClowdEnvStatus(k8sManager.GetClient())
 
 	go func() {
 		err = k8sManager.Start(ctx)
