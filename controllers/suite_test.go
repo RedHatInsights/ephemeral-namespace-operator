@@ -19,6 +19,7 @@ package controllers
 import (
 	"container/list"
 	"context"
+	"fmt"
 	"path/filepath"
 	"testing"
 	"time"
@@ -76,12 +77,23 @@ func populateClowdEnvStatus(client client.Client) {
 			if len(env.Status.Conditions) == 0 {
 				status := v1alpha1.ClowdEnvironmentStatus{
 					Conditions: []clusterv1.Condition{
-						{Type: v1alpha1.ReconciliationSuccessful, Status: core.ConditionTrue},
-						{Type: v1alpha1.DeploymentsReady, Status: core.ConditionTrue},
+						{
+							Type:               v1alpha1.ReconciliationSuccessful,
+							Status:             core.ConditionTrue,
+							LastTransitionTime: metav1.Now(),
+						},
+						{
+							Type:               v1alpha1.DeploymentsReady,
+							Status:             core.ConditionTrue,
+							LastTransitionTime: metav1.Now(),
+						},
 					},
 				}
 				env.Status = status
-				client.Update(ctx, &env)
+				err := client.Status().Update(ctx, &env)
+				if err != nil {
+					fmt.Println("ERROR: ", err)
+				}
 			}
 		}
 	}
