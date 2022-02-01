@@ -19,8 +19,10 @@ package controllers
 import (
 	"container/list"
 	"context"
+	"fmt"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -39,6 +41,8 @@ import (
 	"github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
+	core "k8s.io/api/core/v1"
+	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -56,6 +60,43 @@ func TestAPIs(t *testing.T) {
 	RunSpecsWithDefaultAndCustomReporters(t,
 		"Controller Suite",
 		[]Reporter{printer.NewlineReporter{}})
+}
+
+// routine that will auto-update ClowdEnvironment status during suite test run
+func populateClowdEnvStatus(client client.Client) {
+	ctx := context.Background()
+
+	for {
+		time.Sleep(time.Duration(1 * time.Second))
+		clowdEnvs := v1alpha1.ClowdEnvironmentList{}
+		err := client.List(ctx, &clowdEnvs)
+		if err != nil {
+			continue
+		}
+		for _, env := range clowdEnvs.Items {
+			if len(env.Status.Conditions) == 0 {
+				status := v1alpha1.ClowdEnvironmentStatus{
+					Conditions: []clusterv1.Condition{
+						{
+							Type:               v1alpha1.ReconciliationSuccessful,
+							Status:             core.ConditionTrue,
+							LastTransitionTime: metav1.Now(),
+						},
+						{
+							Type:               v1alpha1.DeploymentsReady,
+							Status:             core.ConditionTrue,
+							LastTransitionTime: metav1.Now(),
+						},
+					},
+				}
+				env.Status = status
+				err := client.Status().Update(ctx, &env)
+				if err != nil {
+					fmt.Println("ERROR: ", err)
+				}
+			}
+		}
+	}
 }
 
 var _ = BeforeSuite(func() {
@@ -165,6 +206,8 @@ var _ = BeforeSuite(func() {
 	stopController = cancel
 
 	go Poll(k8sManager.GetClient(), &pool)
+
+	go populateClowdEnvStatus(k8sManager.GetClient())
 
 	go func() {
 		err = k8sManager.Start(ctx)
