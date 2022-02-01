@@ -137,7 +137,7 @@
                         "limits.cpu": "32",
                         "limits.memory": "48Gi",
                         "requests.cpu": "16",
-                        "requests.memory": "24Gi"
+                        "requests.memory": "32Gi"
                     },
                     "scopes": ["NotTerminating"]
                 },
