@@ -134,9 +134,9 @@
             {
                 "spec": {
                     "hard": {
-                        "limits.cpu": "24",
+                        "limits.cpu": "32",
                         "limits.memory": "48Gi",
-                        "requests.cpu": "12",
+                        "requests.cpu": "16",
                         "requests.memory": "24Gi"
                     },
                     "scopes": ["NotTerminating"]
