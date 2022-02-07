@@ -73,14 +73,6 @@ rules:
   - patch
   - update
 - apiGroups:
-  - config.openshift.io
-  resources:
-  - ingresses
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
   - cloud.redhat.com
   resources:
   - pools
@@ -106,6 +98,14 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - project.openshift.io
   resources:

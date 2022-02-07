@@ -20,26 +20,24 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // PoolSpec defines the desired state of Pool
 type PoolSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of Pool. Edit pool_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Size  int  `json:"size"`
+	Local bool `json:"local"`
 }
 
 // PoolStatus defines the observed state of Pool
 type PoolStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	Ready    int `json:"ready"`
+	Creating int `json:"creating"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:scope=Cluster,shortName=pool
+//+kubebuilder:printcolumn:name="Pool Size",type="string",JSONPath=".spec.size"
+//+kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.ready"
+//+kubebuilder:printcolumn:name="Creating",type="string",JSONPath=".status.creating"
 
 // Pool is the Schema for the pools API
 type Pool struct {
@@ -61,4 +59,15 @@ type PoolList struct {
 
 func init() {
 	SchemeBuilder.Register(&Pool{}, &PoolList{})
+}
+
+// MakeOwnerReference defines the owner reference pointing to the Pool resource.
+func (i *Pool) MakeOwnerReference() metav1.OwnerReference {
+	return metav1.OwnerReference{
+		APIVersion: i.APIVersion,
+		Kind:       i.Kind,
+		Name:       i.ObjectMeta.Name,
+		UID:        i.ObjectMeta.UID,
+		Controller: TruePtr(),
+	}
 }
