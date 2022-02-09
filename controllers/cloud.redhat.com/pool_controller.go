@@ -18,24 +18,15 @@ package controllers
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/go-logr/logr"
-	projectv1 "github.com/openshift/api/project/v1"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 
-	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
-	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 )
 
@@ -82,10 +73,24 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	}
 
 	if r.underManaged(pool) {
-		if err := r.createNS(ctx, pool); err != nil {
-			r.Log.Error(err, "Unable to create namespace")
-			return ctrl.Result{}, err
-		}
+		go func() {
+			statusAnnotation := map[string]string{
+				"pool-status": "",
+			}
+
+			ns, err := SetupNamespace(ctx, r.Client, r.Config, r.Log)
+			if err != nil {
+				r.Log.Error(err, "Encountered error during namespace setup.")
+				statusAnnotation["pool-status"] = "error"
+			} else {
+				statusAnnotation["pool-status"] = "ready"
+			}
+
+			UpdateAnnotations(ctx, r.Client, statusAnnotation, ns)
+
+			// manual requeue after namespace setup complete?
+		}()
+
 		return ctrl.Result{RequeueAfter: 5}, err
 	}
 
@@ -140,147 +145,4 @@ func (r *PoolReconciler) underManaged(pool crd.Pool) bool {
 		return true
 	}
 	return false
-}
-
-func (r *PoolReconciler) createNS(ctx context.Context, pool crd.Pool) error {
-	// Create project or namespace depending on environment
-	ns := core.Namespace{}
-	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
-	r.Log.Info("Creating new namespace", "ns-name", ns.Name)
-
-	initialAnnotations := map[string]string{
-		"pool-status": "creating",
-		"operator-ns": "true",
-	}
-
-	ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
-
-	if r.Config.PoolConfig.Local {
-		if err := r.Client.Create(ctx, &ns); err != nil {
-			return err
-		}
-	} else {
-		project := projectv1.ProjectRequest{}
-		project.Name = ns.Name
-		if err := r.Client.Create(ctx, &project); err != nil {
-			return err
-		}
-	}
-
-	// Create ClowdEnvironment
-	env := clowder.ClowdEnvironment{
-		Spec: r.Config.ClowdEnvSpec,
-	}
-	env.SetName(fmt.Sprintf("env-%s", ns.Name))
-	env.Spec.TargetNamespace = ns.Name
-
-	// Retrieve namespace to populate APIVersion and Kind values
-	// Use retry in case object retrieval is attempted before creation is done
-	err := retry.OnError(
-		wait.Backoff(retry.DefaultBackoff),
-		func(error) bool { return true }, // hack - return true if err is notFound
-		func() error {
-			err := r.Client.Get(ctx, types.NamespacedName{Name: ns.Name}, &ns)
-			return err
-		},
-	)
-	if err != nil {
-		r.Log.Error(err, "Cannot get namespace", "ns-name", ns.Name)
-		return err
-	}
-
-	env.SetOwnerReferences([]metav1.OwnerReference{
-		{
-			APIVersion: ns.APIVersion,
-			Kind:       ns.Kind,
-			Name:       ns.Name,
-			UID:        ns.UID,
-		},
-	})
-
-	r.Log.Info("Creating ClowdEnv for ns", "ns-name", ns.Name)
-	if err := r.Client.Create(ctx, &env); err != nil {
-		r.Log.Error(err, "Cannot Create ClowdEnv in Namespace", "ns-name", ns.Name)
-		return err
-	}
-
-	// Set initial annotations on ns
-	r.Log.Info("Setting initial annotations on ns", "ns-name", ns.Name)
-	ns.SetAnnotations(initialAnnotations)
-	err = r.Client.Update(ctx, &ns)
-	if err != nil {
-		r.Log.Error(err, "Could not update namespace annotations", "ns-name", ns.Name)
-		return err
-	}
-
-	// Create LimitRange
-	limitRange := r.Config.LimitRange
-	limitRange.SetNamespace(ns.Name)
-	if err := r.Client.Create(ctx, &limitRange); err != nil {
-		r.Log.Error(err, "Cannot create LimitRange in Namespace", "ns-name", ns.Name)
-		return err
-	}
-
-	// Create ResourceQuotas
-	resourceQuotas := r.Config.ResourceQuotas
-	for _, quota := range resourceQuotas.Items {
-		quota.SetNamespace(ns.Name)
-		if err := r.Client.Create(ctx, &quota); err != nil {
-			r.Log.Error(err, "Cannot create ResourceQuota in Namespace", "ns-name", ns.Name)
-			return err
-		}
-	}
-
-	// Copy secrets
-	secrets := core.SecretList{}
-	err = r.Client.List(ctx, &secrets, client.InNamespace("ephemeral-base"))
-
-	if err != nil {
-		return err
-	}
-
-	r.Log.Info("Copying secrets from eph-base to new namespace", "ns-name", ns.Name)
-
-	for _, secret := range secrets.Items {
-		// Filter which secrets should be copied
-		// All secrets with the "qontract" annotations are defined in app-interface
-		if val, ok := secret.Annotations["qontract.integration"]; !ok {
-			continue
-		} else {
-			if val != "openshift-vault-secrets" {
-				continue
-			}
-		}
-
-		if val, ok := secret.Annotations["bonfire.ignore"]; ok {
-			if val == "true" {
-				continue
-			}
-		}
-
-		r.Log.Info("Copying secret", "secret-name", secret.Name, "ns-name", ns.Name)
-		src := types.NamespacedName{
-			Name:      secret.Name,
-			Namespace: secret.Namespace,
-		}
-
-		dst := types.NamespacedName{
-			Name:      secret.Name,
-			Namespace: ns.Name,
-		}
-
-		err, newNsSecret := utils.CopySecret(ctx, r.Client, src, dst)
-		if err != nil {
-			r.Log.Error(err, "Unable to copy secret from source namespace")
-			return err
-		}
-
-		if err := r.Client.Create(ctx, newNsSecret); err != nil {
-			r.Log.Error(err, "Unable to apply secret from source namespace")
-			return err
-		}
-
-	}
-
-	return nil
 }
