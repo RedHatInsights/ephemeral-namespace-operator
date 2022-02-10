@@ -26,4 +26,9 @@ resources:
   kind: Pool
   path: github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1
   version: v1alpha1
+- controller: true
+  domain: cloud.redhat.com
+  group: cloud.redhat.com
+  kind: Clowdenvironment
+  version: v1alpha1
 version: "3"

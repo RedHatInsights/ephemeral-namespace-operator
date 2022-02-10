@@ -220,12 +220,6 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 		return err
 	}
 
-	// Remove the namespace from the pool
-	// if err := r.Poller.CheckoutNs(readyNsName); err != nil {
-	// 	r.Log.Error(err, "Could not checkout namespace", "ns-name", readyNsName)
-	// 	return err
-	// }
-
 	// Add rolebinding to the namespace only after it has been owned by the CRD.
 	// We need to skip this on minikube
 	if err := r.addRoleBindings(ctx, &nsObject, r.Client); err != nil {

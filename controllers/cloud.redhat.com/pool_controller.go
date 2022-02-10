@@ -55,10 +55,10 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		return ctrl.Result{}, err
 	}
 
+	r.Log.Info("Pool status", "ready", status["ready"], "creating", status["creating"])
+
 	pool.Status.Ready = status["ready"]
 	pool.Status.Creating = status["creating"]
-
-	r.Log.Info("Namespace Pool Info", "pool", pool)
 
 	for i := r.underManaged(pool); i > 0; i-- {
 		ns, err := CreateNamespace(ctx, r.Client, &pool, r.Config.PoolConfig.Local)
@@ -68,10 +68,8 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 				r.Client.Delete(ctx, ns)
 			}
 		}
-		go func() {
-			SetupNamespace(ctx, r.Client, r.Config, r.Log, ns.Name)
-			// manual requeue after namespace setup complete?
-		}()
+		SetupNamespace(ctx, r.Client, r.Config, r.Log, ns.Name)
+		pool.Status.Creating++
 	}
 
 	if err := r.Status().Update(ctx, &pool); err != nil {
@@ -86,7 +84,8 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 func (r *PoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&crd.Pool{}).
-		Watches(&source.Kind{Type: &core.Namespace{}}, &handler.EnqueueRequestForOwner{IsController: true, OwnerType: &crd.Pool{}}).
+		Watches(&source.Kind{Type: &core.Namespace{}},
+			&handler.EnqueueRequestForOwner{IsController: true, OwnerType: &crd.Pool{}}).
 		Complete(r)
 }
 

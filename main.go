@@ -97,7 +97,7 @@ func main() {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 		Poller: &poller,
-		Log:    ctrl.Log.WithName("controllers").WithName("NamespaceReservation"),
+		Log:    ctrl.Log.WithName("controllers").WithName("ReservationController"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NamespaceReservation")
 		os.Exit(1)
@@ -106,9 +106,17 @@ func main() {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 		Config: controllers.LoadedOperatorConfig,
-		Log:    ctrl.Log.WithName("controllers").WithName("Pool"),
+		Log:    ctrl.Log.WithName("controllers").WithName("PoolController"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Pool")
+		os.Exit(1)
+	}
+	if err = (&controllers.ClowdenvironmentReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+		Log:    ctrl.Log.WithName("controllers").WithName("ClowdEnvController"),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Clowdenvironment")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

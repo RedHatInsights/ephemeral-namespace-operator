@@ -54,20 +54,20 @@ func SetupNamespace(ctx context.Context, cl client.Client, cfg OperatorConfig, l
 	// Wait for clowdenv to go ready before proceeding
 	// TODO: Add timeout
 	// TODO: Instead of waiting - watch clowdenvs for updates in controller?
-	log.Info("Verifying that the ClowdEnv is ready for namespace", "ns-name", ns)
-	clowdEnv := WaitForClowdEnv(ctx, cl, log, ns)
+	// log.Info("Verifying that the ClowdEnv is ready for namespace", "ns-name", ns)
+	// clowdEnv := WaitForClowdEnv(ctx, cl, log, ns)
 
-	// Create FrontendEnvironment if ClowdEnvironment's web provider is set to 'local' mode
-	if clowdEnv.Spec.Providers.Web.Mode == "local" {
-		if err := CreateFrontendEnv(ctx, cl, ns, *clowdEnv); err != nil {
-			log.Error(err, "Could not create frontend environment", "ns-name", ns)
-			UpdateAnnotations(ctx, cl, errorAnnotations, ns)
-			return
-		}
-	}
+	// // Create FrontendEnvironment if ClowdEnvironment's web provider is set to 'local' mode
+	// if clowdEnv.Spec.Providers.Web.Mode == "local" {
+	// 	if err := CreateFrontendEnv(ctx, cl, ns, *clowdEnv); err != nil {
+	// 		log.Error(err, "Could not create frontend environment", "ns-name", ns)
+	// 		UpdateAnnotations(ctx, cl, errorAnnotations, ns)
+	// 		return
+	// 	}
+	// }
 
-	UpdateAnnotations(ctx, cl, readyAnnotations, ns)
-	log.Info("Namespace setup completed successfully", "ns-name", ns)
+	// UpdateAnnotations(ctx, cl, readyAnnotations, ns)
+	// log.Info("Namespace setup completed successfully", "ns-name", ns)
 
 	return
 }
