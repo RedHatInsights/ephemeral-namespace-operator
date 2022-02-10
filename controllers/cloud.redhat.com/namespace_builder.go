@@ -20,6 +20,7 @@ func SetupNamespace(ctx context.Context, cl client.Client, cfg OperatorConfig, l
 	log.Info("Creating new ClowdEnvironment", "ns-name", ns)
 	if err := CreateClowdEnv(ctx, cl, cfg.ClowdEnvSpec, ns); err != nil {
 		log.Error(err, "Error creating ClowdEnvironment", "ns-name", ns)
+		UpdateAnnotations(ctx, cl, errorAnnotations, ns)
 		return
 	}
 

@@ -24,6 +24,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 )
@@ -55,10 +57,6 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 
 	pool.Status.Ready = status["ready"]
 	pool.Status.Creating = status["creating"]
-	if err := r.Status().Update(ctx, &pool); err != nil {
-		r.Log.Error(err, "Cannot update pool status")
-		return ctrl.Result{}, err
-	}
 
 	r.Log.Info("Namespace Pool Info", "pool", pool)
 
@@ -76,6 +74,11 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		}()
 	}
 
+	if err := r.Status().Update(ctx, &pool); err != nil {
+		r.Log.Error(err, "Cannot update pool status")
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -83,6 +86,7 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 func (r *PoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&crd.Pool{}).
+		Watches(&source.Kind{Type: &core.Namespace{}}, &handler.EnqueueRequestForOwner{IsController: true, OwnerType: &crd.Pool{}}).
 		Complete(r)
 }
 

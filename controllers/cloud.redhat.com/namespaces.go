@@ -30,12 +30,14 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.Pool, loca
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
 
 	if local {
+		ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
 		if err := cl.Create(ctx, &ns); err != nil {
 			return nil, err
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
 		project.Name = ns.Name
+		project.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
 		if err := cl.Create(ctx, &project); err != nil {
 			return nil, err
 		}
@@ -43,10 +45,6 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.Pool, loca
 
 	if err := UpdateAnnotations(ctx, cl, initialAnnotations, ns.Name); err != nil {
 		return &ns, errors.New(fmt.Sprintf("Error setting initial annotations: %s", err))
-	}
-
-	if err := UpdateOwnerRef(ctx, cl, ns.Name, []metav1.OwnerReference{pool.MakeOwnerReference()}); err != nil {
-		return &ns, errors.New(fmt.Sprintf("Error updating ns owner reference to pool: %s", err))
 	}
 
 	return &ns, nil
