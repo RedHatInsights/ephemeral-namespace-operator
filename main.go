@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"container/list"
 	"flag"
 	"os"
 
@@ -88,18 +87,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	pool := controllers.NamespacePool{
-		ReadyNamespaces:    list.New(),
+	poller := controllers.Poller{
+		Client:             mgr.GetClient(),
 		ActiveReservations: make(map[string]metav1.Time),
-		Config:             controllers.LoadedOperatorConfig,
-		Log:                ctrl.Log.WithName("NamespacePool"),
+		Log:                ctrl.Log.WithName("Poller"),
 	}
 
 	if err = (&controllers.NamespaceReservationReconciler{
-		Client:        mgr.GetClient(),
-		Scheme:        mgr.GetScheme(),
-		NamespacePool: &pool,
-		Log:           ctrl.Log.WithName("controllers").WithName("NamespaceReservation"),
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+		Poller: &poller,
+		Log:    ctrl.Log.WithName("controllers").WithName("NamespaceReservation"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NamespaceReservation")
 		os.Exit(1)
@@ -124,7 +122,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// go controllers.Poll(mgr.GetClient(), &pool)
+	go poller.Poll()
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

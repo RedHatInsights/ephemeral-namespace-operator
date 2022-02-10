@@ -25,8 +25,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8serr "k8s.io/apimachinery/pkg/api/errors"
-
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 )
 
@@ -45,16 +43,6 @@ type PoolReconciler struct {
 func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	pool := crd.Pool{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &pool); err != nil {
-		if k8serr.IsNotFound(err) {
-			r.Log.Info("Existing pool CRD not found. Creating one from config")
-			pool.Spec.Size = r.Config.PoolConfig.Size
-			pool.Spec.Local = r.Config.PoolConfig.Local
-			if err := r.Client.Create(ctx, &pool); err != nil {
-				r.Log.Error(err, "Error creating namespace pool CRD")
-				return ctrl.Result{}, err
-			}
-			return ctrl.Result{}, nil
-		}
 		r.Log.Error(err, "Error retrieving namespace pool")
 		return ctrl.Result{}, err
 	}
@@ -72,26 +60,20 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		return ctrl.Result{}, err
 	}
 
-	if r.underManaged(pool) {
+	r.Log.Info("Namespace Pool Info", "pool", pool)
+
+	for i := r.underManaged(pool); i > 0; i-- {
+		ns, err := CreateNamespace(ctx, r.Client, &pool, r.Config.PoolConfig.Local)
+		if err != nil {
+			r.Log.Error(err, "Error while creating namespace")
+			if ns != nil {
+				r.Client.Delete(ctx, ns)
+			}
+		}
 		go func() {
-			statusAnnotation := map[string]string{
-				"pool-status": "",
-			}
-
-			ns, err := SetupNamespace(ctx, r.Client, r.Config, r.Log)
-			if err != nil {
-				r.Log.Error(err, "Encountered error during namespace setup.")
-				statusAnnotation["pool-status"] = "error"
-			} else {
-				statusAnnotation["pool-status"] = "ready"
-			}
-
-			UpdateAnnotations(ctx, r.Client, statusAnnotation, ns)
-
+			SetupNamespace(ctx, r.Client, r.Config, r.Log, ns.Name)
 			// manual requeue after namespace setup complete?
 		}()
-
-		return ctrl.Result{RequeueAfter: 5}, err
 	}
 
 	return ctrl.Result{}, nil
@@ -117,12 +99,13 @@ func (r *PoolReconciler) getPoolStatus(ctx context.Context, pool crd.Pool) (map[
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.UID == pool.GetUID() {
-				switch ns.Annotations["pool-status"] {
+				switch ns.Annotations["status"] {
 				case "ready":
 					readyNS++
 				case "creating":
 					creatingNS++
 				case "error":
+					r.Log.Info("Error status for namespace. Deleting", "ns-name", ns)
 					r.Client.Delete(ctx, &ns)
 				}
 			}
@@ -136,13 +119,10 @@ func (r *PoolReconciler) getPoolStatus(ctx context.Context, pool crd.Pool) (map[
 	return status, nil
 }
 
-func (r *PoolReconciler) underManaged(pool crd.Pool) bool {
+func (r *PoolReconciler) underManaged(pool crd.Pool) int {
 	size := pool.Spec.Size
 	ready := pool.Status.Ready
 	creating := pool.Status.Creating
 
-	if ready+creating < size {
-		return true
-	}
-	return false
+	return size - (ready + creating)
 }

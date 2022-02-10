@@ -2,37 +2,54 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	core "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 
 	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
+	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	projectv1 "github.com/openshift/api/project/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateNamespace(ctx context.Context, cl client.Client, local bool) (string, error) {
+var initialAnnotations = map[string]string{
+	"status":      "creating",
+	"operator-ns": "true",
+}
+
+func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.Pool, local bool) (*core.Namespace, error) {
 	// Create project or namespace depending on environment
 	ns := core.Namespace{}
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
 
 	if local {
 		if err := cl.Create(ctx, &ns); err != nil {
-			return "", err
+			return nil, err
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
 		project.Name = ns.Name
 		if err := cl.Create(ctx, &project); err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
-	return ns.Name, nil
+	if err := UpdateAnnotations(ctx, cl, initialAnnotations, ns.Name); err != nil {
+		return &ns, errors.New(fmt.Sprintf("Error setting initial annotations: %s", err))
+	}
+
+	if err := UpdateOwnerRef(ctx, cl, ns.Name, []metav1.OwnerReference{pool.MakeOwnerReference()}); err != nil {
+		return &ns, errors.New(fmt.Sprintf("Error updating ns owner reference to pool: %s", err))
+	}
+
+	return &ns, nil
 }
 
 func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Namespace, error) {
@@ -54,6 +71,26 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 	return ns, nil
 }
 
+func GetNamespacesByStatus(ctx context.Context, cl client.Client, status string) ([]core.Namespace, error) {
+	nsList := core.NamespaceList{}
+	if err := cl.List(ctx, &nsList); err != nil {
+		return nil, err
+	}
+
+	var ready []core.Namespace
+
+	for _, ns := range nsList.Items {
+		matched, _ := regexp.MatchString(`ephemeral-\w{6}$`, ns.Name)
+		if matched {
+			if val, ok := ns.ObjectMeta.Annotations["status"]; ok && val == status {
+				ready = append(ready, ns)
+			}
+		}
+	}
+
+	return ready, nil
+}
+
 func UpdateAnnotations(ctx context.Context, cl client.Client, annotations map[string]string, nsName string) error {
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {
@@ -67,6 +104,21 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, annotations map[st
 			ns.Annotations[k] = v
 		}
 	}
+
+	if err := cl.Update(ctx, &ns); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateOwnerRef(ctx context.Context, cl client.Client, nsName string, owner []metav1.OwnerReference) error {
+	ns, err := GetNamespace(ctx, cl, nsName)
+	if err != nil {
+		return err
+	}
+
+	ns.SetOwnerReferences(owner)
 
 	if err := cl.Update(ctx, &ns); err != nil {
 		return err
