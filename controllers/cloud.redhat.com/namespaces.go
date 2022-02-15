@@ -170,3 +170,18 @@ func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 	}
 	return nil
 }
+
+func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error {
+	UpdateAnnotations(ctx, cl, map[string]string{"status": "deleting"}, nsName)
+
+	ns, err := GetNamespace(ctx, cl, nsName)
+	if err != nil {
+		return err
+	}
+
+	if err := cl.Delete(ctx, &ns); err != nil {
+		return err
+	}
+
+	return nil
+}

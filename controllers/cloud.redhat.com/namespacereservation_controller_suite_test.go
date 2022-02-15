@@ -29,7 +29,7 @@ func newReservation(resName string, duration string, requester string) *crd.Name
 	}
 }
 
-var _ = Describe("Namespace controller basic reservation", func() {
+var _ = Describe("Reservation controller basic reservation", func() {
 	const (
 		timeout  = time.Second * 90
 		duration = time.Second * 90
@@ -37,8 +37,8 @@ var _ = Describe("Namespace controller basic reservation", func() {
 	)
 
 	Context("When creating a Reservation Resource", func() {
-		It("Should setup the namespace properly", func() {
-			By("Creating a namespace/project")
+		It("Should assign a namespace to the reservation", func() {
+			By("Updating the reservation")
 			ctx := context.Background()
 			resName := "test-frontend"
 

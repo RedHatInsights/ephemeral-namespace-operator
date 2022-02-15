@@ -109,7 +109,7 @@ func (r *PoolReconciler) getPoolStatus(ctx context.Context, pool crd.Pool) (map[
 					creatingNS++
 				case "error":
 					r.Log.Info("Error status for namespace. Deleting", "ns-name", ns.Name)
-					r.Client.Delete(ctx, &ns)
+					DeleteNamespace(ctx, r.Client, ns.Name)
 				}
 			}
 		}
