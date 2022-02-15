@@ -39,15 +39,6 @@ type ClowdenvironmentReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Clowdenvironment object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	env := clowder.ClowdEnvironment{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &env); err != nil {
@@ -58,11 +49,18 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	r.Log.Info("Reconciling clowdenv", "env-name", env.Name)
 
 	if ready, _ := VerifyClowdEnvReady(env); ready {
-		if err := CreateFrontendEnv(ctx, r.Client, env.Status.TargetNamespace, env); err != nil {
-			r.Log.Error(err, "Error creating frontend env", "ns-name", env.Status.TargetNamespace)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, env.Status.TargetNamespace)
+		ns, err := GetNamespace(ctx, r.Client, env.Status.TargetNamespace)
+		if err != nil {
+			r.Log.Error(err, "Error retrieving namespace for clowdenv", "env-name", env.Name)
+			return ctrl.Result{}, err
 		}
-		UpdateAnnotations(ctx, r.Client, map[string]string{"status": "ready"}, env.Status.TargetNamespace)
+		if ns.Annotations["status"] != "ready" {
+			if err := CreateFrontendEnv(ctx, r.Client, env.Status.TargetNamespace, env); err != nil {
+				r.Log.Error(err, "Error creating frontend env", "ns-name", env.Status.TargetNamespace)
+				UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, env.Status.TargetNamespace)
+			}
+			UpdateAnnotations(ctx, r.Client, map[string]string{"status": "ready"}, env.Status.TargetNamespace)
+		}
 	}
 
 	return ctrl.Result{}, nil
@@ -88,6 +86,9 @@ func poolFilter(ctx context.Context, cl client.Client) predicate.Predicate {
 			object := e.Object.(*clowder.ClowdEnvironment)
 
 			return isOwnedByPool(ctx, cl, object.Status.TargetNamespace)
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			return false
 		},
 	}
 }
