@@ -210,6 +210,13 @@ var _ = BeforeSuite(func() {
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
+	err = (&ClowdenvironmentReconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+		Log:    ctrl.Log.WithName("controllers").WithName("ClowdEnvController"),
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
 	ctx, cancel := context.WithCancel(context.Background())
 	stopController = cancel
 

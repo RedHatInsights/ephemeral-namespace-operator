@@ -21,6 +21,7 @@ import (
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/go-logr/logr"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -49,17 +50,14 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	r.Log.Info("Reconciling clowdenv", "env-name", env.Name)
 
 	if ready, _ := VerifyClowdEnvReady(env); ready {
-		ns, err := GetNamespace(ctx, r.Client, env.Status.TargetNamespace)
-		if err != nil {
-			r.Log.Error(err, "Error retrieving namespace for clowdenv", "env-name", env.Name)
-			return ctrl.Result{}, err
-		}
-		if ns.Annotations["status"] != "ready" {
-			if err := CreateFrontendEnv(ctx, r.Client, env.Status.TargetNamespace, env); err != nil {
-				r.Log.Error(err, "Error creating frontend env", "ns-name", env.Status.TargetNamespace)
-				UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, env.Status.TargetNamespace)
+		ns := env.Spec.TargetNamespace
+		if err := CreateFrontendEnv(ctx, r.Client, ns, env); err != nil {
+			if !errors.IsAlreadyExists(err) {
+				r.Log.Error(err, "Error creating frontend env", "ns-name", ns)
+				UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, ns)
 			}
-			UpdateAnnotations(ctx, r.Client, map[string]string{"status": "ready"}, env.Status.TargetNamespace)
+		} else {
+			UpdateAnnotations(ctx, r.Client, map[string]string{"status": "ready"}, ns)
 		}
 	}
 
@@ -79,13 +77,11 @@ func poolFilter(ctx context.Context, cl client.Client) predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
 			newObject := e.ObjectNew.(*clowder.ClowdEnvironment)
-
-			return isOwnedByPool(ctx, cl, newObject.Status.TargetNamespace)
+			return isOwnedByPool(ctx, cl, newObject.Spec.TargetNamespace)
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			object := e.Object.(*clowder.ClowdEnvironment)
-
-			return isOwnedByPool(ctx, cl, object.Status.TargetNamespace)
+			return isOwnedByPool(ctx, cl, object.Spec.TargetNamespace)
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			return false
