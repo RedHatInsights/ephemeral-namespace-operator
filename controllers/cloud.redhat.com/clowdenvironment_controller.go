@@ -47,16 +47,19 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
-	r.Log.Info("Reconciling clowdenv", "env-name", env.Name)
+	r.Log.Info("Reconciling clowdenv", "env-name", env.Name, "conditions", env.Status.Conditions)
 
 	if ready, _ := VerifyClowdEnvReady(env); ready {
+		r.Log.Info("Clowdenv ready", "env-name", env.Name)
 		ns := env.Spec.TargetNamespace
+		r.Log.Info("Checking for frontend environment", "ns-name", ns)
 		if err := CreateFrontendEnv(ctx, r.Client, ns, env); err != nil {
 			if !errors.IsAlreadyExists(err) {
 				r.Log.Error(err, "Error creating frontend env", "ns-name", ns)
 				UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, ns)
 			}
 		} else {
+			r.Log.Info("Creating frontend environment", "ns-name", ns)
 			UpdateAnnotations(ctx, r.Client, map[string]string{"status": "ready"}, ns)
 		}
 	}

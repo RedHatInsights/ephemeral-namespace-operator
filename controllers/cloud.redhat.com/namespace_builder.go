@@ -25,6 +25,7 @@ func SetupNamespace(ctx context.Context, cl client.Client, cfg OperatorConfig, l
 	}
 
 	// Create LimitRange
+	log.Info("Creating limit range", "ns-name", ns)
 	limitRange := cfg.LimitRange
 	limitRange.SetNamespace(ns)
 	if err := cl.Create(ctx, &limitRange); err != nil {
@@ -34,6 +35,7 @@ func SetupNamespace(ctx context.Context, cl client.Client, cfg OperatorConfig, l
 	}
 
 	// Create ResourceQuotas
+	log.Info("Creating resource quota", "ns-name", ns)
 	resourceQuotas := cfg.ResourceQuotas
 	for _, quota := range resourceQuotas.Items {
 		quota.SetNamespace(ns)
@@ -45,6 +47,7 @@ func SetupNamespace(ctx context.Context, cl client.Client, cfg OperatorConfig, l
 	}
 
 	// Copy secrets
+	log.Info("Copying secrets from ephemeral-base", "ns-name", ns)
 	if err := CopySecrets(ctx, cl, ns); err != nil {
 		log.Error(err, "Could not copy secrets into namespace", "ns-name", ns)
 		UpdateAnnotations(ctx, cl, errorAnnotations, ns)
