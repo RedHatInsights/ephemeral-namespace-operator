@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -24,30 +23,45 @@ var initialAnnotations = map[string]string{
 	"operator-ns": "true",
 }
 
-func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.Pool, local bool) (*core.Namespace, error) {
+func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.Pool) (string, error) {
 	// Create project or namespace depending on environment
 	ns := core.Namespace{}
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
 
-	if local {
-		ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
+	if pool.Spec.Local {
 		if err := cl.Create(ctx, &ns); err != nil {
-			return nil, err
+			return "", err
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
 		project.Name = ns.Name
-		project.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
 		if err := cl.Create(ctx, &project); err != nil {
-			return nil, err
+			return "", err
 		}
 	}
 
-	if err := UpdateAnnotations(ctx, cl, initialAnnotations, ns.Name); err != nil {
-		return &ns, errors.New(fmt.Sprintf("Error setting initial annotations: %s", err))
+	// WORKAROUND: Can't set annotations and ownerref on project request during create
+	// Performing annotation and ownerref change in one transaction
+	ns, err := GetNamespace(ctx, cl, ns.Name)
+	if err != nil {
+		return ns.Name, err
 	}
 
-	return &ns, nil
+	if len(ns.Annotations) == 0 {
+		ns.SetAnnotations(initialAnnotations)
+	} else {
+		for k, v := range initialAnnotations {
+			ns.Annotations[k] = v
+		}
+	}
+
+	ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
+
+	if err := cl.Update(ctx, &ns); err != nil {
+		return ns.Name, err
+	}
+
+	return ns.Name, nil
 }
 
 func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Namespace, error) {
@@ -102,21 +116,6 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, annotations map[st
 			ns.Annotations[k] = v
 		}
 	}
-
-	if err := cl.Update(ctx, &ns); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func UpdateOwnerRef(ctx context.Context, cl client.Client, nsName string, owner []metav1.OwnerReference) error {
-	ns, err := GetNamespace(ctx, cl, nsName)
-	if err != nil {
-		return err
-	}
-
-	ns.SetOwnerReferences(owner)
 
 	if err := cl.Update(ctx, &ns); err != nil {
 		return err

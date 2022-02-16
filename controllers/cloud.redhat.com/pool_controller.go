@@ -61,15 +61,23 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	pool.Status.Creating = status["creating"]
 
 	for i := r.underManaged(pool); i > 0; i-- {
-		ns, err := CreateNamespace(ctx, r.Client, &pool, r.Config.PoolConfig.Local)
+		nsName, err := CreateNamespace(ctx, r.Client, &pool)
 		if err != nil {
 			r.Log.Error(err, "Error while creating namespace")
-			if ns != nil {
-				r.Client.Delete(ctx, ns)
+			if nsName != "" {
+				ns, err := GetNamespace(ctx, r.Client, nsName)
+				if err != nil {
+					r.Log.Error(err, "Could not retrieve namespace for deletion", "ns-name", nsName)
+				} else {
+					r.Client.Delete(ctx, &ns)
+				}
 			}
+
+		} else {
+			r.Log.Info("Setting up new namespace", "ns-name", nsName)
+			SetupNamespace(ctx, r.Client, r.Config, r.Log, nsName)
+			pool.Status.Creating++
 		}
-		SetupNamespace(ctx, r.Client, r.Config, r.Log, ns.Name)
-		pool.Status.Creating++
 	}
 
 	if err := r.Status().Update(ctx, &pool); err != nil {
