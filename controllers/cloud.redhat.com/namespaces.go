@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	core "k8s.io/api/core/v1"
@@ -83,7 +82,7 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 	return ns, nil
 }
 
-func GetNamespacesByStatus(ctx context.Context, cl client.Client, status string) ([]core.Namespace, error) {
+func GetReadyNamespaces(ctx context.Context, cl client.Client) ([]core.Namespace, error) {
 	nsList := core.NamespaceList{}
 	if err := cl.List(ctx, &nsList); err != nil {
 		return nil, err
@@ -92,10 +91,11 @@ func GetNamespacesByStatus(ctx context.Context, cl client.Client, status string)
 	var ready []core.Namespace
 
 	for _, ns := range nsList.Items {
-		matched, _ := regexp.MatchString(`ephemeral-\w{6}$`, ns.Name)
-		if matched {
-			if val, ok := ns.ObjectMeta.Annotations["status"]; ok && val == status {
-				ready = append(ready, ns)
+		for _, owner := range ns.GetOwnerReferences() {
+			if owner.Kind == "Pool" {
+				if val, ok := ns.ObjectMeta.Annotations["status"]; ok && val == "ready" {
+					ready = append(ready, ns)
+				}
 			}
 		}
 	}

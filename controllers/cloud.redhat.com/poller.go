@@ -73,23 +73,6 @@ func (p *Poller) populateActiveReservations(ctx context.Context) error {
 	return nil
 }
 
-// func (p *Poller) checkExistingNamespaces(ctx context.Context) error {
-// 	nsList, err := GetNamespacesByStatus(ctx, p.Client, "creating")
-// 	if err != nil {
-// 		p.Log.Error(err, "Unable to check existing namespaces at startup")
-// 	}
-
-// 	for _, ns := range nsList {
-// 		if ready, _, _ := GetClowdEnv(ctx, p.Client, ns.Name); !ready {
-// 			p.Log.Info("Clowdenv not ready. Marking ns for deletion", "ns-name", ns.Name)
-// 			if err := UpdateAnnotations(ctx, p.Client, map[string]string{"status": "error"}, ns.Name); err != nil {
-// 				p.Log.Error(err, "Unable to mark ns for deletion", "ns-name", ns.Name)
-// 			}
-// 		}
-// 	}
-// 	return nil
-// }
-
 func (p *Poller) getExistingReservations(ctx context.Context) (*crd.NamespaceReservationList, error) {
 	resList := crd.NamespaceReservationList{}
 	err := p.Client.List(ctx, &resList)
