@@ -135,7 +135,7 @@
                 "spec": {
                     "hard": {
                         "limits.cpu": "32",
-                        "limits.memory": "48Gi",
+                        "limits.memory": "64Gi",
                         "requests.cpu": "16",
                         "requests.memory": "32Gi"
                     },
