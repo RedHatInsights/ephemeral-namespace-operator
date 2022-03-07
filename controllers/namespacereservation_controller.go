@@ -277,9 +277,10 @@ func (r *NamespaceReservationReconciler) addRoleBindings(ctx context.Context, ns
 		for name, kind := range hardCodedUserList() {
 			r.Log.Info(fmt.Sprintf("Creating rolebinding %s for %s: %s", roleName, kind, name), "ns-name", ns.Name)
 			binding.Subjects = append(binding.Subjects, rbac.Subject{
-				APIGroup: "rbac.authorization.k8s.io",
-				Kind:     kind,
-				Name:     name,
+				APIGroup:  "rbac.authorization.k8s.io",
+				Kind:      kind,
+				Name:      name,
+				Namespace: ns.Name,
 			})
 		}
 
@@ -309,6 +310,6 @@ func hardCodedUserList() map[string]string {
 	return map[string]string{
 		"ephemeral-users":      "Group",
 		"system:authenticated": "Group",
-		"system:serviceaccount:ephemeral-base:ephemeral-bot": "User",
+		"system:serviceaccount:ephemeral-base:ephemeral-bot": "ServiceAccount",
 	}
 }
