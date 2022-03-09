@@ -283,6 +283,12 @@ func (r *NamespaceReservationReconciler) addRoleBindings(ctx context.Context, ns
 			})
 		}
 
+		binding.Subjects = append(binding.Subjects, rbac.Subject{
+			Kind:      "ServiceAccount",
+			Name:      "ephemeral-bot",
+			Namespace: "ephemeral-base",
+		})
+
 		binding.SetName(fmt.Sprintf("%s-%s", ns.Name, roleName))
 		binding.SetNamespace(ns.Name)
 
@@ -309,6 +315,5 @@ func hardCodedUserList() map[string]string {
 	return map[string]string{
 		"ephemeral-users":      "Group",
 		"system:authenticated": "Group",
-		"system:serviceaccount:ephemeral-base:ephemeral-bot": "User",
 	}
 }
