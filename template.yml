@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: ephemeral-namespace-operator
+parameters:
+- name: IMAGE_TAG
+  value: latest
+- name: IMAGE
+  value: quay.io/cloudservices/ephemeral-namespace-operator
+objects: []
