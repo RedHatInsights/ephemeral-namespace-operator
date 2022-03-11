@@ -90,6 +90,81 @@ status:
   conditions: []
   storedVersions: []
 ---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: pools.cloud.redhat.com
+spec:
+  group: cloud.redhat.com
+  names:
+    kind: Pool
+    listKind: PoolList
+    plural: pools
+    shortNames:
+    - pool
+    singular: pool
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.size
+      name: Pool Size
+      type: string
+    - jsonPath: .status.ready
+      name: Ready
+      type: string
+    - jsonPath: .status.creating
+      name: Creating
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Pool is the Schema for the pools API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PoolSpec defines the desired state of Pool
+            properties:
+              local:
+                type: boolean
+              size:
+                type: integer
+            required:
+            - local
+            - size
+            type: object
+          status:
+            description: PoolStatus defines the observed state of Pool
+            properties:
+              creating:
+                type: integer
+              ready:
+                type: integer
+            required:
+            - creating
+            - ready
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -205,6 +280,20 @@ rules:
 - apiGroups:
   - cloud.redhat.com
   resources:
+  - clowdenvironments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - clowdenvironments/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud.redhat.com
+  resources:
   - frontendenvironments
   verbs:
   - create
@@ -236,6 +325,32 @@ rules:
   - cloud.redhat.com
   resources:
   - namespacereservations/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - pools
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - pools/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - pools/status
   verbs:
   - get
   - patch
@@ -424,7 +539,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: quay.io/cloudservices/ephemeral-namespace-operator:b7f214e
+        image: quay.io/cloudservices/ephemeral-namespace-operator:latest
         livenessProbe:
           httpGet:
             path: /healthz
