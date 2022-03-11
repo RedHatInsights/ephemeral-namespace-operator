@@ -15,7 +15,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 	const (
 		timeout  = time.Second * 90
 		duration = time.Second * 90
-		interval = time.Millisecond * 250
+		interval = time.Millisecond * 25
 	)
 
 	Context("When a pool is reconciled", func() {
@@ -81,7 +81,8 @@ var _ = Describe("Pool controller basic functionality", func() {
 				}
 			}
 
-			UpdateAnnotations(ctx, k8sClient, map[string]string{"status": "error"}, ownedNs.Name)
+			err = UpdateAnnotations(ctx, k8sClient, map[string]string{"status": "error"}, ownedNs.Name)
+			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {
 				k8sClient.Get(ctx, types.NamespacedName{Name: ownedNs.Name}, &ownedNs)
