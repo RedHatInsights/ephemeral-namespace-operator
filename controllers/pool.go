@@ -269,6 +269,46 @@ func (p *NamespacePool) GetClowdEnv(ctx context.Context, cl client.Client, ns co
 	return ready, &env, err
 }
 
+func (p *NamespacePool) createShimServices(ctx context.Context, cl client.Client, ns core.Namespace, clowdEnv clowder.ClowdEnvironment) error {
+	serviceNames := []string{"keycloak", "mbop", "mocktitlements"}
+
+	for _, serviceName := range serviceNames {
+		origSvc := core.Service{}
+		nn := types.NamespacedName{
+			Name:      fmt.Sprintf("%s-%s", clowdEnv.Name, serviceName),
+			Namespace: ns.Name,
+		}
+
+		err := cl.Get(ctx, nn, &origSvc)
+		if err != nil {
+			p.Log.Info("service %s not found in namespace, not creating shim for it", nn.Name)
+			continue
+		}
+
+		// create a new Service with the same configuration spec but a non-prefixed name
+		newSvc := core.Service{}
+		newSvc.SetName(serviceName)
+		newSvc.SetNamespace(ns.Name)
+		newSvc.Spec = origSvc.Spec
+		newSvc.SetOwnerReferences([]metav1.OwnerReference{
+			{
+				APIVersion: ns.APIVersion,
+				Kind:       ns.Kind,
+				Name:       ns.Name,
+				UID:        ns.UID,
+			},
+		})
+
+		err = cl.Create(ctx, &newSvc)
+		if err != nil {
+			p.Log.Error(err, "failed to create shim service for '%s'", serviceName)
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client, ns core.Namespace, clowdEnv clowder.ClowdEnvironment) error {
 	p.Log.Info("Creating FrontendEnvironment for ns", "ns-name", ns.Name)
 
@@ -308,6 +348,12 @@ func (p *NamespacePool) createFrontendEnv(ctx context.Context, cl client.Client,
 
 	if err := cl.Create(ctx, &frontendEnv); err != nil {
 		p.Log.Error(err, "Cannot create FrontendEnvironment for ns", "ns-name", ns.Name)
+		return err
+	}
+
+	// create "shim" services for keycloak, mbop, mocktitlements
+	// this is a temporary solution until apps begin to read the hostnames for these from their cdappconfig.json
+	if err := p.createShimServices(ctx, cl, ns, clowdEnv); err != nil {
 		return err
 	}
 
