@@ -281,7 +281,7 @@ func (p *NamespacePool) createShimServices(ctx context.Context, cl client.Client
 
 		err := cl.Get(ctx, nn, &origSvc)
 		if err != nil {
-			p.Log.Info("service %s not found in namespace, not creating shim for it", nn.Name)
+			p.Log.Info(fmt.Sprintf("service %s not found in namespace, not creating shim for it", serviceName), "ns-name", ns.Name)
 			continue
 		}
 
@@ -301,7 +301,7 @@ func (p *NamespacePool) createShimServices(ctx context.Context, cl client.Client
 
 		err = cl.Create(ctx, &newSvc)
 		if err != nil {
-			p.Log.Error(err, "failed to create shim service for '%s'", serviceName)
+			p.Log.Error(err, fmt.Sprintf("failed to create shim service for '%s'", serviceName), "ns-name", ns.Name)
 			return err
 		}
 	}
