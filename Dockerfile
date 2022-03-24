@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.16 as builder
+FROM registry.access.redhat.com/ubi8/go-toolset:1.16.7 as builder
 
 WORKDIR /workspace
 # Copy the Go Modules manifests
@@ -14,6 +14,8 @@ COPY main.go main.go
 COPY api/ api/
 COPY controllers/ controllers/
 COPY config/ config/
+
+USER 0
 
 # Build
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o manager main.go
