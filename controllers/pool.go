@@ -290,6 +290,9 @@ func (p *NamespacePool) createShimServices(ctx context.Context, cl client.Client
 		newSvc.SetName(serviceName)
 		newSvc.SetNamespace(ns.Name)
 		newSvc.Spec = origSvc.Spec
+		// empty the ClusterIPs so a new one is generated
+		newSvc.Spec.ClusterIP = ""
+		newSvc.Spec.ClusterIPs = []string{}
 		newSvc.SetOwnerReferences([]metav1.OwnerReference{
 			{
 				APIVersion: ns.APIVersion,
