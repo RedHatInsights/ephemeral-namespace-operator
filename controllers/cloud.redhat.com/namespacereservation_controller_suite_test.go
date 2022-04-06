@@ -106,9 +106,7 @@ var _ = Describe("Reservation controller basic reservation", func() {
 				if err1 != nil || err2 != nil || err3 != nil {
 					return false
 				}
-				if updatedR1.Status.State == "active" &&
-					updatedR2.Status.State == "active" &&
-					updatedR3.Status.State == "waiting" {
+				if updatedR3.Status.State == "waiting" {
 					return true
 				}
 				return false
