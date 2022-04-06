@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -61,6 +62,36 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.Pool) (str
 	}
 
 	return ns.Name, nil
+}
+
+func SetupNamespace(ctx context.Context, cl client.Client, cfg OperatorConfig, ns string) error {
+	// Create ClowdEnvironment
+	if err := CreateClowdEnv(ctx, cl, cfg.ClowdEnvSpec, ns); err != nil {
+		return errors.New("Error creating ClowdEnvironment: " + err.Error())
+	}
+
+	// Create LimitRange
+	limitRange := cfg.LimitRange
+	limitRange.SetNamespace(ns)
+	if err := cl.Create(ctx, &limitRange); err != nil {
+		return errors.New("Error creating LimitRange: " + err.Error())
+	}
+
+	// Create ResourceQuotas
+	resourceQuotas := cfg.ResourceQuotas
+	for _, quota := range resourceQuotas.Items {
+		quota.SetNamespace(ns)
+		if err := cl.Create(ctx, &quota); err != nil {
+			return errors.New("Error creating ResourceQuota: " + err.Error())
+		}
+	}
+
+	// Copy secrets
+	if err := CopySecrets(ctx, cl, ns); err != nil {
+		return errors.New("Error copying secrets: " + err.Error())
+	}
+
+	return nil
 }
 
 func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Namespace, error) {

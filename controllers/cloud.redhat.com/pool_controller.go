@@ -75,7 +75,20 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 
 		} else {
 			r.Log.Info("Setting up new namespace", "ns-name", nsName)
-			SetupNamespace(ctx, r.Client, r.Config, r.Log, nsName)
+			if err := SetupNamespace(ctx, r.Client, r.Config, nsName); err != nil {
+				r.Log.Error(err, "Error while setting up namespace", "ns-name", nsName)
+				if err := UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, nsName); err != nil {
+					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", nsName)
+					// Last resort - if annotations can't be updated attempt manual deletion of namespace
+					ns, err := GetNamespace(ctx, r.Client, nsName)
+					if err != nil {
+						r.Log.Error(err, "Could not retrieve namespace for deletion", "ns-name", nsName)
+					} else {
+						r.Client.Delete(ctx, &ns)
+					}
+				}
+				continue
+			}
 			pool.Status.Creating++
 		}
 	}

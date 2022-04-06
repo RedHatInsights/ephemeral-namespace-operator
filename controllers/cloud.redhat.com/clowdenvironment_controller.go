@@ -21,7 +21,6 @@ import (
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,8 +36,7 @@ type ClowdenvironmentReconciler struct {
 }
 
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/status,verbs=get
 
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	env := clowder.ClowdEnvironment{}
@@ -50,16 +48,14 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	r.Log.Info("Reconciling clowdenv", "env-name", env.Name, "conditions", env.Status.Conditions)
 
 	if ready, _ := VerifyClowdEnvReady(env); ready {
-		r.Log.Info("Clowdenv ready", "env-name", env.Name)
 		ns := env.Spec.TargetNamespace
-		r.Log.Info("Checking for frontend environment", "ns-name", ns)
+		r.Log.Info("Clowdenvironment ready", "ns-name", ns)
+
 		if err := CreateFrontendEnv(ctx, r.Client, ns, env); err != nil {
-			if !errors.IsAlreadyExists(err) {
-				r.Log.Error(err, "Error creating frontend env", "ns-name", ns)
-				UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, ns)
-			}
+			r.Log.Error(err, "Error encountered with frontend environment", "ns-name", ns)
+			UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, ns)
 		} else {
-			r.Log.Info("Creating frontend environment", "ns-name", ns)
+			r.Log.Info("Namespace ready", "ns-name", ns)
 			UpdateAnnotations(ctx, r.Client, map[string]string{"status": "ready"}, ns)
 		}
 	}
