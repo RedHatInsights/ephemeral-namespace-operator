@@ -102,13 +102,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "NamespaceReservation")
 		os.Exit(1)
 	}
-	if err = (&controllers.PoolReconciler{
+	if err = (&controllers.NamespacePoolReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 		Config: controllers.LoadedOperatorConfig,
-		Log:    ctrl.Log.WithName("controllers").WithName("PoolController"),
+		Log:    ctrl.Log.WithName("controllers").WithName("NamespacePoolController"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Pool")
+		setupLog.Error(err, "unable to create controller", "controller", "NamespacePool")
 		os.Exit(1)
 	}
 	if err = (&controllers.ClowdenvironmentReconciler{

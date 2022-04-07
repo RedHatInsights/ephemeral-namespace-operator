@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/go-logr/logr"
@@ -45,7 +46,11 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
-	r.Log.Info("Reconciling clowdenv", "env-name", env.Name, "conditions", env.Status.Conditions)
+	r.Log.Info(
+		"Reconciling clowdenv",
+		"env-name", env.Name,
+		"deployments", fmt.Sprintf("%d / %d", env.Status.Deployments.ReadyDeployments, env.Status.Deployments.ManagedDeployments),
+	)
 
 	if ready, _ := VerifyClowdEnvReady(env); ready {
 		ns := env.Spec.TargetNamespace
@@ -94,7 +99,7 @@ func isOwnedByPool(ctx context.Context, cl client.Client, nsName string) bool {
 		return false
 	}
 	for _, owner := range ns.GetOwnerReferences() {
-		if owner.Kind == "Pool" {
+		if owner.Kind == "NamespacePool" {
 			return true
 		}
 	}

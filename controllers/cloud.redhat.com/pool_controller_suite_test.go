@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	core "k8s.io/api/core/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -22,7 +23,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 		It("Should reconcile the number of managed namespaces", func() {
 			By("Comparing pool status to pool size")
 			ctx := context.Background()
-			pool := crd.Pool{}
+			pool := crd.NamespacePool{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-pool"}, &pool)
@@ -85,8 +86,8 @@ var _ = Describe("Pool controller basic functionality", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {
-				k8sClient.Get(ctx, types.NamespacedName{Name: ownedNs.Name}, &ownedNs)
-				if ownedNs.Status.Phase == "Terminating" {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: ownedNs.Name}, &ownedNs)
+				if k8serr.IsNotFound(err) || ownedNs.Status.Phase == "Terminating" {
 					return true
 				}
 				return false

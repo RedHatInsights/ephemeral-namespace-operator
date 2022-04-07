@@ -1,7 +1,7 @@
 apiVersion: cloud.redhat.com/v1alpha1
-kind: Pool
+kind: NamespacePool
 metadata:
-  name: pool-sample
+  name: namespacepool-sample
 spec:
   # Add fields here
   foo: bar

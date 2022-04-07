@@ -194,11 +194,11 @@ var _ = BeforeSuite(func() {
 		Log:                ctrl.Log.WithName("Poller"),
 	}
 
-	err = (&PoolReconciler{
+	err = (&NamespacePoolReconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
 		Config: testConfig,
-		Log:    ctrl.Log.WithName("controllers").WithName("PoolReconciler"),
+		Log:    ctrl.Log.WithName("controllers").WithName("NamespacePoolReconciler"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -220,15 +220,15 @@ var _ = BeforeSuite(func() {
 	ctx, cancel := context.WithCancel(context.Background())
 	stopController = cancel
 
-	pool := &crd.Pool{
+	pool := &crd.NamespacePool{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "cloud.redhat.com/",
-			Kind:       "Pool",
+			Kind:       "NamespacePool",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-pool",
 		},
-		Spec: crd.PoolSpec{
+		Spec: crd.NamespacePoolSpec{
 			Size:  testConfig.PoolConfig.Size,
 			Local: testConfig.PoolConfig.Local,
 		},

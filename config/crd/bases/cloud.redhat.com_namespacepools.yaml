@@ -31,7 +31,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: NamespacePool is the Schema for the namespacepools API
+        description: NamespacePool is the Schema for the pools API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -46,7 +46,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: NamespacePoolSpec defines the desired state of NamespacePool
+            description: NamespacePoolSpec defines the desired state of Pool
             properties:
               local:
                 type: boolean
@@ -57,7 +57,7 @@ spec:
             - size
             type: object
           status:
-            description: NamespacePoolStatus defines the observed state of NamespacePool
+            description: NamespacePoolStatus defines the observed state of Pool
             properties:
               creating:
                 type: integer

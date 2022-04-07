@@ -23,7 +23,7 @@ var initialAnnotations = map[string]string{
 	"operator-ns": "true",
 }
 
-func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.Pool) (string, error) {
+func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
 	// Create project or namespace depending on environment
 	ns := core.Namespace{}
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
@@ -123,7 +123,7 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client) ([]core.Namespace
 
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
-			if owner.Kind == "Pool" {
+			if owner.Kind == "NamespacePool" {
 				if val, ok := ns.ObjectMeta.Annotations["status"]; ok && val == "ready" {
 					ready = append(ready, ns)
 				}

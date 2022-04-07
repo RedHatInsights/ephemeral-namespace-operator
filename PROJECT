@@ -23,7 +23,7 @@ resources:
   controller: true
   domain: cloud.redhat.com
   group: cloud.redhat.com
-  kind: Pool
+  kind: NamespacePool
   path: github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1
   version: v1alpha1
 - controller: true

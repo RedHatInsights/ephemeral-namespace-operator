@@ -30,20 +30,20 @@ import (
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 )
 
-// PoolReconciler reconciles a Pool object
-type PoolReconciler struct {
+// NamespacePoolReconciler reconciles a NamespacePool object
+type NamespacePoolReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	Config OperatorConfig
 	Log    logr.Logger
 }
 
-//+kubebuilder:rbac:groups=cloud.redhat.com,resources=pools,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cloud.redhat.com,resources=pools/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cloud.redhat.com,resources=pools/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacepools,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacepools/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacepools/finalizers,verbs=update
 
-func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	pool := crd.Pool{}
+func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	pool := crd.NamespacePool{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &pool); err != nil {
 		r.Log.Error(err, "Error retrieving namespace pool")
 		return ctrl.Result{}, err
@@ -102,15 +102,15 @@ func (r *PoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *PoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&crd.Pool{}).
+		For(&crd.NamespacePool{}).
 		Watches(&source.Kind{Type: &core.Namespace{}},
-			&handler.EnqueueRequestForOwner{IsController: true, OwnerType: &crd.Pool{}}).
+			&handler.EnqueueRequestForOwner{IsController: true, OwnerType: &crd.NamespacePool{}}).
 		Complete(r)
 }
 
-func (r *PoolReconciler) getPoolStatus(ctx context.Context, pool crd.Pool) (map[string]int, error) {
+func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.NamespacePool) (map[string]int, error) {
 	nsList := core.NamespaceList{}
 	if err := r.Client.List(ctx, &nsList); err != nil {
 		r.Log.Error(err, "Unable to retrieve list of existing ready namespaces")
@@ -143,7 +143,7 @@ func (r *PoolReconciler) getPoolStatus(ctx context.Context, pool crd.Pool) (map[
 	return status, nil
 }
 
-func (r *PoolReconciler) underManaged(pool crd.Pool) int {
+func (r *NamespacePoolReconciler) underManaged(pool crd.NamespacePool) int {
 	size := pool.Spec.Size
 	ready := pool.Status.Ready
 	creating := pool.Status.Creating

@@ -25,11 +25,11 @@
                             "memory": "600Mi"
                         }
                     },
-                    "version": "2.7.0"
+                    "version": "2.8.0"
                 },
                 "connect": {
-                    "version": "2.7.0",
-                    "image": "quay.io/cloudservices/xjoin-kafka-connect-strimzi:182ab8b",
+                    "version": "2.8.0",
+                    "image": "quay.io/cloudservices/xjoin-kafka-connect-strimzi:61cc1b8",
                     "resources": {
                         "limits": {
                             "cpu": "500m",

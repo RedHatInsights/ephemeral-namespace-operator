@@ -1,13 +1,13 @@
-# permissions for end users to edit pools.
+# permissions for end users to edit namespacepools.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: pool-editor-role
+  name: namespacepool-editor-role
 rules:
 - apiGroups:
   - cloud.redhat.com
   resources:
-  - pools
+  - namespacepools
   verbs:
   - create
   - delete
@@ -19,6 +19,6 @@ rules:
 - apiGroups:
   - cloud.redhat.com
   resources:
-  - pools/status
+  - namespacepools/status
   verbs:
   - get
