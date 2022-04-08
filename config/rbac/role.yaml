@@ -37,6 +37,12 @@ rules:
 - apiGroups:
   - cloud.redhat.com
   resources:
+  - clowdenvironments/status
+  verbs:
+  - get
+- apiGroups:
+  - cloud.redhat.com
+  resources:
   - frontendenvironments
   verbs:
   - create
@@ -46,6 +52,32 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - namespacepools
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - namespacepools/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - namespacepools/status
+  verbs:
+  - get
+  - patch
+  - update
 - apiGroups:
   - cloud.redhat.com
   resources:

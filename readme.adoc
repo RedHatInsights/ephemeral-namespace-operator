@@ -9,8 +9,8 @@ Why not e.g. give each user a static namespace and let them manage the resources
 
 - Users tend to leave resources hanging around after they're done with them.
   We want to ensure resources are cleaned up with minimal effort from users.
-- Long-running environments reqiure work to maintain.
-  Instead users are encouraged to create new environments from scracth often;
+- Long-running environments require work to maintain.
+  Instead users are encouraged to create new environments from scratch often;
   ephemeral environments should be treated as disposable.
   The problem is that creating a new environment from scratch can take several minutes, which is a significant drag on development time (including PR check durations).
   Thus the operator just needs to keep a few pre-populated namespaces "on deck" ready for the next reservation request.
@@ -35,4 +35,4 @@ When the controller needs to create a new namespace to be added to the "on-deck"
 - `RoleBindings`: Access is granted to devs to edit resources in the namespace
 - Secrets are copied from the base namespace.
 
-image::design.svg[design]
+image::operator_diagram.png[design]

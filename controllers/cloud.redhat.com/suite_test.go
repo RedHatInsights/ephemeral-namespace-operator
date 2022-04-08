@@ -17,7 +17,6 @@ limitations under the License.
 package controllers
 
 import (
-	"container/list"
 	"context"
 	"fmt"
 	"path/filepath"
@@ -39,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
-	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	core "k8s.io/api/core/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -105,8 +104,8 @@ var _ = BeforeSuite(func() {
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
 		CRDDirectoryPaths: []string{
-			filepath.Join("..", "config", "crd", "bases"),
-			filepath.Join("..", "config", "crd", "static"), // added to the project manually
+			filepath.Join("..", "..", "config", "crd", "bases"),
+			filepath.Join("..", "..", "config", "crd", "static"), // added to the project manually
 		},
 		ErrorIfCRDPathMissing: true,
 	}
@@ -134,78 +133,110 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	pool := NamespacePool{
-		ReadyNamespaces:    list.New(),
-		ActiveReservations: make(map[string]metav1.Time),
-		Config: OperatorConfig{
-			PoolConfig: PoolConfig{
-				Size:  2,
-				Local: true,
-			},
-			ClowdEnvSpec: v1alpha1.ClowdEnvironmentSpec{
-				Providers: v1alpha1.ProvidersConfig{
-					Kafka: v1alpha1.KafkaConfig{
-						Mode: "operator",
-						Cluster: v1alpha1.KafkaClusterConfig{
-							Name:      "kafka",
-							Namespace: "kafka",
-							Replicas:  5,
-						},
-					},
-					Database: v1alpha1.DatabaseConfig{
-						Mode: "local",
-					},
-					Logging: v1alpha1.LoggingConfig{
-						Mode: "app-interface",
-					},
-					ObjectStore: v1alpha1.ObjectStoreConfig{
-						Mode: "app-interface",
-					},
-					InMemoryDB: v1alpha1.InMemoryDBConfig{
-						Mode: "redis",
-					},
-					Web: v1alpha1.WebConfig{
-						Port: int32(8000),
-						Mode: "none",
-					},
-					Metrics: v1alpha1.MetricsConfig{
-						Port: int32(9000),
-						Path: "/metrics",
-						Mode: "none",
-					},
-					FeatureFlags: v1alpha1.FeatureFlagsConfig{
-						Mode: "none",
-					},
-					Testing: v1alpha1.TestingConfig{
-						ConfigAccess:   "environment",
-						K8SAccessLevel: "edit",
-						Iqe: v1alpha1.IqeConfig{
-							ImageBase: "quay.io/cloudservices/iqe-tests",
-						},
-					},
-					AutoScaler: v1alpha1.AutoScalerConfig{
-						Mode: "keda",
+	testConfig := OperatorConfig{
+		PoolConfig: PoolConfig{
+			Size:  2,
+			Local: true,
+		},
+		ClowdEnvSpec: v1alpha1.ClowdEnvironmentSpec{
+			Providers: v1alpha1.ProvidersConfig{
+				Kafka: v1alpha1.KafkaConfig{
+					Mode: "operator",
+					Cluster: v1alpha1.KafkaClusterConfig{
+						Name:      "kafka",
+						Namespace: "kafka",
+						Replicas:  5,
 					},
 				},
+				Database: v1alpha1.DatabaseConfig{
+					Mode: "local",
+				},
+				Logging: v1alpha1.LoggingConfig{
+					Mode: "app-interface",
+				},
+				ObjectStore: v1alpha1.ObjectStoreConfig{
+					Mode: "app-interface",
+				},
+				InMemoryDB: v1alpha1.InMemoryDBConfig{
+					Mode: "redis",
+				},
+				Web: v1alpha1.WebConfig{
+					Port: int32(8000),
+					Mode: "none",
+				},
+				Metrics: v1alpha1.MetricsConfig{
+					Port: int32(9000),
+					Path: "/metrics",
+					Mode: "none",
+				},
+				FeatureFlags: v1alpha1.FeatureFlagsConfig{
+					Mode: "none",
+				},
+				Testing: v1alpha1.TestingConfig{
+					ConfigAccess:   "environment",
+					K8SAccessLevel: "edit",
+					Iqe: v1alpha1.IqeConfig{
+						ImageBase: "quay.io/cloudservices/iqe-tests",
+					},
+				},
+				AutoScaler: v1alpha1.AutoScalerConfig{
+					Mode: "keda",
+				},
 			},
-			LimitRange:     v1.LimitRange{},
-			ResourceQuotas: v1.ResourceQuotaList{},
 		},
-		Log: ctrl.Log.WithName("NamespacePool"),
+		LimitRange:     v1.LimitRange{},
+		ResourceQuotas: v1.ResourceQuotaList{},
 	}
 
+	poller := Poller{
+		Client:             k8sManager.GetClient(),
+		ActiveReservations: make(map[string]metav1.Time),
+		Log:                ctrl.Log.WithName("Poller"),
+	}
+
+	err = (&NamespacePoolReconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+		Config: testConfig,
+		Log:    ctrl.Log.WithName("controllers").WithName("NamespacePoolReconciler"),
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
 	err = (&NamespaceReservationReconciler{
-		Client:        k8sManager.GetClient(),
-		Scheme:        k8sManager.GetScheme(),
-		NamespacePool: &pool,
-		Log:           ctrl.Log.WithName("controllers").WithName("NamespaceReconciler"),
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+		Poller: &poller,
+		Log:    ctrl.Log.WithName("controllers").WithName("NamespaceReconciler"),
+	}).SetupWithManager(k8sManager)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = (&ClowdenvironmentReconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+		Log:    ctrl.Log.WithName("controllers").WithName("ClowdEnvController"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	ctx, cancel := context.WithCancel(context.Background())
 	stopController = cancel
 
-	go Poll(k8sManager.GetClient(), &pool)
+	pool := &crd.NamespacePool{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "cloud.redhat.com/",
+			Kind:       "NamespacePool",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "test-pool",
+		},
+		Spec: crd.NamespacePoolSpec{
+			Size:  testConfig.PoolConfig.Size,
+			Local: testConfig.PoolConfig.Local,
+		},
+	}
+
+	Expect(k8sClient.Create(ctx, pool)).Should(Succeed())
+
+	go poller.Poll()
 
 	go populateClowdEnvStatus(k8sManager.GetClient())
 

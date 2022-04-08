@@ -4,10 +4,11 @@ import (
 	"context"
 	"time"
 
-	crd "github.com/RedHatInsights/ephemeral-namespace-operator/api/v1alpha1"
+	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/rhc-osdk-utils/utils"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -28,7 +29,7 @@ func newReservation(resName string, duration string, requester string) *crd.Name
 	}
 }
 
-var _ = Describe("Namespace controller basic reservation", func() {
+var _ = Describe("Reservation controller basic reservation", func() {
 	const (
 		timeout  = time.Second * 90
 		duration = time.Second * 90
@@ -36,8 +37,8 @@ var _ = Describe("Namespace controller basic reservation", func() {
 	)
 
 	Context("When creating a Reservation Resource", func() {
-		It("Should setup the namespace properly", func() {
-			By("Creating a namespace/project")
+		It("Should assign a namespace to the reservation", func() {
+			By("Updating the reservation")
 			ctx := context.Background()
 			resName := "test-frontend"
 
@@ -60,7 +61,7 @@ var _ = Describe("Namespace controller basic reservation", func() {
 		})
 
 		It("Should handle expired reservations", func() {
-			By("Setting reservation state to expired")
+			By("Deleting the reservation")
 			ctx := context.Background()
 			resName := "short-reservation"
 
@@ -72,10 +73,7 @@ var _ = Describe("Namespace controller basic reservation", func() {
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
-				if err != nil {
-					return false
-				}
-				if updatedReservation.Status.State == "expired" {
+				if errors.IsNotFound(err) {
 					return true
 				}
 				return false
@@ -108,9 +106,7 @@ var _ = Describe("Namespace controller basic reservation", func() {
 				if err1 != nil || err2 != nil || err3 != nil {
 					return false
 				}
-				if updatedR1.Status.State == "active" &&
-					updatedR2.Status.State == "active" &&
-					updatedR3.Status.State == "waiting" {
+				if updatedR3.Status.State == "waiting" {
 					return true
 				}
 				return false
@@ -120,11 +116,10 @@ var _ = Describe("Namespace controller basic reservation", func() {
 				err1 := k8sClient.Get(ctx, types.NamespacedName{Name: resName1}, updatedR1)
 				err2 := k8sClient.Get(ctx, types.NamespacedName{Name: resName2}, updatedR2)
 				err3 := k8sClient.Get(ctx, types.NamespacedName{Name: resName3}, updatedR3)
-				if err1 != nil || err2 != nil || err3 != nil {
+				if errors.IsNotFound(err1) || err2 != nil || err3 != nil {
 					return false
 				}
-				if updatedR1.Status.State == "expired" &&
-					updatedR2.Status.State == "active" &&
+				if updatedR2.Status.State == "active" &&
 					updatedR3.Status.State == "active" {
 					return true
 				}
