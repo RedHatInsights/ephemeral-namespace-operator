@@ -29,7 +29,7 @@
                 },
                 "connect": {
                     "version": "3.0.0",
-                    "image": "quay.io/cloudservices/xjoin-kafka-connect-strimzi:61cc1b8",
+                    "image": "quay.io/cloudservices/xjoin-kafka-connect-strimzi:latest",
                     "resources": {
                         "limits": {
                             "cpu": "500m",
