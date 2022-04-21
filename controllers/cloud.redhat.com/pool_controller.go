@@ -18,9 +18,10 @@ package controllers
 
 import (
 	"context"
-
+	
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -112,14 +113,16 @@ func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.NamespacePool) (map[string]int, error) {
 	nsList := core.NamespaceList{}
-	if err := r.Client.List(ctx, &nsList); err != nil {
+	labelSelector, _ := labels.Parse("operator-ns=true")
+	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
+	if err := r.Client.List(ctx, &nsList, nsListOptions); err != nil {
 		r.Log.Error(err, "Unable to retrieve list of existing ready namespaces")
 		return nil, err
 	}
 
 	var readyNS int
 	var creatingNS int
-
+	
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.UID == pool.GetUID() {

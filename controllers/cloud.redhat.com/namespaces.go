@@ -8,6 +8,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
@@ -20,6 +21,10 @@ import (
 
 var initialAnnotations = map[string]string{
 	"status":      "creating",
+	"operator-ns": "true",
+}
+
+var initialLabels = map[string]string{
 	"operator-ns": "true",
 }
 
@@ -52,6 +57,14 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	} else {
 		for k, v := range initialAnnotations {
 			ns.Annotations[k] = v
+		}
+	}
+
+	if len(ns.Labels) == 0 {
+		ns.SetLabels(initialLabels)
+	} else {
+		for k, v := range initialLabels {
+			ns.Labels[k] = v
 		}
 	}
 
@@ -115,7 +128,10 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 
 func GetReadyNamespaces(ctx context.Context, cl client.Client) ([]core.Namespace, error) {
 	nsList := core.NamespaceList{}
-	if err := cl.List(ctx, &nsList); err != nil {
+	labelSelector, _ := labels.Parse("operator-ns=true")
+	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
+
+	if err := cl.List(ctx, &nsList, nsListOptions); err != nil {
 		return nil, err
 	}
 
