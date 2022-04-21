@@ -76,13 +76,13 @@ var _ = Describe("Pool controller basic functionality", func() {
 
 			ownedNs := core.Namespace{}
 			for _, ns := range nsList.Items {
-				if ns.Annotations["status"] == "ready" {
+				if ns.Annotations["env-status"] == "ready" {
 					ownedNs = ns
 					break
 				}
 			}
 
-			err = UpdateAnnotations(ctx, k8sClient, map[string]string{"status": "error"}, ownedNs.Name)
+			err = UpdateAnnotations(ctx, k8sClient, map[string]string{"env-status": "error"}, ownedNs.Name)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {

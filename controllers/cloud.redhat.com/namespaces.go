@@ -20,7 +20,8 @@ import (
 )
 
 var initialAnnotations = map[string]string{
-	"status":      "creating",
+	"status":      "creating", // TODO: Remove this annotation after Bonfire is updated
+	"env-status":  "creating",
 	"operator-ns": "true",
 }
 
@@ -140,7 +141,7 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client) ([]core.Namespace
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.Kind == "NamespacePool" {
-				if val, ok := ns.ObjectMeta.Annotations["status"]; ok && val == "ready" {
+				if val, ok := ns.ObjectMeta.Annotations["env-status"]; ok && val == "ready" {
 					ready = append(ready, ns)
 				}
 			}
@@ -218,7 +219,7 @@ func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 }
 
 func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error {
-	UpdateAnnotations(ctx, cl, map[string]string{"status": "deleting"}, nsName)
+	UpdateAnnotations(ctx, cl, map[string]string{"env-status": "deleting", "status": "deleting"}, nsName)
 
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {

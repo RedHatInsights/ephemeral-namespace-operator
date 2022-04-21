@@ -126,7 +126,7 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.UID == pool.GetUID() {
-				switch ns.Annotations["status"] {
+				switch ns.Annotations["env-status"] {
 				case "ready":
 					readyNS++
 				case "creating":

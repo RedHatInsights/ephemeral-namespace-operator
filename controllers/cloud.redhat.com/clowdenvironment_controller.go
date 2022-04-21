@@ -58,10 +58,10 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 		if err := CreateFrontendEnv(ctx, r.Client, ns, env); err != nil {
 			r.Log.Error(err, "Error encountered with frontend environment", "ns-name", ns)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, ns)
+			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error", "status": "error"}, ns)
 		} else {
 			r.Log.Info("Namespace ready", "ns-name", ns)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"status": "ready"}, ns)
+			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "ready", "status": "ready"}, ns)
 		}
 	}
 
