@@ -76,9 +76,10 @@ var _ = Describe("Pool controller basic functionality", func() {
 
 			ownedNs := core.Namespace{}
 			for _, ns := range nsList.Items {
-				if ns.Annotations["env-status"] == "ready" {
-					ownedNs = ns
-					break
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						ownedNs = ns
+						break
 				}
 			}
 
