@@ -80,6 +80,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 					if owner.Kind == "NamespacePool" {
 						ownedNs = ns
 						break
+					}
 				}
 			}
 
