@@ -33,7 +33,7 @@ var _ = Describe("Clowdenvironment controller basic update", func() {
 				for _, ns := range nsList.Items {
 					if isOwnedByPool(ctx, k8sClient, ns.Name) {
 						a := ns.GetAnnotations()
-						if val, ok := a["status"]; !ok || val != "ready" {
+						if val, ok := a["env-status"]; !ok || val != "ready" {
 							if val != "deleting" {
 								return false
 							}

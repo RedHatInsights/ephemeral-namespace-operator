@@ -76,13 +76,15 @@ var _ = Describe("Pool controller basic functionality", func() {
 
 			ownedNs := core.Namespace{}
 			for _, ns := range nsList.Items {
-				if ns.Annotations["status"] == "ready" {
-					ownedNs = ns
-					break
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						ownedNs = ns
+						break
+					}
 				}
 			}
 
-			err = UpdateAnnotations(ctx, k8sClient, map[string]string{"status": "error"}, ownedNs.Name)
+			err = UpdateAnnotations(ctx, k8sClient, map[string]string{"env-status": "error"}, ownedNs.Name)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {

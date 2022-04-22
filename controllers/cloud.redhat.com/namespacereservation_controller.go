@@ -145,7 +145,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		if err := r.verifyClowdEnvForReadyNs(ctx, readyNsName); err != nil {
 			r.Log.Error(err, err.Error(), "ns-name", readyNsName)
 			errorAnnotation := map[string]string{
-				"status": "error",
+				"env-status": "error",
 			}
 			if err := UpdateAnnotations(ctx, r.Client, errorAnnotation, readyNsName); err != nil {
 				r.Log.Error(err, "Unable to update annotations for unready namespace", "ns-name", readyNsName)
