@@ -15,6 +15,7 @@ spec:
     plural: namespacereservations
     shortNames:
     - reservation
+    - nsr
     singular: namespacereservation
   scope: Cluster
   versions:
