@@ -37,7 +37,7 @@ type NamespaceReservationStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-//+kubebuilder:resource:scope=Cluster,shortName=reservation
+//+kubebuilder:resource:scope=Cluster,shortName={reservation,nsr}
 //+kubebuilder:printcolumn:name="Requester",type="string",JSONPath=".spec.requester"
 //+kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
 //+kubebuilder:printcolumn:name="Namespace",type="string",JSONPath=".status.namespace"
