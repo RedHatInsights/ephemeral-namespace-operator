@@ -73,6 +73,22 @@
                 "k8sAccessLevel": "edit",
                 "configAccess": "environment",
                 "iqe": {
+                    "ui": {
+                        "selenium": {
+                            "imageBase": "quay.io/redhatqe/selenium-standalone",
+                            "defaultImageTag": "ff_91.5.1esr_gecko_v0.30.0_chrome_98.0.4758.80",
+                            "resources": {
+                                "limits": {
+                                    "cpu": "1",
+                                    "memory": "3Gi"
+                                },
+                                "requests": {
+                                    "cpu": "500m",
+                                    "memory": "512Mi"
+                                }
+                            }
+                        }
+                    },
                     "vaultSecretRef": {
                         "namespace": "ephemeral-base",
                         "name": "iqe-vault"
