@@ -36,18 +36,19 @@ type NamespacePoolStatus struct {
 	Creating int `json:"creating"`
 }
 
-type NamespacePoolConfig struct {
-	Size  int  `json:"size"`
-	Local bool `json:"local"`
-}
+// type NamespacePoolConfig struct {
+// 	Size  int  `json:"size"`
+// 	Local bool `json:"local"`
+// }
 type NamespaceConfig struct {
+	PoolConfig      NamespacePoolConfig              `json:"pool"`
 	ClowdEnvSpec    clowder.ClowdEnvironmentSpec     `json:"clowdEnv"`
 	FrontendEnvSpec frontend.FrontendEnvironmentSpec `json:"frontendEnv"`
 	LimitRange      core.LimitRange                  `json:"limitRange"`
 	ResourceQuotas  core.ResourceQuotaList           `json:"resourceQuotas"`
 }
 
-type PoolConfig struct {
+type NamespacePoolConfig struct {
 	Size  int  `json:"size"`
 	Local bool `json:"local"`
 }
