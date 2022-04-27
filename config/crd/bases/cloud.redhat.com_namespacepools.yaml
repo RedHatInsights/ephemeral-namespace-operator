@@ -49,6 +49,8 @@ spec:
             description: NamespacePoolSpec defines the desired state of Pool
             properties:
               clowdenvironment:
+                description: "type NamespacePoolConfig struct { \tSize  int  `json:\"size\"`
+                  \tLocal bool `json:\"local\"` }"
                 properties:
                   clowdEnv:
                     description: ClowdEnvironmentSpec defines the desired state of
@@ -806,6 +808,16 @@ spec:
                         - limits
                         type: object
                     type: object
+                  pool:
+                    properties:
+                      local:
+                        type: boolean
+                      size:
+                        type: integer
+                    required:
+                    - local
+                    - size
+                    type: object
                   resourceQuotas:
                     description: ResourceQuotaList is a list of ResourceQuota items.
                     properties:
@@ -992,6 +1004,7 @@ spec:
                 - clowdEnv
                 - frontendEnv
                 - limitRange
+                - pool
                 - resourceQuotas
                 type: object
               local:
