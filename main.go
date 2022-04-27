@@ -105,7 +105,6 @@ func main() {
 	if err = (&controllers.NamespacePoolReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-		Config: controllers.LoadedOperatorConfig,
 		Log:    ctrl.Log.WithName("controllers").WithName("NamespacePoolController"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NamespacePool")
