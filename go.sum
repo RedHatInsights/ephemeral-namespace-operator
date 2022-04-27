@@ -133,6 +133,7 @@ github.com/RedHatInsights/frontend-operator v0.0.1/go.mod h1:vlf833Jby5OXMq+fGxf
 github.com/RedHatInsights/go-difflib v1.0.0/go.mod h1:UMKOFdypYfrKT1B1nbGodM09nhOiAmcjes8qWP7Myrs=
 github.com/RedHatInsights/rhc-osdk-utils v0.3.2 h1:9gVkXeAWxddHd0t+fjUDb1ZxPeTS4+Ag4GwOXF1NbnY=
 github.com/RedHatInsights/rhc-osdk-utils v0.3.2/go.mod h1:zjAoNLox+wOInRpI5Mx+yKiavzgJbmqxySTRVLQRVTo=
+github.com/RedHatInsights/rhc-osdk-utils v0.4.1 h1:wAd0oy+O9e6hsy13VG0mqhX0EHBwIZgtJZDzqWbyKKE=
 github.com/RedHatInsights/rhc-osdk-utils v0.4.1/go.mod h1:kzhoWdsajLo0R2/S8f2EEtozJgkooUAmadB8giwuq+4=
 github.com/RedHatInsights/simple-kc-client v0.0.5/go.mod h1:ctTJFcWGT/Tec/S4l7RnDV2ddVjZ0OqxDMF7XK4iT1U=
 github.com/RedHatInsights/strimzi-client-go v0.24.0-1 h1:2qMravs3qx6W7ZIKLyo9a6m8uYfILDSQ/fA7L/Yw/jc=
