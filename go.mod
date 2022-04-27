@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/RedHatInsights/clowder v0.30.0
-	github.com/RedHatInsights/frontend-operator v0.0.1
+	github.com/RedHatInsights/frontend-operator v0.0.2
 	github.com/RedHatInsights/rhc-osdk-utils v0.4.1
 	github.com/go-logr/logr v0.4.0
 	github.com/onsi/ginkgo v1.16.5

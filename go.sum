@@ -125,14 +125,15 @@ github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2/go.mod h1:uGdko
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/RedHatInsights/clowder v0.27.2 h1:LHqkePo5mVpQc/f2gvtsdXML2dl1UtlpWws2LDxg52c=
 github.com/RedHatInsights/clowder v0.27.2/go.mod h1:vlsB8e5UrFqBE5kLSliWbRBgOg3cwoUBfgwKH4OVBUU=
+github.com/RedHatInsights/clowder v0.28.0/go.mod h1:TRyngQP2IfiYTvcfoWZu/nMjAue9EPWio1qNUJO8sRM=
 github.com/RedHatInsights/clowder v0.30.0 h1:KooCTqokgjJ6E211vC+pf23whNw+DXamWfVhVj0ttNY=
 github.com/RedHatInsights/clowder v0.30.0/go.mod h1:PfECLPNUJS+VA3QQB8rSOEhmF/GcXG/snMICtdkgnYk=
 github.com/RedHatInsights/cyndi-operator v0.1.4/go.mod h1:lHxzGinQkZvGzGnTWT6X39CihCrOpTIt9YCsyymuowI=
 github.com/RedHatInsights/frontend-operator v0.0.1 h1:gkfn2jFzbL1zgRwUjTKO0ue4dRW6QuCCbwiTb3LTdYE=
 github.com/RedHatInsights/frontend-operator v0.0.1/go.mod h1:vlf833Jby5OXMq+fGxfaeDNtYZMLQRN3f6IJ8x1mDQ0=
+github.com/RedHatInsights/frontend-operator v0.0.2 h1:UjwweamwSeNxsW4QBrnj1cuDFmfQuznxoNrbyDijwuA=
+github.com/RedHatInsights/frontend-operator v0.0.2/go.mod h1:+mZ3g+E5zW4sWQ3+GCNY5gRfCs3i2h1x9up9IBiAH9E=
 github.com/RedHatInsights/go-difflib v1.0.0/go.mod h1:UMKOFdypYfrKT1B1nbGodM09nhOiAmcjes8qWP7Myrs=
-github.com/RedHatInsights/rhc-osdk-utils v0.3.2 h1:9gVkXeAWxddHd0t+fjUDb1ZxPeTS4+Ag4GwOXF1NbnY=
-github.com/RedHatInsights/rhc-osdk-utils v0.3.2/go.mod h1:zjAoNLox+wOInRpI5Mx+yKiavzgJbmqxySTRVLQRVTo=
 github.com/RedHatInsights/rhc-osdk-utils v0.4.1 h1:wAd0oy+O9e6hsy13VG0mqhX0EHBwIZgtJZDzqWbyKKE=
 github.com/RedHatInsights/rhc-osdk-utils v0.4.1/go.mod h1:kzhoWdsajLo0R2/S8f2EEtozJgkooUAmadB8giwuq+4=
 github.com/RedHatInsights/simple-kc-client v0.0.5/go.mod h1:ctTJFcWGT/Tec/S4l7RnDV2ddVjZ0OqxDMF7XK4iT1U=
