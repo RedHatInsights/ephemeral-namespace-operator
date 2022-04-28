@@ -35,7 +35,7 @@ import (
 type NamespacePoolReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	Config OperatorConfig
+	Config crd.NamespacePoolSpec
 	Log    logr.Logger
 }
 
@@ -76,7 +76,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 		} else {
 			r.Log.Info("Setting up new namespace", "ns-name", nsName)
-			if err := SetupNamespace(ctx, r.Client, r.Config, nsName); err != nil {
+			if err := SetupNamespace(ctx, r.Client, r.getPoolConfig(pool), nsName); err != nil {
 				r.Log.Error(err, "Error while setting up namespace", "ns-name", nsName)
 				if err := UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, nsName); err != nil {
 					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", nsName)
@@ -144,6 +144,17 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 	status["creating"] = creatingNS
 
 	return status, nil
+}
+
+func (r *NamespacePoolReconciler) getPoolConfig(pool crd.NamespacePool) crd.NamespacePoolSpec {
+	namespaceConfig := crd.NamespacePoolSpec{
+		ClowdEnvironment: pool.Spec.ClowdEnvironment,
+		// FrontendEnvironment: pool.Spec.FrontendEnvironment,
+		LimitRange:     pool.Spec.LimitRange,
+		ResourceQuotas: pool.Spec.ResourceQuotas,
+	}
+
+	return namespaceConfig
 }
 
 func (r *NamespacePoolReconciler) underManaged(pool crd.NamespacePool) int {

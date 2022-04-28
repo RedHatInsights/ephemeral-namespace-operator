@@ -78,9 +78,9 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	return ns.Name, nil
 }
 
-func SetupNamespace(ctx context.Context, cl client.Client, cfg OperatorConfig, ns string) error {
+func SetupNamespace(ctx context.Context, cl client.Client, cfg crd.NamespacePoolSpec, ns string) error {
 	// Create ClowdEnvironment
-	if err := CreateClowdEnv(ctx, cl, cfg.ClowdEnvSpec, ns); err != nil {
+	if err := CreateClowdEnv(ctx, cl, cfg.ClowdEnvironment, ns); err != nil {
 		return errors.New("Error creating ClowdEnvironment: " + err.Error())
 	}
 

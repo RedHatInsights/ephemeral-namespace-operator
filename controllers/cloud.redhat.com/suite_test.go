@@ -133,12 +133,10 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	testConfig := OperatorConfig{
-		PoolConfig: PoolConfig{
-			Size:  2,
-			Local: true,
-		},
-		ClowdEnvSpec: v1alpha1.ClowdEnvironmentSpec{
+	testConfig := crd.NamespacePoolSpec{
+		Size:  2,
+		Local: true,
+		ClowdEnvironment: v1alpha1.ClowdEnvironmentSpec{
 			Providers: v1alpha1.ProvidersConfig{
 				Kafka: v1alpha1.KafkaConfig{
 					Mode: "operator",
@@ -229,8 +227,8 @@ var _ = BeforeSuite(func() {
 			Name: "test-pool",
 		},
 		Spec: crd.NamespacePoolSpec{
-			Size:  testConfig.PoolConfig.Size,
-			Local: testConfig.PoolConfig.Local,
+			Size:  testConfig.Size,
+			Local: testConfig.Local,
 		},
 	}
 
