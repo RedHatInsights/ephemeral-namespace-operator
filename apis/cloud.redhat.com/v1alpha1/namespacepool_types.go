@@ -18,39 +18,24 @@ package v1alpha1
 
 import (
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
-	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // NamespacePoolSpec defines the desired state of Pool
 type NamespacePoolSpec struct {
-	Size             int             `json:"size"`
-	Local            bool            `json:"local"`
-	ClowdEnvironment NamespaceConfig `json:"clowdenvironment"`
+	Size             int                          `json:"size"`
+	Local            bool                         `json:"local"`
+	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment"`
+	// FrontendEnvironment frontend.FrontendEnvironmentSpec `json:"frontendenvironment"`
+	LimitRange     core.LimitRange        `json:"limitrange"`
+	ResourceQuotas core.ResourceQuotaList `json:"resourcequotas"`
 }
 
 // NamespacePoolStatus defines the observed state of Pool
 type NamespacePoolStatus struct {
 	Ready    int `json:"ready"`
 	Creating int `json:"creating"`
-}
-
-// type NamespacePoolConfig struct {
-// 	Size  int  `json:"size"`
-// 	Local bool `json:"local"`
-// }
-type NamespaceConfig struct {
-	PoolConfig      NamespacePoolConfig              `json:"pool"`
-	ClowdEnvSpec    clowder.ClowdEnvironmentSpec     `json:"clowdEnv"`
-	FrontendEnvSpec frontend.FrontendEnvironmentSpec `json:"frontendEnv"`
-	LimitRange      core.LimitRange                  `json:"limitRange"`
-	ResourceQuotas  core.ResourceQuotaList           `json:"resourceQuotas"`
-}
-
-type NamespacePoolConfig struct {
-	Size  int  `json:"size"`
-	Local bool `json:"local"`
 }
 
 //+kubebuilder:object:root=true
