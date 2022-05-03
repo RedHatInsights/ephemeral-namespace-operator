@@ -78,24 +78,27 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	return ns.Name, nil
 }
 
-func SetupNamespace(ctx context.Context, cl client.Client, cfg crd.NamespacePoolSpec, ns string) error {
+func SetupNamespace(ctx context.Context, cl client.Client, pool crd.NamespacePool, ns string) error {
 	// Create ClowdEnvironment
-	if err := CreateClowdEnv(ctx, cl, cfg.ClowdEnvironment, ns); err != nil {
+	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, ns); err != nil {
 		return errors.New("Error creating ClowdEnvironment: " + err.Error())
 	}
 
 	// Create LimitRange
-	limitRange := cfg.LimitRange
+	limitRange := pool.Spec.LimitRange.Config
+	limitRange.SetName(pool.Spec.LimitRange.Name)
 	limitRange.SetNamespace(ns)
+
 	if err := cl.Create(ctx, &limitRange); err != nil {
 		return errors.New("Error creating LimitRange: " + err.Error())
 	}
 
 	// Create ResourceQuotas
-	resourceQuotas := cfg.ResourceQuotas
-	for _, quota := range resourceQuotas.Items {
-		quota.SetNamespace(ns)
-		if err := cl.Create(ctx, &quota); err != nil {
+	resourceQuotas := pool.Spec.ResourceQuotas
+	for i, quota := range resourceQuotas.Items {
+		quota.Config.SetName(pool.Spec.ResourceQuotas.Items[i].Name)
+		quota.Config.SetNamespace(ns)
+		if err := cl.Create(ctx, &quota.Config); err != nil {
 			return errors.New("Error creating ResourceQuota: " + err.Error())
 		}
 	}

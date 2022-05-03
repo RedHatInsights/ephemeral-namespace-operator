@@ -25,7 +25,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -182,8 +181,6 @@ var _ = BeforeSuite(func() {
 				},
 			},
 		},
-		LimitRange:     v1.LimitRange{},
-		ResourceQuotas: v1.ResourceQuotaList{},
 	}
 
 	poller := Poller{
@@ -195,7 +192,6 @@ var _ = BeforeSuite(func() {
 	err = (&NamespacePoolReconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
-		Config: testConfig,
 		Log:    ctrl.Log.WithName("controllers").WithName("NamespacePoolReconciler"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
@@ -227,8 +223,11 @@ var _ = BeforeSuite(func() {
 			Name: "test-pool",
 		},
 		Spec: crd.NamespacePoolSpec{
-			Size:  testConfig.Size,
-			Local: testConfig.Local,
+			Size:             testConfig.Size,
+			Local:            testConfig.Local,
+			ClowdEnvironment: testConfig.ClowdEnvironment,
+			LimitRange:       testConfig.LimitRange,
+			ResourceQuotas:   testConfig.ResourceQuotas,
 		},
 	}
 
