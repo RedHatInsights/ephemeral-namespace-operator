@@ -85,8 +85,7 @@ func SetupNamespace(ctx context.Context, cl client.Client, pool crd.NamespacePoo
 	}
 
 	// Create LimitRange
-	limitRange := pool.Spec.LimitRange.Config
-	limitRange.SetName(pool.Spec.LimitRange.Name)
+	limitRange := pool.Spec.LimitRange
 	limitRange.SetNamespace(ns)
 
 	if err := cl.Create(ctx, &limitRange); err != nil {
@@ -95,10 +94,9 @@ func SetupNamespace(ctx context.Context, cl client.Client, pool crd.NamespacePoo
 
 	// Create ResourceQuotas
 	resourceQuotas := pool.Spec.ResourceQuotas
-	for i, quota := range resourceQuotas.Items {
-		quota.Config.SetName(pool.Spec.ResourceQuotas.Items[i].Name)
-		quota.Config.SetNamespace(ns)
-		if err := cl.Create(ctx, &quota.DeepCopy().Config); err != nil {
+	for _, quota := range resourceQuotas.Items {
+		quota.SetNamespace(ns)
+		if err := cl.Create(ctx, &quota); err != nil {
 			return errors.New("Error creating ResourceQuota: " + err.Error())
 		}
 	}

@@ -28,22 +28,8 @@ type NamespacePoolSpec struct {
 	Local            bool                         `json:"local"`
 	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment"`
 	// FrontendEnvironment frontend.FrontendEnvironmentSpec `json:"frontendenvironment"`
-	LimitRange     LimitRangeConfig    `json:"limitrange"`
-	ResourceQuotas ResourceQuotasItems `json:"resourcequotas"`
-}
-
-type LimitRangeConfig struct {
-	Name   string          `json:"name"`
-	Config core.LimitRange `json:"spec"`
-}
-
-type ResourceQuotasItems struct {
-	Items []ResourceQuotaConfig `json:"items"`
-}
-
-type ResourceQuotaConfig struct {
-	Name   string             `json:"name"`
-	Config core.ResourceQuota `json:"spec"`
+	LimitRange     core.LimitRange        `json:"limitrange"`
+	ResourceQuotas core.ResourceQuotaList `json:"resourcequotas"`
 }
 
 // NamespacePoolStatus defines the observed state of Pool
