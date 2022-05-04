@@ -98,7 +98,7 @@ func SetupNamespace(ctx context.Context, cl client.Client, pool crd.NamespacePoo
 	for i, quota := range resourceQuotas.Items {
 		quota.Config.SetName(pool.Spec.ResourceQuotas.Items[i].Name)
 		quota.Config.SetNamespace(ns)
-		if err := cl.Create(ctx, &quota.Config); err != nil {
+		if err := cl.Create(ctx, &quota.DeepCopy().Config); err != nil {
 			return errors.New("Error creating ResourceQuota: " + err.Error())
 		}
 	}
