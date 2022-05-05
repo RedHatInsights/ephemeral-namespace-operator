@@ -149,10 +149,10 @@ var _ = BeforeSuite(func() {
 					Mode: "local",
 				},
 				Logging: v1alpha1.LoggingConfig{
-					Mode: "app-interface",
+					Mode: "none",
 				},
 				ObjectStore: v1alpha1.ObjectStoreConfig{
-					Mode: "app-interface",
+					Mode: "minio",
 				},
 				InMemoryDB: v1alpha1.InMemoryDBConfig{
 					Mode: "redis",
@@ -164,10 +164,10 @@ var _ = BeforeSuite(func() {
 				Metrics: v1alpha1.MetricsConfig{
 					Port: int32(9000),
 					Path: "/metrics",
-					Mode: "none",
+					Mode: "operator",
 				},
 				FeatureFlags: v1alpha1.FeatureFlagsConfig{
-					Mode: "none",
+					Mode: "local",
 				},
 				Testing: v1alpha1.TestingConfig{
 					ConfigAccess:   "environment",
