@@ -13,7 +13,7 @@ objects:
   kind: CustomResourceDefinition
   metadata:
     annotations:
-      controller-gen.kubebuilder.io/version: v0.4.1
+      controller-gen.kubebuilder.io/version: v0.6.0
     creationTimestamp: null
     name: namespacepools.cloud.redhat.com
   spec:
@@ -92,7 +92,7 @@ objects:
   kind: CustomResourceDefinition
   metadata:
     annotations:
-      controller-gen.kubebuilder.io/version: v0.4.1
+      controller-gen.kubebuilder.io/version: v0.6.0
     creationTimestamp: null
     name: namespacereservations.cloud.redhat.com
   spec:
@@ -237,6 +237,7 @@ objects:
     - namespacereservations
     - clowdenvironments
     - frontendenvironments
+    - namespacepools
     verbs:
     - create
     - delete

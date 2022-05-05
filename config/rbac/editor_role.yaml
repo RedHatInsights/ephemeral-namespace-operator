@@ -14,6 +14,7 @@ rules:
   - namespacereservations
   - clowdenvironments
   - frontendenvironments
+  - namespacepools
   verbs:
   - create
   - delete
