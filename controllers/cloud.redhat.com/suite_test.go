@@ -25,10 +25,10 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -47,7 +47,6 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var stopController context.CancelFunc
@@ -149,10 +148,10 @@ var _ = BeforeSuite(func() {
 					Mode: "local",
 				},
 				Logging: v1alpha1.LoggingConfig{
-					Mode: "none",
+					Mode: "app-interface",
 				},
 				ObjectStore: v1alpha1.ObjectStoreConfig{
-					Mode: "minio",
+					Mode: "app-interface",
 				},
 				InMemoryDB: v1alpha1.InMemoryDBConfig{
 					Mode: "redis",
@@ -164,10 +163,10 @@ var _ = BeforeSuite(func() {
 				Metrics: v1alpha1.MetricsConfig{
 					Port: int32(9000),
 					Path: "/metrics",
-					Mode: "operator",
+					Mode: "none",
 				},
 				FeatureFlags: v1alpha1.FeatureFlagsConfig{
-					Mode: "local",
+					Mode: "none",
 				},
 				Testing: v1alpha1.TestingConfig{
 					ConfigAccess:   "environment",
@@ -181,6 +180,8 @@ var _ = BeforeSuite(func() {
 				},
 			},
 		},
+		LimitRange:     v1.LimitRange{},
+		ResourceQuotas: v1.ResourceQuotaList{},
 	}
 
 	poller := Poller{
