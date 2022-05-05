@@ -17,7 +17,7 @@ import (
 
 func CreateFrontendEnv(ctx context.Context, cl client.Client, nsName string, clowdEnv clowder.ClowdEnvironment) error {
 	frontendEnv := frontend.FrontendEnvironment{}
-	err := cl.Get(ctx, types.NamespacedName{Name: fmt.Sprintf("%s", nsName)}, &frontendEnv)
+	err := cl.Get(ctx, types.NamespacedName{Name: nsName}, &frontendEnv)
 
 	// if frontendEnv not found create it
 	if err != nil && k8serr.IsNotFound(err) {
