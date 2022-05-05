@@ -50,7 +50,7 @@ func CreateFrontendEnv(ctx context.Context, cl client.Client, nsName string, clo
 			return err
 		}
 
-		frontendEnv.SetName(fmt.Sprintf("%s", ns.Name))
+		frontendEnv.SetName(ns.Name)
 		frontendEnv.SetOwnerReferences([]metav1.OwnerReference{
 			{
 				APIVersion: ns.APIVersion,
