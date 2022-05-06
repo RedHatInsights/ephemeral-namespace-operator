@@ -157,7 +157,7 @@ var _ = BeforeSuite(func() {
 				},
 				Web: clowder.WebConfig{
 					Port: int32(8000),
-					Mode: clowder.WebMode("none"),
+					Mode: "none",
 				},
 				Metrics: clowder.MetricsConfig{
 					Port: int32(9000),
