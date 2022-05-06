@@ -36,7 +36,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
+	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	core "k8s.io/api/core/v1"
@@ -66,22 +66,22 @@ func populateClowdEnvStatus(client client.Client) {
 
 	for {
 		time.Sleep(time.Duration(1 * time.Second))
-		clowdEnvs := v1alpha1.ClowdEnvironmentList{}
+		clowdEnvs := clowder.ClowdEnvironmentList{}
 		err := client.List(ctx, &clowdEnvs)
 		if err != nil {
 			continue
 		}
 		for _, env := range clowdEnvs.Items {
 			if len(env.Status.Conditions) == 0 {
-				status := v1alpha1.ClowdEnvironmentStatus{
+				status := clowder.ClowdEnvironmentStatus{
 					Conditions: []clusterv1.Condition{
 						{
-							Type:               v1alpha1.ReconciliationSuccessful,
+							Type:               clowder.ReconciliationSuccessful,
 							Status:             core.ConditionTrue,
 							LastTransitionTime: metav1.Now(),
 						},
 						{
-							Type:               v1alpha1.DeploymentsReady,
+							Type:               clowder.DeploymentsReady,
 							Status:             core.ConditionTrue,
 							LastTransitionTime: metav1.Now(),
 						},
@@ -115,7 +115,7 @@ var _ = BeforeSuite(func() {
 
 	k8sscheme := runtime.NewScheme()
 	clientgoscheme.AddToScheme(k8sscheme)
-	v1alpha1.AddToScheme(k8sscheme)
+	clowder.AddToScheme(k8sscheme)
 	frontend.AddToScheme(k8sscheme)
 
 	err = crd.AddToScheme(k8sscheme)
@@ -135,51 +135,59 @@ var _ = BeforeSuite(func() {
 	testConfig := crd.NamespacePoolSpec{
 		Size:  2,
 		Local: true,
-		ClowdEnvironment: v1alpha1.ClowdEnvironmentSpec{
-			Providers: v1alpha1.ProvidersConfig{
-				Kafka: v1alpha1.KafkaConfig{
+		ClowdEnvironment: clowder.ClowdEnvironmentSpec{
+			Providers: clowder.ProvidersConfig{
+				Kafka: clowder.KafkaConfig{
 					Mode: "operator",
-					Cluster: v1alpha1.KafkaClusterConfig{
+					Cluster: clowder.KafkaClusterConfig{
 						Name:      "kafka",
 						Namespace: "kafka",
 						Replicas:  5,
 					},
 				},
-				Database: v1alpha1.DatabaseConfig{
+				Database: clowder.DatabaseConfig{
 					Mode: "local",
 				},
-				Logging: v1alpha1.LoggingConfig{
+				Logging: clowder.LoggingConfig{
 					Mode: "none",
 				},
-				ObjectStore: v1alpha1.ObjectStoreConfig{
+				ObjectStore: clowder.ObjectStoreConfig{
 					Mode: "minio",
 				},
-				InMemoryDB: v1alpha1.InMemoryDBConfig{
+				InMemoryDB: clowder.InMemoryDBConfig{
 					Mode: "redis",
 				},
-				Web: v1alpha1.WebConfig{
+				Web: clowder.WebConfig{
 					Port: int32(8000),
-					Mode: "none",
+					Mode: clowder.WebMode("none"),
 				},
-				Metrics: v1alpha1.MetricsConfig{
+				Metrics: clowder.MetricsConfig{
 					Port: int32(9000),
 					Path: "/metrics",
 					Mode: "operator",
 				},
-				FeatureFlags: v1alpha1.FeatureFlagsConfig{
+				FeatureFlags: clowder.FeatureFlagsConfig{
 					Mode: "local",
 				},
-				Testing: v1alpha1.TestingConfig{
+				Testing: clowder.TestingConfig{
 					ConfigAccess:   "environment",
 					K8SAccessLevel: "edit",
-					Iqe: v1alpha1.IqeConfig{
+					Iqe: clowder.IqeConfig{
 						ImageBase: "quay.io/cloudservices/iqe-tests",
 					},
 				},
-				AutoScaler: v1alpha1.AutoScalerConfig{
+				AutoScaler: clowder.AutoScalerConfig{
 					Mode: "keda",
 				},
 			},
+		},
+		LimitRange: core.LimitRange{
+			Spec: core.LimitRangeSpec{
+				Limits: []core.LimitRangeItem{},
+			},
+		},
+		ResourceQuotas: core.ResourceQuotaList{
+			Items: []core.ResourceQuota{},
 		},
 	}
 
@@ -222,13 +230,7 @@ var _ = BeforeSuite(func() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-pool",
 		},
-		Spec: crd.NamespacePoolSpec{
-			Size:             testConfig.Size,
-			Local:            testConfig.Local,
-			ClowdEnvironment: testConfig.ClowdEnvironment,
-			LimitRange:       testConfig.LimitRange,
-			ResourceQuotas:   testConfig.ResourceQuotas,
-		},
+		Spec: testConfig,
 	}
 
 	Expect(k8sClient.Create(ctx, pool)).Should(Succeed())

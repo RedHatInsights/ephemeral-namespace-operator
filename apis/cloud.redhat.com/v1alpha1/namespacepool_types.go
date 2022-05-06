@@ -27,9 +27,8 @@ type NamespacePoolSpec struct {
 	Size             int                          `json:"size"`
 	Local            bool                         `json:"local"`
 	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment"`
-	// FrontendEnvironment frontend.FrontendEnvironmentSpec `json:"frontendenvironment"`
-	LimitRange     core.LimitRange        `json:"limitrange"`
-	ResourceQuotas core.ResourceQuotaList `json:"resourcequotas"`
+	LimitRange       core.LimitRange              `json:"limitrange"`
+	ResourceQuotas   core.ResourceQuotaList       `json:"resourcequotas"`
 }
 
 // NamespacePoolStatus defines the observed state of Pool
