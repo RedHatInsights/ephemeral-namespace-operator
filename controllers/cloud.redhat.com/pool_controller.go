@@ -134,6 +134,9 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 				case "error":
 					r.Log.Info("Error status for namespace. Deleting", "ns-name", ns.Name)
 					DeleteNamespace(ctx, r.Client, ns.Name)
+
+					r.Log.Info("Removing prometheus-operator associated with ns-name", ns.Name)
+					DeletePrometheusOperator(ctx, r.Client, ns.Name)
 				}
 			}
 		}
