@@ -29,10 +29,18 @@ var initialLabels = map[string]string{
 	"operator-ns": "true",
 }
 
+func AddResourceTag(pool *crd.NamespacePool) {
+	initialLabels["pool-type"] = pool.Name
+}
+
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
 	// Create project or namespace depending on environment
 	ns := core.Namespace{}
-	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
+
+	AddResourceTag(pool)
+	pool_type_name := strings.Split(initialLabels["pool-type"], "-")[0]
+
+	ns.Name = fmt.Sprintf("ephemeral-%s-%s", pool_type_name, strings.ToLower(randString(6)))
 
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &ns); err != nil {
