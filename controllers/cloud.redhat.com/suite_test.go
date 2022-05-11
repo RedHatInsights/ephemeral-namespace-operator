@@ -231,19 +231,7 @@ var _ = BeforeSuite(func() {
 		Spec: testConfig,
 	}
 
-	// minimal_pool := &crd.NamespacePool{
-	// 	TypeMeta: metav1.TypeMeta{
-	// 		APIVersion: "cloud.redhat.com/",
-	// 		Kind:       "NamespacePool",
-	// 	},
-	// 	ObjectMeta: metav1.ObjectMeta{
-	// 		Name: "test-minimal-pool",
-	// 	},
-	// 	Spec: testConfig,
-	// }
-
 	Expect(k8sClient.Create(ctx, default_pool)).Should(Succeed())
-	//sExpect(k8sClient.Create(ctx, minimal_pool)).Should(Succeed())
 
 	go poller.Poll()
 
