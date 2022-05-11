@@ -26,7 +26,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 			pool := crd.NamespacePool{}
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-pool"}, &pool)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default-pool"}, &pool)
 				Expect(err).NotTo(HaveOccurred())
 
 				return pool.Spec.Size == (pool.Status.Ready + pool.Status.Creating)
@@ -55,7 +55,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-pool"}, &pool)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default-pool"}, &pool)
 				Expect(err).NotTo(HaveOccurred())
 
 				return pool.Spec.Size == pool.Status.Ready
