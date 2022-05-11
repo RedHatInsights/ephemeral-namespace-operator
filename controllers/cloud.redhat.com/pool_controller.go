@@ -55,7 +55,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	r.Log.Info("Pool status", "ready", status["ready"], "creating", status["creating"])
+	r.Log.Info(pool.Name, "ready", status["ready"], "creating", status["creating"])
 
 	pool.Status.Ready = status["ready"]
 	pool.Status.Creating = status["creating"]
