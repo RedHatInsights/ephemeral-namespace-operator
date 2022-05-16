@@ -98,82 +98,27 @@ var _ = Describe("Pool controller basic functionality", func() {
 	})
 })
 
-var _ = Describe("Start up another namespace upon reservation of another", func() {
+var _ = Describe("Pool controller functionality with multiple pools", func() {
 	const (
 		timeout  = time.Second * 90
 		duration = time.Second * 90
 		interval = time.Millisecond * 250
 	)
 
-	Context("When creating a reservation resource", func() {
-		It("Should assign a namespace to the reservation", func() {
-			By("Updating the reservation")
-			ctx := context.Background()
-			resName := "test-res"
-
-			reservation := newReservation(resName, "10h", "mknop")
-
-			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
-
-			updatedReservation := &crd.NamespaceReservation{}
-
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
-				if err != nil {
-					return false
-				}
-				if updatedReservation.Status.State == "active" {
-					return true
-				}
-				return false
-			}, timeout, interval).Should(BeTrue())
-		})
-
-		It("Should reconcile the number of managed namespaces", func() {
-			By("Comparing pool status to pool size")
+	Context("When reserving a minimal namespace", func() {
+		It("Should recreate a minimal namespace", func() {
+			By("Checking that a reservation occurred")
 			ctx := context.Background()
 			pool := crd.NamespacePool{}
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default-pool"}, &pool)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "minimal-pool"}, &pool)
 				Expect(err).NotTo(HaveOccurred())
 
 				return pool.Spec.Size == (pool.Status.Ready + pool.Status.Creating)
 			}, timeout, interval).Should(BeTrue())
 
-			By("Checking the total number of owned namespaces")
-			nsList := core.NamespaceList{}
-
-			Eventually(func() bool {
-				err := k8sClient.List(ctx, &nsList)
-				ownedCount := 0
-				for _, ns := range nsList.Items {
-					if isOwnedByPool(ctx, k8sClient, ns.Name) {
-						ownedCount++
-					}
-				}
-				Expect(err).NotTo(HaveOccurred())
-
-				return ownedCount == pool.Spec.Size
-			}, timeout, interval).Should(BeTrue())
-
-			By("By creating new namespaces as needed")
-			pool.Spec.Size++
-
-			err := k8sClient.Update(ctx, &pool)
-			Expect(err).NotTo(HaveOccurred())
-
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default-pool"}, &pool)
-				Expect(err).NotTo(HaveOccurred())
-
-				return pool.Spec.Size == pool.Status.Ready
-			}, timeout, interval).Should(BeTrue())
-
-			pool.Spec.Size--
-
-			err = k8sClient.Update(ctx, &pool)
-			Expect(err).NotTo(HaveOccurred())
+			By("creating a new minimal namespace")
 		})
 	})
 })
