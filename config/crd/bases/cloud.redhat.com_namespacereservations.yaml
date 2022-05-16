@@ -56,6 +56,10 @@ spec:
               duration:
                 description: Duration is how long the reservation will last
                 type: string
+              pool-type:
+                description: PoolType is the pool resource specified to reserve a
+                  namespace from
+                type: string
               requester:
                 description: Requester is the entity (bot or human) requesting the
                   namespace
