@@ -99,7 +99,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			if err := r.Client.Delete(ctx, &res); err != nil {
 				r.Log.Error(err, "Unable to delete waiting reservation", "res-name", res.Name)
 			} else {
-				r.Log.Info("Reservation for namespace has expired while waiting. Deleting.", "res-name", res.Name)
+				r.Log.Info("Reservation for namespace has expired while waiting. Deleting.", "res-name", res.Name, "pool-type", res.Spec.PoolType)
 			}
 			return ctrl.Result{}, nil
 		}
@@ -108,7 +108,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	default:
 		// if no, requeue and wait for pool to populate
 		r.Log.Info("Reconciling reservation", "name", res.Name)
-		r.Log.Info("Checking pool for ready namespaces", "name", res.Name)
+		r.Log.Info(fmt.Sprintf("Checking %s for ready namespaces", res.Spec.PoolType), "name", res.Name)
 
 		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
@@ -119,12 +119,12 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		nsList, err := GetReadyNamespaces(ctx, r.Client)
 		if err != nil {
-			r.Log.Error(err, "Unable to retrieve list of namespaces", "res-name", res.Name)
+			r.Log.Error(err, "Unable to retrieve list of namespaces", "res-name", res.Name, "pool-type", res.Spec.PoolType)
 			return ctrl.Result{}, err
 		}
 
 		if len(nsList) < 1 {
-			r.Log.Info("Requeue to wait for namespace pool population", "name", res.Name)
+			r.Log.Info("Requeue to wait for namespace pool population", "name", res.Name, "pool-type", res.Spec.PoolType)
 			if res.Status.State == "" {
 				res.Status.State = "waiting"
 				res.Status.Expiration = expirationTS
@@ -139,7 +139,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		// Check to see if there's an error with the Get
 		readyNsName := nsList[0].Name
-		r.Log.Info("Found namespace in pool; verifying ready status")
+		r.Log.Info(fmt.Sprintf("Found namespace in %s; verifying ready status", res.Spec.PoolType))
 
 		// Verify that the ClowdEnv has been set up for the requested namespace
 		if err := r.verifyClowdEnvForReadyNs(ctx, readyNsName); err != nil {
@@ -148,14 +148,14 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 				"env-status": "error",
 			}
 			if err := UpdateAnnotations(ctx, r.Client, errorAnnotation, readyNsName); err != nil {
-				r.Log.Error(err, "Unable to update annotations for unready namespace", "ns-name", readyNsName)
+				r.Log.Error(err, "Unable to update annotations for unready namespace", "ns-name", readyNsName, "pool-type", res.Spec.PoolType)
 			}
 			return ctrl.Result{Requeue: true}, err
 		}
 
 		// Resolve the requested namespace and remove it from the pool
 		if err := r.reserveNamespace(ctx, readyNsName, &res); err != nil {
-			r.Log.Error(err, "Could not reserve namespace", "ns-name", readyNsName)
+			r.Log.Error(err, "Could not reserve namespace", "ns-name", readyNsName, "pool-type", res.Spec.PoolType)
 			return ctrl.Result{Requeue: true}, err
 		}
 
@@ -197,7 +197,7 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 	nsObject := core.Namespace{}
 	err := r.Client.Get(ctx, types.NamespacedName{Name: readyNsName}, &nsObject)
 	if err != nil {
-		r.Log.Error(err, "Could not retrieve namespace", "name", readyNsName)
+		r.Log.Error(err, "Could not retrieve namespace", "name", readyNsName, "pool-type", res.Spec.PoolType)
 		return err
 	}
 
@@ -211,14 +211,14 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 
 	err = r.Client.Update(ctx, &nsObject)
 	if err != nil {
-		r.Log.Error(err, "Could not update namespace", "ns-name", readyNsName)
+		r.Log.Error(err, "Could not update namespace", "ns-name", readyNsName, "pool-type", res.Spec.PoolType)
 		return err
 	}
 
 	// Add rolebinding to the namespace only after it has been owned by the CRD.
 	// We need to skip this on minikube
 	if err := r.addRoleBindings(ctx, &nsObject, r.Client); err != nil {
-		r.Log.Error(err, "Could not apply rolebindings for namespace", "ns-name", readyNsName)
+		r.Log.Error(err, "Could not apply rolebindings for namespace", "ns-name", readyNsName, "pool-type", res.Spec.PoolType)
 		return err
 	}
 
