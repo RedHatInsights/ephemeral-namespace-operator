@@ -133,7 +133,7 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 
 func GetReadyNamespaces(ctx context.Context, cl client.Client) ([]core.Namespace, error) {
 	nsList := core.NamespaceList{}
-	labelSelector, _ := labels.Parse("operator-ns=true")
+	labelSelector, _ := labels.Parse("pool-type")
 	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
 
 	if err := cl.List(ctx, &nsList, nsListOptions); err != nil {
