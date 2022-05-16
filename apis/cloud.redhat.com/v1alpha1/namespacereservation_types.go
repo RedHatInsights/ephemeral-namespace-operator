@@ -26,6 +26,8 @@ type NamespaceReservationSpec struct {
 	Duration *string `json:"duration,omitempty"`
 	// Requester is the entity (bot or human) requesting the namespace
 	Requester string `json:"requester"`
+	// PoolType is the pool resource specified to reserve a namespace from
+	PoolType string `json:"pool-type,omitempty" default:"default-pool"`
 }
 
 // NamespaceReservationStatus defines the observed state of NamespaceReservation
