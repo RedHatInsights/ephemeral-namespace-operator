@@ -33,7 +33,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	// Create project or namespace depending on environment
 	ns := core.Namespace{}
 
-	initialLabels["pool-type"] = pool.Name
+	initialLabels["pool-type"] = pool.Name[:len(pool.Name)-5]
 
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
 
@@ -133,7 +133,7 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 
 func GetReadyNamespaces(ctx context.Context, cl client.Client) ([]core.Namespace, error) {
 	nsList := core.NamespaceList{}
-	labelSelector, _ := labels.Parse("pool-type")
+	labelSelector, _ := labels.Parse("operator-ns=true")
 	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
 
 	if err := cl.List(ctx, &nsList, nsListOptions); err != nil {

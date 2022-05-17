@@ -47,7 +47,7 @@ func (p *Poller) Poll() error {
 				if err := p.Client.Delete(ctx, &res); err != nil {
 					p.Log.Error(err, "Unable to delete reservation", "ns-name", res.Status.Namespace)
 				} else {
-					p.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace, "pool-type", res.Spec.PoolType)
+					p.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
 				}
 			}
 		}

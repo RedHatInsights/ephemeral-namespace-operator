@@ -27,7 +27,7 @@ type NamespaceReservationSpec struct {
 	// Requester is the entity (bot or human) requesting the namespace
 	Requester string `json:"requester"`
 	// PoolType is the pool resource specified to reserve a namespace from
-	PoolType string `json:"pool-type,omitempty" default:"default-pool"`
+	PoolType string `json:"pool-type,omitempty" default:"default"`
 }
 
 // NamespaceReservationStatus defines the observed state of NamespaceReservation
