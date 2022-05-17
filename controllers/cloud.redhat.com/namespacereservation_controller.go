@@ -139,7 +139,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		// Check to see if there's an error with the Get
 		readyNsName := nsList[0].Name
-		r.Log.Info(fmt.Sprintf("Found namespace in %s; verifying ready status", res.Spec.PoolType))
+		r.Log.Info(fmt.Sprintf("Found namespace in %s-pool; verifying ready status", res.Spec.PoolType))
 
 		// Verify that the ClowdEnv has been set up for the requested namespace
 		if err := r.verifyClowdEnvForReadyNs(ctx, readyNsName); err != nil {
