@@ -108,7 +108,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	default:
 		// if no, requeue and wait for pool to populate
 		r.Log.Info("Reconciling reservation", "name", res.Name)
-		r.Log.Info(fmt.Sprintf("Checking %s for ready namespaces", res.Spec.PoolType), "name", res.Name)
+		r.Log.Info(fmt.Sprintf("Checking %s-pool for ready namespaces", res.Spec.PoolType), "name", res.Name)
 
 		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
