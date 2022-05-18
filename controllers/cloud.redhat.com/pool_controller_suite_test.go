@@ -98,27 +98,17 @@ var _ = Describe("Pool controller basic functionality", func() {
 	})
 })
 
-var _ = Describe("Pool controller functionality with multiple pools", func() {
+var _ = Describe("Ensure proper number of namespaces are in ready", func() {
 	const (
 		timeout  = time.Second * 90
 		duration = time.Second * 90
 		interval = time.Millisecond * 250
 	)
 
-	Context("When reserving a minimal namespace", func() {
-		It("Should recreate a minimal namespace", func() {
-			By("Checking that a reservation occurred")
-			ctx := context.Background()
-			pool := crd.NamespacePool{}
+	Context("When a namespace is deleted", func() {
+		It("Should create a new namespace", func() {
+			By("Seeing that the total of ready namespaces is less than the desired quantity")
 
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "minimal-pool"}, &pool)
-				Expect(err).NotTo(HaveOccurred())
-
-				return pool.Spec.Size == (pool.Status.Ready + pool.Status.Creating)
-			}, timeout, interval).Should(BeTrue())
-
-			By("creating a new minimal namespace")
 		})
 	})
 })

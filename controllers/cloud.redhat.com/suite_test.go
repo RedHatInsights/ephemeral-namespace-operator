@@ -226,7 +226,7 @@ var _ = BeforeSuite(func() {
 			Kind:       "NamespacePool",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "default-pool",
+			Name: "default",
 		},
 		Spec: testConfig,
 	}
@@ -237,7 +237,7 @@ var _ = BeforeSuite(func() {
 			Kind:       "NamespacePool",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "minimal-pool",
+			Name: "minimal",
 		},
 		Spec: testConfig,
 	}
