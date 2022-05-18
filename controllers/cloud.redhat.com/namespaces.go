@@ -33,7 +33,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	// Create project or namespace depending on environment
 	ns := core.Namespace{}
 
-	initialLabels["pool-type"] = pool.Name[:len(pool.Name)-5]
+	initialLabels["pool-type"] = pool.Name
 
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
 
