@@ -1,10 +1,9 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.6.0
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: namespacepools.cloud.redhat.com
 spec:
@@ -312,6 +311,10 @@ spec:
                           enableLegacyStrimzi:
                             description: EnableLegacyStrimzi disables TLS + user auth
                             type: boolean
+                          managedPrefix:
+                            description: Managed topic prefix for the managed cluster.
+                              Only used in (*_managed_*) mode.
+                            type: string
                           managedSecretRef:
                             description: Defines the secret reference for the Managed
                               Kafka mode. Only used in (*_managed_*) mode.
@@ -386,7 +389,7 @@ spec:
                         properties:
                           mode:
                             description: The mode of operation of the Metrics provider.
-                              The allowed modes are  (*_none_*), which disables metrics
+                              The allowed modes are (*_none_*), which disables metrics
                               service generation, or (*_operator_*) where services
                               and probes are generated. (*_app-interface_*) where
                               services and probes are generated for app-interface.
