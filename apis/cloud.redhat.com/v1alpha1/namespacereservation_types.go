@@ -27,7 +27,7 @@ type NamespaceReservationSpec struct {
 	// Requester is the entity (bot or human) requesting the namespace
 	Requester string `json:"requester"`
 	// PoolType is the pool resource specified to reserve a namespace from
-	Pool string `json:"pool-type,omitempty" default:"default"`
+	Pool string `json:"pool,omitempty" default:"default"`
 }
 
 // NamespaceReservationStatus defines the observed state of NamespaceReservation
@@ -35,7 +35,7 @@ type NamespaceReservationStatus struct {
 	Expiration metav1.Time `json:"expiration"`
 	State      string      `json:"state"`
 	Namespace  string      `json:"namespace"`
-	Pool       string      `json:"pool-type,omitempty"`
+	Pool       string      `json:"pool,omitempty"`
 }
 
 //+kubebuilder:object:root=true
