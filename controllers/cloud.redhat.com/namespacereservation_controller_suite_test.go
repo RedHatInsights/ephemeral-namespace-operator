@@ -13,7 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func newReservation(resName string, duration string, requester string) *crd.NamespaceReservation {
+func newReservation(resName string, duration string, requester string, pool string) *crd.NamespaceReservation {
 	return &crd.NamespaceReservation{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "cloud.redhat.com/",
@@ -25,14 +25,18 @@ func newReservation(resName string, duration string, requester string) *crd.Name
 		Spec: crd.NamespaceReservationSpec{
 			Duration:  utils.StringPtr(duration),
 			Requester: requester,
+			Pool:      pool,
+		},
+		Status: crd.NamespaceReservationStatus{
+			Pool: pool,
 		},
 	}
 }
 
 var _ = Describe("Reservation controller basic reservation", func() {
 	const (
-		timeout  = time.Second * 90
-		duration = time.Second * 90
+		timeout  = time.Second * 45
+		duration = time.Second * 45
 		interval = time.Millisecond * 250
 	)
 
@@ -42,7 +46,7 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			ctx := context.Background()
 			resName := "test-frontend"
 
-			reservation := newReservation(resName, "10h", "psav")
+			reservation := newReservation(resName, "10h", "psav", "default")
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
@@ -65,7 +69,7 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			ctx := context.Background()
 			resName := "short-reservation"
 
-			reservation := newReservation(resName, "30s", "test-user")
+			reservation := newReservation(resName, "30s", "test-user", "default")
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
@@ -84,9 +88,9 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			resName2 := "res-2"
 			resName3 := "res-3"
 
-			r1 := newReservation(resName1, "30s", "test-user-1")
-			r2 := newReservation(resName2, "10m", "test-user-2")
-			r3 := newReservation(resName3, "10m", "test-user-3")
+			r1 := newReservation(resName1, "30s", "test-user-1", "default")
+			r2 := newReservation(resName2, "10m", "test-user-2", "default")
+			r3 := newReservation(resName3, "10m", "test-user-3", "default")
 
 			Expect(k8sClient.Create(ctx, r1)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, r2)).Should(Succeed())

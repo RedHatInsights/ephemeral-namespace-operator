@@ -125,7 +125,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
-		nsList, err := GetReadyNamespaces(ctx, r.Client)
+		nsList, err := GetReadyNamespaces(ctx, r.Client, res.Status.Pool)
 		if err != nil {
 			r.Log.Error(err, "Unable to retrieve list of namespaces", "res-name", res.Name, "pool-type", res.Status.Pool)
 			return ctrl.Result{}, err

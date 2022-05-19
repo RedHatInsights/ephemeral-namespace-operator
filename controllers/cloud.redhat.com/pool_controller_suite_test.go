@@ -26,7 +26,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 			pool := crd.NamespacePool{}
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default-pool"}, &pool)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
 				Expect(err).NotTo(HaveOccurred())
 
 				return pool.Spec.Size == (pool.Status.Ready + pool.Status.Creating)
@@ -39,7 +39,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 				err := k8sClient.List(ctx, &nsList)
 				ownedCount := 0
 				for _, ns := range nsList.Items {
-					if isOwnedByPool(ctx, k8sClient, ns.Name) {
+					if isOwnedBySpecificPool(ctx, k8sClient, ns.Name, pool.UID) {
 						ownedCount++
 					}
 				}
@@ -48,14 +48,14 @@ var _ = Describe("Pool controller basic functionality", func() {
 				return ownedCount == pool.Spec.Size
 			}, timeout, interval).Should(BeTrue())
 
-			By("By creating new namespaces as needed")
+			By("Creating new namespaces as needed")
 			pool.Spec.Size++
 
 			err := k8sClient.Update(ctx, &pool)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default-pool"}, &pool)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
 				Expect(err).NotTo(HaveOccurred())
 
 				return pool.Spec.Size == pool.Status.Ready
@@ -94,21 +94,6 @@ var _ = Describe("Pool controller basic functionality", func() {
 				}
 				return false
 			}, timeout, interval).Should(BeTrue())
-		})
-	})
-})
-
-var _ = Describe("Ensure proper number of namespaces are in ready", func() {
-	const (
-		timeout  = time.Second * 90
-		duration = time.Second * 90
-		interval = time.Millisecond * 250
-	)
-
-	Context("When a namespace is deleted", func() {
-		It("Should create a new namespace", func() {
-			By("Seeing that the total of ready namespaces is less than the desired quantity")
-
 		})
 	})
 })

@@ -9,6 +9,7 @@ import (
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
@@ -87,6 +88,8 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 }
 
 func SetupNamespace(ctx context.Context, cl client.Client, pool crd.NamespacePool, ns string) error {
+	initialLabels["pool"] = pool.Name
+
 	// Create ClowdEnvironment
 	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, ns); err != nil {
 		return errors.New("Error creating ClowdEnvironment: " + err.Error())
@@ -136,10 +139,24 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 	return ns, nil
 }
 
-func GetReadyNamespaces(ctx context.Context, cl client.Client) ([]core.Namespace, error) {
+func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]core.Namespace, error) {
 	nsList := core.NamespaceList{}
-	labelSelector, _ := labels.Parse("operator-ns=true")
-	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
+
+	selector := labels.NewSelector()
+	labelRequirement, err := labels.NewRequirement("operator-ns", selection.Equals, []string{"true"})
+	if err != nil {
+		return nil, err
+	}
+
+	poolRequirement, err := labels.NewRequirement("pool", selection.Equals, []string{pool})
+	if err != nil {
+		return nil, err
+	}
+
+	selector.Add(*labelRequirement)
+	selector.Add(*poolRequirement)
+
+	nsListOptions := &client.ListOptions{LabelSelector: selector}
 
 	if err := cl.List(ctx, &nsList, nsListOptions); err != nil {
 		return nil, err

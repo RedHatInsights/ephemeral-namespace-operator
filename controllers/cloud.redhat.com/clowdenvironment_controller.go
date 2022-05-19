@@ -23,6 +23,7 @@ import (
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -100,6 +101,20 @@ func isOwnedByPool(ctx context.Context, cl client.Client, nsName string) bool {
 	}
 	for _, owner := range ns.GetOwnerReferences() {
 		if owner.Kind == "NamespacePool" {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isOwnedBySpecificPool(ctx context.Context, cl client.Client, nsName string, uid types.UID) bool {
+	ns, err := GetNamespace(ctx, cl, nsName)
+	if err != nil {
+		return false
+	}
+	for _, owner := range ns.GetOwnerReferences() {
+		if owner.Kind == "NamespacePool" && owner.UID == uid {
 			return true
 		}
 	}
