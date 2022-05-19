@@ -73,10 +73,7 @@ var _ = Describe("Reservation controller basic reservation", func() {
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
-				if errors.IsNotFound(err) {
-					return true
-				}
-				return false
+				return errors.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 		})
 
