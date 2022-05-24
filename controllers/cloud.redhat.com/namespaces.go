@@ -9,7 +9,6 @@ import (
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
@@ -142,21 +141,12 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]core.Namespace, error) {
 	nsList := core.NamespaceList{}
 
-	selector := labels.NewSelector()
-	labelRequirement, err := labels.NewRequirement("operator-ns", selection.Equals, []string{"true"})
-	if err != nil {
-		return nil, err
-	}
+	validatedSelector, _ := labels.ValidatedSelectorFromSet(
+		map[string]string{"operator-ns": "true", "pool": pool})
 
-	poolRequirement, err := labels.NewRequirement("pool", selection.Equals, []string{pool})
-	if err != nil {
-		return nil, err
-	}
+	fmt.Printf("%v", validatedSelector)
 
-	selector.Add(*labelRequirement)
-	selector.Add(*poolRequirement)
-
-	nsListOptions := &client.ListOptions{LabelSelector: selector}
+	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
 	if err := cl.List(ctx, &nsList, nsListOptions); err != nil {
 		return nil, err
@@ -167,8 +157,10 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.Kind == "NamespacePool" {
-				if val, ok := ns.ObjectMeta.Annotations["env-status"]; ok && val == "ready" {
-					ready = append(ready, ns)
+				if val := ns.ObjectMeta.Labels["pool"]; val == pool {
+					if val, ok := ns.ObjectMeta.Annotations["env-status"]; ok && val == "ready" {
+						ready = append(ready, ns)
+					}
 				}
 			}
 		}
