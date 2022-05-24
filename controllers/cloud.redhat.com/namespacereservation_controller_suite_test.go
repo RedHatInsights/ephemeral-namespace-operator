@@ -27,9 +27,6 @@ func newReservation(resName string, duration string, requester string, pool stri
 			Requester: requester,
 			Pool:      pool,
 		},
-		Status: crd.NamespaceReservationStatus{
-			Pool: pool,
-		},
 	}
 }
 
