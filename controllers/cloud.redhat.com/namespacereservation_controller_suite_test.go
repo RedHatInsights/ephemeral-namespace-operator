@@ -35,8 +35,8 @@ func newReservation(resName string, duration string, requester string, pool stri
 
 var _ = Describe("Reservation controller basic reservation", func() {
 	const (
-		timeout  = time.Second * 45
-		duration = time.Second * 45
+		timeout  = time.Second * 4500
+		duration = time.Second * 4500
 		interval = time.Millisecond * 250
 	)
 
@@ -84,30 +84,36 @@ var _ = Describe("Reservation controller basic reservation", func() {
 		It("Should handle waiting reservations", func() {
 			By("Setting reservation state to waiting")
 			ctx := context.Background()
+
 			resName1 := "res-1"
 			resName2 := "res-2"
 			resName3 := "res-3"
+			resName4 := "res-4"
 
-			r1 := newReservation(resName1, "30s", "test-user-1", "default")
-			r2 := newReservation(resName2, "10m", "test-user-2", "default")
-			r3 := newReservation(resName3, "10m", "test-user-3", "default")
+			r1 := newReservation(resName1, "30s", "test-user-1", "minimal")
+			r2 := newReservation(resName2, "10m", "test-user-2", "minimal")
+			r3 := newReservation(resName3, "10m", "test-user-3", "minimal")
+			r4 := newReservation(resName4, "10m", "test-user-4", "minimal")
 
 			Expect(k8sClient.Create(ctx, r1)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, r2)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, r3)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, r4)).Should(Succeed())
 
 			updatedR1 := &crd.NamespaceReservation{}
 			updatedR2 := &crd.NamespaceReservation{}
 			updatedR3 := &crd.NamespaceReservation{}
+			updatedR4 := &crd.NamespaceReservation{}
 
 			Eventually(func() bool {
 				err1 := k8sClient.Get(ctx, types.NamespacedName{Name: resName1}, updatedR1)
 				err2 := k8sClient.Get(ctx, types.NamespacedName{Name: resName2}, updatedR2)
 				err3 := k8sClient.Get(ctx, types.NamespacedName{Name: resName3}, updatedR3)
-				if err1 != nil || err2 != nil || err3 != nil {
+				err4 := k8sClient.Get(ctx, types.NamespacedName{Name: resName4}, updatedR3)
+				if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
 					return false
 				}
-				if updatedR3.Status.State == "waiting" {
+				if updatedR4.Status.State == "waiting" {
 					return true
 				}
 				return false
@@ -117,7 +123,8 @@ var _ = Describe("Reservation controller basic reservation", func() {
 				err1 := k8sClient.Get(ctx, types.NamespacedName{Name: resName1}, updatedR1)
 				err2 := k8sClient.Get(ctx, types.NamespacedName{Name: resName2}, updatedR2)
 				err3 := k8sClient.Get(ctx, types.NamespacedName{Name: resName3}, updatedR3)
-				if errors.IsNotFound(err1) || err2 != nil || err3 != nil {
+				err4 := k8sClient.Get(ctx, types.NamespacedName{Name: resName4}, updatedR4)
+				if errors.IsNotFound(err1) || err2 != nil || err3 != nil || err4 != nil {
 					return false
 				}
 				if updatedR2.Status.State == "active" &&
