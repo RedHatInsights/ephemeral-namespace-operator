@@ -35,8 +35,8 @@ func newReservation(resName string, duration string, requester string, pool stri
 
 var _ = Describe("Reservation controller basic reservation", func() {
 	const (
-		timeout  = time.Second * 45
-		duration = time.Second * 45
+		timeout  = time.Second * 4500
+		duration = time.Second * 4500
 		interval = time.Millisecond * 250
 	)
 
@@ -88,9 +88,9 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			resName2 := "res-2"
 			resName3 := "res-3"
 
-			r1 := newReservation(resName1, "10m", "test-user-1", "minimal")
-			r2 := newReservation(resName2, "10m", "test-user-2", "minimal")
-			r3 := newReservation(resName3, "10m", "test-user-3", "minimal")
+			r1 := newReservation(resName1, "30s", "test-user-1", "default")
+			r2 := newReservation(resName2, "10m", "test-user-2", "default")
+			r3 := newReservation(resName3, "10m", "test-user-3", "default")
 
 			Expect(k8sClient.Create(ctx, r1)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, r2)).Should(Succeed())
