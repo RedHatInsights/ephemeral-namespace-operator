@@ -144,8 +144,6 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 	validatedSelector, _ := labels.ValidatedSelectorFromSet(
 		map[string]string{"operator-ns": "true", "pool": pool})
 
-	fmt.Printf("%v", validatedSelector)
-
 	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
 	if err := cl.List(ctx, &nsList, nsListOptions); err != nil {
