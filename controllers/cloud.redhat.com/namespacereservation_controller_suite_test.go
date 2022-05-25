@@ -122,6 +122,5 @@ var _ = Describe("Reservation controller basic reservation", func() {
 				return pool.Spec.Size == pool.Status.Ready
 			}, timeout, interval).Should(BeTrue())
 		})
-
 	})
 })
