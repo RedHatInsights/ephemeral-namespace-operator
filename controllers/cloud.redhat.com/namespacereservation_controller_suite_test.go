@@ -78,12 +78,13 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			}, timeout, interval).Should(BeTrue())
 		})
 
-		It("Should handle waiting reservations", func() {
-			By("Setting reservation state to waiting")
+		It("Should ensure two namespaces are ready after all reservations are reconciled", func() {
+			By("Creating more reservations then the pool size")
 			ctx := context.Background()
-			resName1 := "res-1"
-			resName2 := "res-2"
-			resName3 := "res-3"
+
+			resName1 := "res-3"
+			resName2 := "res-4"
+			resName3 := "res-5"
 
 			r1 := newReservation(resName1, "30m", "test-user-3", "minimal")
 			r2 := newReservation(resName2, "30m", "test-user-4", "minimal")
@@ -101,19 +102,6 @@ var _ = Describe("Reservation controller basic reservation", func() {
 				err1 := k8sClient.Get(ctx, types.NamespacedName{Name: resName1}, updatedR1)
 				err2 := k8sClient.Get(ctx, types.NamespacedName{Name: resName2}, updatedR2)
 				err3 := k8sClient.Get(ctx, types.NamespacedName{Name: resName3}, updatedR3)
-				if err1 != nil || err2 != nil || err3 != nil {
-					return false
-				}
-				if updatedR3.Status.State == "waiting" {
-					return true
-				}
-				return false
-			}, timeout, interval).Should(BeTrue())
-
-			Eventually(func() bool {
-				err1 := k8sClient.Get(ctx, types.NamespacedName{Name: resName1}, updatedR1)
-				err2 := k8sClient.Get(ctx, types.NamespacedName{Name: resName2}, updatedR2)
-				err3 := k8sClient.Get(ctx, types.NamespacedName{Name: resName3}, updatedR3)
 				if errors.IsNotFound(err1) || err2 != nil || err3 != nil {
 					return false
 				}
@@ -123,6 +111,17 @@ var _ = Describe("Reservation controller basic reservation", func() {
 				}
 				return false
 			}, timeout, interval).Should(BeTrue())
+
+			By("Creating the number of ready namespaces as the pool size")
+			pool := crd.NamespacePool{}
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "minimal"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Spec.Size == pool.Status.Ready
+			}, timeout, interval).Should(BeTrue())
 		})
+
 	})
 })
