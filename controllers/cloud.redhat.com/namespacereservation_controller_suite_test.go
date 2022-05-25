@@ -85,9 +85,9 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			resName2 := "res-2"
 			resName3 := "res-3"
 
-			r1 := newReservation(resName1, "1m", "test-user-3", "minimal")
-			r2 := newReservation(resName2, "1m", "test-user-4", "minimal")
-			r3 := newReservation(resName3, "1m", "test-user-5", "minimal")
+			r1 := newReservation(resName1, "30m", "test-user-3", "minimal")
+			r2 := newReservation(resName2, "30m", "test-user-4", "minimal")
+			r3 := newReservation(resName3, "30m", "test-user-5", "minimal")
 
 			Expect(k8sClient.Create(ctx, r1)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, r2)).Should(Succeed())
