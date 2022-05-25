@@ -32,8 +32,8 @@ func newReservation(resName string, duration string, requester string, pool stri
 
 var _ = Describe("Reservation controller basic reservation", func() {
 	const (
-		timeout  = time.Second * 45
-		duration = time.Second * 45
+		timeout  = time.Second * 55
+		duration = time.Second * 55
 		interval = time.Millisecond * 250
 	)
 
