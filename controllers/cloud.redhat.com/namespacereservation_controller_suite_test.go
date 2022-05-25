@@ -43,7 +43,7 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			ctx := context.Background()
 			resName := "test-frontend"
 
-			reservation := newReservation(resName, "10h", "psav", "default")
+			reservation := newReservation(resName, "10h", "test-user-1", "default")
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
@@ -66,7 +66,7 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			ctx := context.Background()
 			resName := "short-reservation"
 
-			reservation := newReservation(resName, "30s", "test-user", "default")
+			reservation := newReservation(resName, "30s", "test-user-2", "default")
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
@@ -85,9 +85,9 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			resName2 := "res-2"
 			resName3 := "res-3"
 
-			r1 := newReservation(resName1, "1m", "test-user-1", "minimal")
-			r2 := newReservation(resName2, "1m", "test-user-2", "minimal")
-			r3 := newReservation(resName3, "1m", "test-user-3", "minimal")
+			r1 := newReservation(resName1, "1m", "test-user-3", "minimal")
+			r2 := newReservation(resName2, "1m", "test-user-4", "minimal")
+			r3 := newReservation(resName3, "1m", "test-user-5", "minimal")
 
 			Expect(k8sClient.Create(ctx, r1)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, r2)).Should(Succeed())
