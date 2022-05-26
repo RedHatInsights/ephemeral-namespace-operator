@@ -70,9 +70,9 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	}
 
 	if len(ns.Labels) == 0 {
-		ns.SetLabels(initialLabels)
+		ns.SetLabels(labels)
 	} else {
-		for k, v := range initialLabels {
+		for k, v := range labels {
 			ns.Labels[k] = v
 		}
 	}
@@ -88,6 +88,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 func SetupNamespace(ctx context.Context, cl client.Client, pool crd.NamespacePool, ns string) error {
 	labels := map[string]string{}
+
 	for k, v := range initialLabels {
 		labels[k] = v
 	}
