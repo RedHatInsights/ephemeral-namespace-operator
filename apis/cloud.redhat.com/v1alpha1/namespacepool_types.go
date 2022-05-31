@@ -24,12 +24,16 @@ import (
 
 // NamespacePoolSpec defines the desired state of Pool
 type NamespacePoolSpec struct {
-	Size             int                          `json:"size"`
-	Local            bool                         `json:"local"`
+	// Number of namespaces to have ready in the pool
+	Size int `json:"size"`
+	// Value to determine if deployed locally or not
+	Local bool `json:"local"`
+	// Clowdenvironment configurations
 	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment"`
-	LimitRange       core.LimitRange              `json:"limitrange"`
-	ResourceQuotas   core.ResourceQuotaList       `json:"resourcequotas"`
-	Description      string                       `json:"description,omitempty"`
+	// Resource limits for containers and pods
+	LimitRange core.LimitRange `json:"limitrange"`
+	// Defined resource quotas for specific states
+	ResourceQuotas core.ResourceQuotaList `json:"resourcequotas"`
 }
 
 // NamespacePoolStatus defines the observed state of Pool

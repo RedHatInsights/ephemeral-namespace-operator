@@ -87,6 +87,14 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 }
 
 func SetupNamespace(ctx context.Context, cl client.Client, pool crd.NamespacePool, ns string) error {
+	labels := map[string]string{}
+
+	for k, v := range initialLabels {
+		labels[k] = v
+	}
+
+	labels["pool"] = pool.Name
+
 	// Create ClowdEnvironment
 	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, ns); err != nil {
 		return errors.New("Error creating ClowdEnvironment: " + err.Error())
@@ -153,16 +161,22 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.Kind == "NamespacePool" {
-				if val := ns.ObjectMeta.Labels["pool"]; val == pool {
-					if val, ok := ns.ObjectMeta.Annotations["env-status"]; ok && val == "ready" {
-						ready = append(ready, ns)
-					}
-				}
+				ready = CheckReadyStatus(pool, ns, ready)
 			}
 		}
 	}
 
 	return ready, nil
+}
+
+func CheckReadyStatus(pool string, ns core.Namespace, ready []core.Namespace) []core.Namespace {
+	if val := ns.ObjectMeta.Labels["pool"]; val == pool {
+		if val, ok := ns.ObjectMeta.Annotations["env-status"]; ok && val == "ready" {
+			ready = append(ready, ns)
+		}
+	}
+
+	return ready
 }
 
 func UpdateAnnotations(ctx context.Context, cl client.Client, annotations map[string]string, nsName string) error {

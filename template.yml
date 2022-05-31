@@ -7,6 +7,4 @@ parameters:
   value: latest
 - name: IMAGE
   value: quay.io/cloudservices/ephemeral-namespace-operator
-- name: NS_OPERATOR_CONFIG
-  value: "ephemeral_config.json"
 objects: []

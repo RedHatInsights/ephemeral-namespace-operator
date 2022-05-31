@@ -33,10 +33,14 @@ type NamespaceReservationSpec struct {
 
 // NamespaceReservationStatus defines the observed state of NamespaceReservation
 type NamespaceReservationStatus struct {
+	// Expiration of reservation
 	Expiration metav1.Time `json:"expiration"`
-	State      string      `json:"state"`
-	Namespace  string      `json:"namespace"`
-	Pool       string      `json:"pool,omitempty"`
+	// State determines whether a reservation is active, waiting, or in error
+	State string `json:"state"`
+	// Name of the namespace associated with the reservation
+	Namespace string `json:"namespace"`
+	// PoolType is the pool resource specified to reserve a namespace from
+	Pool string `json:"pool,omitempty"`
 }
 
 //+kubebuilder:object:root=true

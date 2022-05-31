@@ -48,7 +48,7 @@ spec:
             description: NamespacePoolSpec defines the desired state of Pool
             properties:
               clowdenvironment:
-                description: ClowdEnvironmentSpec defines the desired state of ClowdEnvironment.
+                description: Clowdenvironment configurations
                 properties:
                   disabled:
                     description: Disabled turns off reconciliation for this ClowdEnv
@@ -724,8 +724,7 @@ spec:
               description:
                 type: string
               limitrange:
-                description: LimitRange sets resource usage limits for each kind of
-                  resource in a Namespace.
+                description: Resource limits for containers and pods
                 properties:
                   apiVersion:
                     description: 'APIVersion defines the versioned schema of this
@@ -836,9 +835,10 @@ spec:
                     type: object
                 type: object
               local:
+                description: Value to determine if deployed locally or not
                 type: boolean
               resourcequotas:
-                description: ResourceQuotaList is a list of ResourceQuota items.
+                description: Defined resource quotas for specific states
                 properties:
                   apiVersion:
                     description: 'APIVersion defines the versioned schema of this
@@ -1032,6 +1032,7 @@ spec:
                 - items
                 type: object
               size:
+                description: Number of namespaces to have ready in the pool
                 type: integer
             required:
             - clowdenvironment
