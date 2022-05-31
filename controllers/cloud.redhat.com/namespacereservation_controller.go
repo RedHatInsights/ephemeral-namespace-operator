@@ -116,7 +116,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	default:
 		// if no, requeue and wait for pool to populate
 		r.Log.Info("Reconciling reservation", "name", res.Name)
-		r.Log.Info(fmt.Sprintf("Checking %s-pool for ready namespaces", res.Status.Pool), "name", res.Name)
+		r.Log.Info(fmt.Sprintf("Checking %s pool for ready namespaces", res.Status.Pool), "name", res.Name)
 
 		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
@@ -127,12 +127,12 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		nsList, err := GetReadyNamespaces(ctx, r.Client, res.Status.Pool)
 		if err != nil {
-			r.Log.Error(err, "Unable to retrieve list of namespaces", "res-name", res.Name, "pool-type", res.Status.Pool)
+			r.Log.Error(err, fmt.Sprintf("Unable to retrieve list of namespaces from '%s' pool", res.Status.Pool), "res-name", res.Name)
 			return ctrl.Result{}, err
 		}
 
 		if len(nsList) < 1 {
-			r.Log.Info("Requeue to wait for namespace pool population", "name", res.Name, "pool-type", res.Status.Pool)
+			r.Log.Info(fmt.Sprintf("Requeue to wait for namespace population from '%s' pool", res.Status.Pool), "name", res.Name)
 			if res.Status.State == "" {
 				res.Status.State = "waiting"
 				res.Status.Expiration = expirationTS
@@ -156,14 +156,14 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 				"env-status": "error",
 			}
 			if err := UpdateAnnotations(ctx, r.Client, errorAnnotation, readyNsName); err != nil {
-				r.Log.Error(err, "Unable to update annotations for unready namespace", "ns-name", readyNsName, "pool-type", res.Status.Pool)
+				r.Log.Error(err, fmt.Sprintf("Unable to update annotations for unready namespace in '%s' pool", res.Status.Pool), "ns-name", readyNsName)
 			}
 			return ctrl.Result{Requeue: true}, err
 		}
 
 		// Resolve the requested namespace and remove it from the pool
 		if err := r.reserveNamespace(ctx, readyNsName, &res); err != nil {
-			r.Log.Error(err, "Could not reserve namespace", "ns-name", readyNsName, "pool-type", res.Status.Pool)
+			r.Log.Error(err, fmt.Sprintf("Could not reserve namespace from '%s' pool", res.Status.Pool), "ns-name", readyNsName)
 			return ctrl.Result{Requeue: true}, err
 		}
 
@@ -205,7 +205,7 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 	nsObject := core.Namespace{}
 	err := r.Client.Get(ctx, types.NamespacedName{Name: readyNsName}, &nsObject)
 	if err != nil {
-		r.Log.Error(err, "Could not retrieve namespace", "name", readyNsName, "pool-type", res.Status.Pool)
+		r.Log.Error(err, fmt.Sprintf("Could not retrieve namespace from '%s' pool", res.Status.Pool), "name", readyNsName)
 		return err
 	}
 
@@ -219,14 +219,14 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 
 	err = r.Client.Update(ctx, &nsObject)
 	if err != nil {
-		r.Log.Error(err, "Could not update namespace", "ns-name", readyNsName, "pool-type", res.Status.Pool)
+		r.Log.Error(err, "Could not update namespace", "ns-name", readyNsName)
 		return err
 	}
 
 	// Add rolebinding to the namespace only after it has been owned by the CRD.
 	// We need to skip this on minikube
 	if err := r.addRoleBindings(ctx, &nsObject, r.Client); err != nil {
-		r.Log.Error(err, "Could not apply rolebindings for namespace", "ns-name", readyNsName, "pool-type", res.Status.Pool)
+		r.Log.Error(err, "Could not apply rolebindings for namespace", "ns-name", readyNsName)
 		return err
 	}
 
