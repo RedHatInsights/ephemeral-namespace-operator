@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"fmt"
-	"math/rand"
 	"time"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
@@ -291,18 +290,6 @@ func (r *NamespaceReservationReconciler) addRoleBindings(ctx context.Context, ns
 		}
 	}
 	return nil
-}
-
-const rCharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-
-func randString(n int) string {
-	b := make([]byte, n)
-
-	for i := range b {
-		b[i] = rCharSet[rand.Intn(len(rCharSet))]
-	}
-
-	return string(b)
 }
 
 func hardCodedUserList() map[string]string {
