@@ -3,8 +3,6 @@ package controllers
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strings"
 
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -15,6 +13,7 @@ import (
 
 	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
+	"github.com/castillobgr/sententia"
 	projectv1 "github.com/openshift/api/project/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -32,7 +31,11 @@ var initialLabels = map[string]string{
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
 	// Create project or namespace depending on environment
 	ns := core.Namespace{}
-	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
+	randomName, nameErr := sententia.Make("ephemeral-{{ adjective }}-{{ noun }}")
+	if nameErr != nil {
+		return "", nameErr
+	}
+	ns.Name = randomName
 
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &ns); err != nil {
