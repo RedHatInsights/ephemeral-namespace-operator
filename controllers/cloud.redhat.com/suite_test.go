@@ -25,11 +25,9 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -37,7 +35,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
+	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	core "k8s.io/api/core/v1"
@@ -48,7 +46,6 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var stopController context.CancelFunc
@@ -67,22 +64,22 @@ func populateClowdEnvStatus(client client.Client) {
 
 	for {
 		time.Sleep(time.Duration(1 * time.Second))
-		clowdEnvs := v1alpha1.ClowdEnvironmentList{}
+		clowdEnvs := clowder.ClowdEnvironmentList{}
 		err := client.List(ctx, &clowdEnvs)
 		if err != nil {
 			continue
 		}
 		for _, env := range clowdEnvs.Items {
 			if len(env.Status.Conditions) == 0 {
-				status := v1alpha1.ClowdEnvironmentStatus{
+				status := clowder.ClowdEnvironmentStatus{
 					Conditions: []clusterv1.Condition{
 						{
-							Type:               v1alpha1.ReconciliationSuccessful,
+							Type:               clowder.ReconciliationSuccessful,
 							Status:             core.ConditionTrue,
 							LastTransitionTime: metav1.Now(),
 						},
 						{
-							Type:               v1alpha1.DeploymentsReady,
+							Type:               clowder.DeploymentsReady,
 							Status:             core.ConditionTrue,
 							LastTransitionTime: metav1.Now(),
 						},
@@ -116,7 +113,7 @@ var _ = BeforeSuite(func() {
 
 	k8sscheme := runtime.NewScheme()
 	clientgoscheme.AddToScheme(k8sscheme)
-	v1alpha1.AddToScheme(k8sscheme)
+	clowder.AddToScheme(k8sscheme)
 	frontend.AddToScheme(k8sscheme)
 
 	err = crd.AddToScheme(k8sscheme)
@@ -133,59 +130,63 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	testConfig := OperatorConfig{
-		PoolConfig: PoolConfig{
-			Size:  2,
-			Local: true,
-		},
-		ClowdEnvSpec: v1alpha1.ClowdEnvironmentSpec{
-			Providers: v1alpha1.ProvidersConfig{
-				Kafka: v1alpha1.KafkaConfig{
+	testConfig := crd.NamespacePoolSpec{
+		Size:  2,
+		Local: true,
+		ClowdEnvironment: clowder.ClowdEnvironmentSpec{
+			Providers: clowder.ProvidersConfig{
+				Kafka: clowder.KafkaConfig{
 					Mode: "operator",
-					Cluster: v1alpha1.KafkaClusterConfig{
+					Cluster: clowder.KafkaClusterConfig{
 						Name:      "kafka",
 						Namespace: "kafka",
 						Replicas:  5,
 					},
 				},
-				Database: v1alpha1.DatabaseConfig{
+				Database: clowder.DatabaseConfig{
 					Mode: "local",
 				},
-				Logging: v1alpha1.LoggingConfig{
-					Mode: "app-interface",
+				Logging: clowder.LoggingConfig{
+					Mode: "none",
 				},
-				ObjectStore: v1alpha1.ObjectStoreConfig{
-					Mode: "app-interface",
+				ObjectStore: clowder.ObjectStoreConfig{
+					Mode: "minio",
 				},
-				InMemoryDB: v1alpha1.InMemoryDBConfig{
+				InMemoryDB: clowder.InMemoryDBConfig{
 					Mode: "redis",
 				},
-				Web: v1alpha1.WebConfig{
+				Web: clowder.WebConfig{
 					Port: int32(8000),
 					Mode: "none",
 				},
-				Metrics: v1alpha1.MetricsConfig{
+				Metrics: clowder.MetricsConfig{
 					Port: int32(9000),
 					Path: "/metrics",
 					Mode: "none",
 				},
-				FeatureFlags: v1alpha1.FeatureFlagsConfig{
-					Mode: "none",
+				FeatureFlags: clowder.FeatureFlagsConfig{
+					Mode: "local",
 				},
-				Testing: v1alpha1.TestingConfig{
+				Testing: clowder.TestingConfig{
 					ConfigAccess:   "environment",
 					K8SAccessLevel: "edit",
-					Iqe: v1alpha1.IqeConfig{
+					Iqe: clowder.IqeConfig{
 						ImageBase: "quay.io/cloudservices/iqe-tests",
 					},
 				},
-				AutoScaler: v1alpha1.AutoScalerConfig{
+				AutoScaler: clowder.AutoScalerConfig{
 					Mode: "keda",
 				},
 			},
 		},
-		LimitRange:     v1.LimitRange{},
-		ResourceQuotas: v1.ResourceQuotaList{},
+		LimitRange: core.LimitRange{
+			Spec: core.LimitRangeSpec{
+				Limits: []core.LimitRangeItem{},
+			},
+		},
+		ResourceQuotas: core.ResourceQuotaList{
+			Items: []core.ResourceQuota{},
+		},
 	}
 
 	poller := Poller{
@@ -197,7 +198,6 @@ var _ = BeforeSuite(func() {
 	err = (&NamespacePoolReconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
-		Config: testConfig,
 		Log:    ctrl.Log.WithName("controllers").WithName("NamespacePoolReconciler"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
@@ -228,10 +228,7 @@ var _ = BeforeSuite(func() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-pool",
 		},
-		Spec: crd.NamespacePoolSpec{
-			Size:  testConfig.PoolConfig.Size,
-			Local: testConfig.PoolConfig.Local,
-		},
+		Spec: testConfig,
 	}
 
 	Expect(k8sClient.Create(ctx, pool)).Should(Succeed())

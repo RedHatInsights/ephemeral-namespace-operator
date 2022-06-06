@@ -35,7 +35,6 @@ import (
 type NamespacePoolReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	Config OperatorConfig
 	Log    logr.Logger
 }
 
@@ -76,7 +75,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 		} else {
 			r.Log.Info("Setting up new namespace", "ns-name", nsName)
-			if err := SetupNamespace(ctx, r.Client, r.Config, nsName); err != nil {
+			if err := SetupNamespace(ctx, r.Client, pool, nsName); err != nil {
 				r.Log.Error(err, "Error while setting up namespace", "ns-name", nsName)
 				if err := UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, nsName); err != nil {
 					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", nsName)

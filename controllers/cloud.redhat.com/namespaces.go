@@ -79,21 +79,22 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	return ns.Name, nil
 }
 
-func SetupNamespace(ctx context.Context, cl client.Client, cfg OperatorConfig, ns string) error {
+func SetupNamespace(ctx context.Context, cl client.Client, pool crd.NamespacePool, ns string) error {
 	// Create ClowdEnvironment
-	if err := CreateClowdEnv(ctx, cl, cfg.ClowdEnvSpec, ns); err != nil {
+	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, ns); err != nil {
 		return errors.New("Error creating ClowdEnvironment: " + err.Error())
 	}
 
 	// Create LimitRange
-	limitRange := cfg.LimitRange
+	limitRange := pool.Spec.LimitRange
 	limitRange.SetNamespace(ns)
+
 	if err := cl.Create(ctx, &limitRange); err != nil {
 		return errors.New("Error creating LimitRange: " + err.Error())
 	}
 
 	// Create ResourceQuotas
-	resourceQuotas := cfg.ResourceQuotas
+	resourceQuotas := pool.Spec.ResourceQuotas
 	for _, quota := range resourceQuotas.Items {
 		quota.SetNamespace(ns)
 		if err := cl.Create(ctx, &quota); err != nil {
