@@ -57,6 +57,7 @@ spec:
                 description: Duration is how long the reservation will last
                 type: string
               pool:
+                default: default
                 description: PoolType is the pool resource specified to reserve a
                   namespace from
                 type: string
