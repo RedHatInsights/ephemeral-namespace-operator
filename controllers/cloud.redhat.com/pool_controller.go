@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
@@ -134,8 +135,11 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 					r.Log.Info("Error status for namespace. Deleting", "ns-name", ns.Name)
 					DeleteNamespace(ctx, r.Client, ns.Name)
 
-					r.Log.Info("Removing prometheus-operator associated with ns-name", ns.Name)
-					DeletePrometheusOperator(ctx, r.Client, ns.Name)
+					r.Log.Info("Removing prometheus-operator associated with", "ns-name", ns.Name)
+					err := DeletePrometheusOperator(ctx, r.Client, ns.Name)
+					if err != nil {
+						r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", ns.Name))
+					}
 				}
 			}
 		}
