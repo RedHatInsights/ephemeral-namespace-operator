@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"math"
 
 	"fmt"
 	"math/rand"
@@ -32,6 +33,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	_ "github.com/prometheus/client_golang/prometheus"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -187,6 +189,31 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
+		defer func() {
+			duration, err := time.ParseDuration(*res.Spec.Duration)
+			if err != nil {
+				r.Log.Error(err, "Could not parse duration for Prometheus metrics")
+			}
+
+			durationSum := 0.0
+			durationCount := len(durationQueue) + 1
+
+			if durationCount == 500 {
+				durationQueue = durationQueue[1:]
+			}
+
+			durationQueue = append(durationQueue, duration.Seconds())
+
+			for _, item := range durationQueue {
+				durationSum += item
+			}
+
+			averageDurationRequested = (float64(durationSum) / float64(durationCount)) / 60 / 60
+
+			averageRequestedDurationMetrics.Set(math.Round(averageDurationRequested*100) / 100)
+
+		}()
+
 		return ctrl.Result{}, nil
 	}
 }
@@ -229,6 +256,20 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 		r.Log.Error(err, "Could not apply rolebindings for namespace", "ns-name", readyNsName)
 		return err
 	}
+
+	defer func() {
+		if res.Spec.Pool == "default" {
+			totalDefaultPoolReservationsCountMetrics.Inc()
+		} else if res.Spec.Pool == "minimal" {
+			totalMinimalPoolReservationsCountMetrics.Inc()
+		} else if res.Spec.Pool == "managed-kafka" {
+			totalManagedKafkaPoolReservationsCountMetrics.Inc()
+		}
+
+		totalReservationCountMetrics.Inc()
+
+		// topRequestersMetrics.WithLabelValues(resQuantityByRequester["bonfire"])
+	}()
 
 	return nil
 }
