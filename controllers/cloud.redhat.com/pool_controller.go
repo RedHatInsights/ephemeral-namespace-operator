@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
@@ -55,7 +56,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	r.Log.Info("Pool status", "ready", status["ready"], "creating", status["creating"])
+	r.Log.Info(fmt.Sprintf("Populating %s", pool.Name), "ready", status["ready"], "creating", status["creating"])
 
 	pool.Status.Ready = status["ready"]
 	pool.Status.Creating = status["creating"]
@@ -74,7 +75,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			}
 
 		} else {
-			r.Log.Info("Setting up new namespace", "ns-name", nsName)
+			r.Log.Info("Setting up new namespace", "ns-name", nsName, "pool-type", pool.Name)
 			if err := SetupNamespace(ctx, r.Client, pool, nsName); err != nil {
 				r.Log.Error(err, "Error while setting up namespace", "ns-name", nsName)
 				if err := UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, nsName); err != nil {

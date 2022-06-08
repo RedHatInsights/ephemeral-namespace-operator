@@ -70,6 +70,14 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{}, err
 	}
 
+	if res.Status.Pool == "" {
+		if res.Spec.Pool == "" {
+			res.Status.Pool = "default"
+		} else {
+			res.Status.Pool = res.Spec.Pool
+		}
+	}
+
 	switch res.Status.State {
 	case "active":
 		r.Log.Info("Reconciling active reservation", "name", res.Name, "namespace", res.Status.Namespace)
@@ -108,7 +116,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	default:
 		// if no, requeue and wait for pool to populate
 		r.Log.Info("Reconciling reservation", "name", res.Name)
-		r.Log.Info("Checking pool for ready namespaces", "name", res.Name)
+		r.Log.Info(fmt.Sprintf("Checking %s pool for ready namespaces", res.Status.Pool), "name", res.Name)
 
 		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
@@ -117,14 +125,14 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
-		nsList, err := GetReadyNamespaces(ctx, r.Client)
+		nsList, err := GetReadyNamespaces(ctx, r.Client, res.Status.Pool)
 		if err != nil {
-			r.Log.Error(err, "Unable to retrieve list of namespaces", "res-name", res.Name)
+			r.Log.Error(err, fmt.Sprintf("Unable to retrieve list of namespaces from '%s' pool", res.Status.Pool), "res-name", res.Name)
 			return ctrl.Result{}, err
 		}
 
 		if len(nsList) < 1 {
-			r.Log.Info("Requeue to wait for namespace pool population", "name", res.Name)
+			r.Log.Info(fmt.Sprintf("Requeue to wait for namespace population from '%s' pool", res.Status.Pool), "name", res.Name)
 			if res.Status.State == "" {
 				res.Status.State = "waiting"
 				res.Status.Expiration = expirationTS
@@ -139,7 +147,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		// Check to see if there's an error with the Get
 		readyNsName := nsList[0].Name
-		r.Log.Info("Found namespace in pool; verifying ready status")
+		r.Log.Info(fmt.Sprintf("Found namespace in '%s' pool; verifying ready status", res.Status.Pool))
 
 		// Verify that the ClowdEnv has been set up for the requested namespace
 		if err := r.verifyClowdEnvForReadyNs(ctx, readyNsName); err != nil {
@@ -148,14 +156,14 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 				"env-status": "error",
 			}
 			if err := UpdateAnnotations(ctx, r.Client, errorAnnotation, readyNsName); err != nil {
-				r.Log.Error(err, "Unable to update annotations for unready namespace", "ns-name", readyNsName)
+				r.Log.Error(err, fmt.Sprintf("Unable to update annotations for unready namespace in '%s' pool", res.Status.Pool), "ns-name", readyNsName)
 			}
 			return ctrl.Result{Requeue: true}, err
 		}
 
 		// Resolve the requested namespace and remove it from the pool
 		if err := r.reserveNamespace(ctx, readyNsName, &res); err != nil {
-			r.Log.Error(err, "Could not reserve namespace", "ns-name", readyNsName)
+			r.Log.Error(err, fmt.Sprintf("Could not reserve namespace from '%s' pool", res.Status.Pool), "ns-name", readyNsName)
 			return ctrl.Result{Requeue: true}, err
 		}
 
@@ -197,7 +205,7 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 	nsObject := core.Namespace{}
 	err := r.Client.Get(ctx, types.NamespacedName{Name: readyNsName}, &nsObject)
 	if err != nil {
-		r.Log.Error(err, "Could not retrieve namespace", "name", readyNsName)
+		r.Log.Error(err, fmt.Sprintf("Could not retrieve namespace from '%s' pool", res.Status.Pool), "name", readyNsName)
 		return err
 	}
 

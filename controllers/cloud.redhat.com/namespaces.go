@@ -32,6 +32,14 @@ var initialLabels = map[string]string{
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
 	// Create project or namespace depending on environment
 	ns := core.Namespace{}
+
+	labels := map[string]string{}
+	for k, v := range initialLabels {
+		labels[k] = v
+	}
+
+	labels["pool"] = pool.Name
+
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
 
 	if pool.Spec.Local {
@@ -62,9 +70,9 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	}
 
 	if len(ns.Labels) == 0 {
-		ns.SetLabels(initialLabels)
+		ns.SetLabels(labels)
 	} else {
-		for k, v := range initialLabels {
+		for k, v := range labels {
 			ns.Labels[k] = v
 		}
 	}
@@ -79,6 +87,14 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 }
 
 func SetupNamespace(ctx context.Context, cl client.Client, pool crd.NamespacePool, ns string) error {
+	labels := map[string]string{}
+
+	for k, v := range initialLabels {
+		labels[k] = v
+	}
+
+	labels["pool"] = pool.Name
+
 	// Create ClowdEnvironment
 	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, ns); err != nil {
 		return errors.New("Error creating ClowdEnvironment: " + err.Error())
@@ -128,10 +144,13 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 	return ns, nil
 }
 
-func GetReadyNamespaces(ctx context.Context, cl client.Client) ([]core.Namespace, error) {
+func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]core.Namespace, error) {
 	nsList := core.NamespaceList{}
-	labelSelector, _ := labels.Parse("operator-ns=true")
-	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
+
+	validatedSelector, _ := labels.ValidatedSelectorFromSet(
+		map[string]string{"operator-ns": "true", "pool": pool})
+
+	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
 	if err := cl.List(ctx, &nsList, nsListOptions); err != nil {
 		return nil, err
@@ -142,8 +161,10 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client) ([]core.Namespace
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.Kind == "NamespacePool" {
-				if val, ok := ns.ObjectMeta.Annotations["env-status"]; ok && val == "ready" {
-					ready = append(ready, ns)
+				if val := ns.ObjectMeta.Labels["pool"]; val == pool {
+					if val, ok := ns.ObjectMeta.Annotations["env-status"]; ok && val == "ready" {
+						ready = append(ready, ns)
+					}
 				}
 			}
 		}
