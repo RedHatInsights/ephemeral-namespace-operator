@@ -247,7 +247,6 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 
 	prometheusOperator.SetGroupVersionKind(gvk)
 	prometheusOperator.SetName(fmt.Sprintf("prometheus.%s", nsName))
-	//prometheusOperator.SetNamespace(nsName)
 
 	err := cl.Delete(ctx, &prometheusOperator)
 
