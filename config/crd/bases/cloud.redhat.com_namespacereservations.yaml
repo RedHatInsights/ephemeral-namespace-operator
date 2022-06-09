@@ -57,10 +57,7 @@ spec:
                 description: Duration is how long the reservation will last
                 type: string
               pool:
-<<<<<<< HEAD
                 default: default
-=======
->>>>>>> c788d71 (Added kuttl command.)
                 description: PoolType is the pool resource specified to reserve a
                   namespace from
                 type: string
@@ -83,10 +80,8 @@ spec:
                 description: Name of the namespace associated with the reservation
                 type: string
               pool:
-                description: PoolType is the pool resource specified to reserve a
-                  namespace from
-                type: string
-              pool:
+                description: Specifies the pool type that the reservation was requested
+                  with
                 type: string
               state:
                 description: State determines whether a reservation is active, waiting,
