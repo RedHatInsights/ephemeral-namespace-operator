@@ -29,6 +29,7 @@ type NamespacePoolSpec struct {
 	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment"`
 	LimitRange       core.LimitRange              `json:"limitrange"`
 	ResourceQuotas   core.ResourceQuotaList       `json:"resourcequotas"`
+	Description      string                       `json:"description,omitempty"`
 }
 
 // NamespacePoolStatus defines the observed state of Pool

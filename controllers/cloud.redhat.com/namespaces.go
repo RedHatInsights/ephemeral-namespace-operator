@@ -87,14 +87,6 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 }
 
 func SetupNamespace(ctx context.Context, cl client.Client, pool crd.NamespacePool, ns string) error {
-	labels := map[string]string{}
-
-	for k, v := range initialLabels {
-		labels[k] = v
-	}
-
-	labels["pool"] = pool.Name
-
 	// Create ClowdEnvironment
 	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, ns); err != nil {
 		return errors.New("Error creating ClowdEnvironment: " + err.Error())

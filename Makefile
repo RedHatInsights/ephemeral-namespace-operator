@@ -86,8 +86,7 @@ help: ## Display this help.
 
 ##@ Development
 
-pre-push:
-	manifests generate build-template
+pre-push: manifests generate build-template
 
 build-template: manifests kustomize controller-gen
 	$(KUSTOMIZE) build config/deployment-template | ./manifest2template.py > deploy.yml
