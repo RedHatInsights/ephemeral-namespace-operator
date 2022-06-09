@@ -741,6 +741,8 @@ objects:
                   - providers
                   - resourceDefaults
                   type: object
+                description:
+                  type: string
                 limitrange:
                   description: LimitRange sets resource usage limits for each kind
                     of resource in a Namespace.
@@ -1141,6 +1143,11 @@ objects:
                 duration:
                   description: Duration is how long the reservation will last
                   type: string
+                pool:
+                  default: default
+                  description: PoolType is the pool resource specified to reserve
+                    a namespace from
+                  type: string
                 requester:
                   description: Requester is the entity (bot or human) requesting the
                     namespace
@@ -1156,6 +1163,8 @@ objects:
                   format: date-time
                   type: string
                 namespace:
+                  type: string
+                pool:
                   type: string
                 state:
                   type: string
