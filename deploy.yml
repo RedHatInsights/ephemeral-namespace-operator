@@ -59,7 +59,7 @@ objects:
               description: NamespacePoolSpec defines the desired state of Pool
               properties:
                 clowdenvironment:
-                  description: ClowdEnvironmentSpec defines the desired state of ClowdEnvironment.
+                  description: Clowdenvironment template for the namespace
                   properties:
                     disabled:
                       description: Disabled turns off reconciliation for this ClowdEnv
@@ -742,10 +742,11 @@ objects:
                   - resourceDefaults
                   type: object
                 description:
+                  description: Description for the namespace pool
                   type: string
                 limitrange:
-                  description: LimitRange sets resource usage limits for each kind
-                    of resource in a Namespace.
+                  description: Resource limits for containers and pods for the deployed
+                    namespace
                   properties:
                     apiVersion:
                       description: 'APIVersion defines the versioned schema of this
@@ -856,9 +857,11 @@ objects:
                       type: object
                   type: object
                 local:
+                  description: Determine whether the project uses a project or a namespace
                   type: boolean
                 resourcequotas:
-                  description: ResourceQuotaList is a list of ResourceQuota items.
+                  description: Defined resource quotas for specific states for the
+                    deployed namespace
                   properties:
                     apiVersion:
                       description: 'APIVersion defines the versioned schema of this
@@ -1055,6 +1058,7 @@ objects:
                   - items
                   type: object
                 size:
+                  description: Number of namespaces to have ready in the pool
                   type: integer
               required:
               - clowdenvironment
@@ -1160,13 +1164,19 @@ objects:
                 NamespaceReservation
               properties:
                 expiration:
+                  description: Expiration of reservation
                   format: date-time
                   type: string
                 namespace:
+                  description: Name of the namespace associated with the reservation
                   type: string
                 pool:
+                  description: Specifies the pool type that the reservation was requested
+                    with
                   type: string
                 state:
+                  description: State determines whether a reservation is active, waiting,
+                    or in error
                   type: string
               required:
               - expiration
@@ -1554,6 +1564,4 @@ parameters:
   value: latest
 - name: IMAGE
   value: quay.io/cloudservices/ephemeral-namespace-operator
-- name: NS_OPERATOR_CONFIG
-  value: ephemeral_config.json
 

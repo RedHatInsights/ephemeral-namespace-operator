@@ -73,13 +73,19 @@ spec:
               NamespaceReservation
             properties:
               expiration:
+                description: Expiration of reservation
                 format: date-time
                 type: string
               namespace:
+                description: Name of the namespace associated with the reservation
                 type: string
               pool:
+                description: Specifies the pool type that the reservation was requested
+                  with
                 type: string
               state:
+                description: State determines whether a reservation is active, waiting,
+                  or in error
                 type: string
             required:
             - expiration

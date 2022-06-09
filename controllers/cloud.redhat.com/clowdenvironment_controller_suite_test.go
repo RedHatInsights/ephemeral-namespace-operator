@@ -11,8 +11,8 @@ import (
 
 var _ = Describe("Clowdenvironment controller basic update", func() {
 	const (
-		timeout  = time.Second * 90
-		duration = time.Second * 90
+		timeout  = time.Second * 30
+		duration = time.Second * 30
 		interval = time.Millisecond * 250
 	)
 
