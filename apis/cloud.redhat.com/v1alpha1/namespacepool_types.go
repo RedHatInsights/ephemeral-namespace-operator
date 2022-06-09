@@ -34,6 +34,8 @@ type NamespacePoolSpec struct {
 	LimitRange core.LimitRange `json:"limitrange"`
 	// Defined resource quotas for specific states for the deployed namespace
 	ResourceQuotas core.ResourceQuotaList `json:"resourcequotas"`
+	// Description for the namespace pool
+	Description string `json:"description,omitempty"`
 }
 
 // NamespacePoolStatus defines the observed state of Pool

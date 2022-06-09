@@ -721,6 +721,9 @@ spec:
                 - providers
                 - resourceDefaults
                 type: object
+              description:
+                description: Description for the namespace pool
+                type: string
               limitrange:
                 description: Resource limits for containers and pods for the deployed
                   namespace
