@@ -26,13 +26,13 @@ import (
 type NamespacePoolSpec struct {
 	// Number of namespaces to have ready in the pool
 	Size int `json:"size"`
-	// Value to determine if deployed locally or not
+	// Determine whether the project uses a project or a namespace
 	Local bool `json:"local"`
-	// Clowdenvironment configurations
+	// Clowdenvironment template for the namespace
 	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment"`
-	// Resource limits for containers and pods
+	// Resource limits for containers and pods for the deployed namespace
 	LimitRange core.LimitRange `json:"limitrange"`
-	// Defined resource quotas for specific states
+	// Defined resource quotas for specific states for the deployed namespace
 	ResourceQuotas core.ResourceQuotaList `json:"resourcequotas"`
 }
 

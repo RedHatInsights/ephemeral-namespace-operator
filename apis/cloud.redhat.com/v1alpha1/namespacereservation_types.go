@@ -39,7 +39,7 @@ type NamespaceReservationStatus struct {
 	State string `json:"state"`
 	// Name of the namespace associated with the reservation
 	Namespace string `json:"namespace"`
-	// PoolType is the pool resource specified to reserve a namespace from
+	// Specifies the pool type that the reservation was requested with
 	Pool string `json:"pool,omitempty"`
 }
 

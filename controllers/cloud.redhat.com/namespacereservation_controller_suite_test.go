@@ -15,15 +15,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-<<<<<<< HEAD
-=======
 const (
 	timeout  = time.Second * 30
 	duration = time.Second * 30
 	interval = time.Millisecond * 250
 )
 
->>>>>>> c788d71 (Added kuttl command.)
 func newReservation(resName string, duration string, requester string, pool string) *crd.NamespaceReservation {
 	return &crd.NamespaceReservation{
 		TypeMeta: metav1.TypeMeta{
@@ -42,15 +39,6 @@ func newReservation(resName string, duration string, requester string, pool stri
 }
 
 var _ = Describe("Reservation controller basic reservation", func() {
-<<<<<<< HEAD
-	const (
-		timeout  = time.Second * 55
-		duration = time.Second * 55
-		interval = time.Millisecond * 250
-	)
-
-=======
->>>>>>> c788d71 (Added kuttl command.)
 	Context("When creating a Reservation Resource", func() {
 		It("Should assign a namespace to the reservation", func() {
 			By("Updating the reservation")
@@ -80,11 +68,7 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			ctx := context.Background()
 			resName := "short-reservation"
 
-<<<<<<< HEAD
-			reservation := newReservation(resName, "30s", "test-user-2", "default")
-=======
 			reservation := newReservation(resName, "15s", "test-user-2", "default")
->>>>>>> c788d71 (Added kuttl command.)
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
@@ -99,10 +83,7 @@ var _ = Describe("Reservation controller basic reservation", func() {
 		It("Should ensure two namespaces are ready after all reservations are reconciled", func() {
 			By("Creating more reservations then the pool size")
 			ctx := context.Background()
-<<<<<<< HEAD
-=======
 			nsList := core.NamespaceList{}
->>>>>>> c788d71 (Added kuttl command.)
 
 			resName1 := "res-3"
 			resName2 := "res-4"
@@ -121,11 +102,8 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			updatedR3 := &crd.NamespaceReservation{}
 
 			Eventually(func() bool {
-<<<<<<< HEAD
-=======
 				nsCount := 0
 
->>>>>>> c788d71 (Added kuttl command.)
 				err1 := k8sClient.Get(ctx, types.NamespacedName{Name: resName1}, updatedR1)
 				err2 := k8sClient.Get(ctx, types.NamespacedName{Name: resName2}, updatedR2)
 				err3 := k8sClient.Get(ctx, types.NamespacedName{Name: resName3}, updatedR3)
