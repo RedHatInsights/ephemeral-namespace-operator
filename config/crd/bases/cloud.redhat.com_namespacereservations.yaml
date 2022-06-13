@@ -83,8 +83,6 @@ spec:
                 description: Specifies the pool type that the reservation was requested
                   with
                 type: string
-              pool:
-                type: string
               state:
                 description: State determines whether a reservation is active, waiting,
                   or in error
