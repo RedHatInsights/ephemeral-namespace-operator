@@ -171,7 +171,7 @@ var _ = Describe("Handle reservation without defined pool type", func() {
 			}, timeout, interval).Should(BeTrue())
 
 			By("Creating the number of ready namespaces as the pool size")
-			pool := crd.NamespacePool{}
+			pool = crd.NamespacePool{}
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: "minimal"}, &pool)
