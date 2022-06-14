@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"math"
 
 	"fmt"
 	"math/rand"
@@ -33,7 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	_ "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,6 +60,8 @@ type NamespaceReservationReconciler struct {
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings;roles,verbs=get;list;watch;create;update;patch;delete
 
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	start := time.Now()
+
 	// Fetch the reservation
 	res := crd.NamespaceReservation{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &res); err != nil {
@@ -189,29 +190,18 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
+		duration, err := ParseDurationTime(res.Spec.Duration)
+		if err != nil {
+			r.Log.Error(err, "Cannot parse duration")
+		}
+
+		averageRequestedDurationMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(duration.Hours()))
+
 		defer func() {
-			duration, err := time.ParseDuration(*res.Spec.Duration)
-			if err != nil {
-				r.Log.Error(err, "Could not parse duration for Prometheus metrics")
-			}
+			t := time.Now()
 
-			durationSum := 0.0
-			durationCount := len(durationQueue) + 1
-
-			if durationCount == 500 {
-				durationQueue = durationQueue[1:]
-			}
-
-			durationQueue = append(durationQueue, duration.Seconds())
-
-			for _, item := range durationQueue {
-				durationSum += item
-			}
-
-			averageDurationRequested = (float64(durationSum) / float64(durationCount)) / 60 / 60
-
-			averageRequestedDurationMetrics.Set(math.Round(averageDurationRequested*100) / 100)
-
+			elapsed := t.Sub(start)
+			averageReservationToDeploymentMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(elapsed.Milliseconds()))
 		}()
 
 		return ctrl.Result{}, nil
@@ -267,22 +257,13 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 		}
 
 		totalReservationCountMetrics.Inc()
-
-		// topRequestersMetrics.WithLabelValues(resQuantityByRequester["bonfire"])
 	}()
 
 	return nil
 }
 
 func getExpirationTime(res *crd.NamespaceReservation) (metav1.Time, error) {
-	var duration time.Duration
-	var err error
-	if res.Spec.Duration != nil {
-		duration, err = time.ParseDuration(*res.Spec.Duration)
-	} else {
-		// Defaults to 1 hour if not specified in spec
-		duration, err = time.ParseDuration("1h")
-	}
+	duration, err := ParseDurationTime(res.Spec.Duration)
 	if err != nil {
 		return metav1.Time{}, err
 	}
@@ -359,4 +340,18 @@ func hardCodedUserList() map[string]string {
 		"ephemeral-users":      "Group",
 		"system:authenticated": "Group",
 	}
+}
+
+func ParseDurationTime(duration *string) (time.Duration, error) {
+	var durationTime time.Duration
+	var err error
+
+	if duration != nil {
+		durationTime, err = time.ParseDuration(*duration)
+	} else {
+		// Defaults to 1 hour if not specified in spec
+		durationTime, err = time.ParseDuration("1h")
+	}
+
+	return durationTime, err
 }
