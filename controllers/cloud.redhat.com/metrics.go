@@ -47,7 +47,7 @@ var (
 		prometheus.HistogramOpts{
 			Name:    "average_time_from_reservation_to_deployment_in_milliseconds",
 			Help:    "Average time it takes from reservation to deployment (In milliseconds)",
-			Buckets: prometheus.LinearBuckets(200, 10, 10),
+			Buckets: prometheus.LinearBuckets(5, 10, 10),
 		},
 		[]string{"controller"},
 	)
