@@ -43,9 +43,9 @@ var _ = Describe("Reservation controller basic reservation", func() {
 		It("Should assign a namespace to the reservation", func() {
 			By("Updating the reservation")
 			ctx := context.Background()
-			resName := "test-frontend"
+			resName := "test-res-01"
 
-			reservation := newReservation(resName, "10h", "test-user-1", "default")
+			reservation := newReservation(resName, "10h", "test-user-01", "default")
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
@@ -66,9 +66,9 @@ var _ = Describe("Reservation controller basic reservation", func() {
 		It("Should handle expired reservations", func() {
 			By("Deleting the reservation")
 			ctx := context.Background()
-			resName := "short-reservation"
+			resName := "test-user-02"
 
-			reservation := newReservation(resName, "15s", "test-user-2", "default")
+			reservation := newReservation(resName, "15s", "test-user-02", "default")
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
@@ -85,13 +85,13 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			ctx := context.Background()
 			nsList := core.NamespaceList{}
 
-			resName1 := "res-3"
-			resName2 := "res-4"
-			resName3 := "res-5"
+			resName1 := "test-res-03"
+			resName2 := "test-res-04"
+			resName3 := "test-res-05"
 
-			r1 := newReservation(resName1, "30m", "test-user-3", "minimal")
-			r2 := newReservation(resName2, "30m", "test-user-4", "minimal")
-			r3 := newReservation(resName3, "30m", "test-user-5", "minimal")
+			r1 := newReservation(resName1, "30m", "test-user-03", "minimal")
+			r2 := newReservation(resName2, "30m", "test-user-04", "minimal")
+			r3 := newReservation(resName3, "30m", "test-user-05", "minimal")
 
 			Expect(k8sClient.Create(ctx, r1)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, r2)).Should(Succeed())
@@ -143,8 +143,8 @@ var _ = Describe("Handle reservation without defined pool type", func() {
 	Context("When creating a Reservation Resource without specifying the pool", func() {
 		It("Should be able to set the pool to the 'default' pool", func() {
 			ctx := context.Background()
-			resName := "test-res-1"
-			reservation := newReservation(resName, "30s", "test-user-1", "")
+			resName := "test-res-06"
+			reservation := newReservation(resName, "30s", "test-user-06", "")
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 			updatedR1 := &crd.NamespaceReservation{}
@@ -169,6 +169,42 @@ var _ = Describe("Handle reservation without defined pool type", func() {
 
 				return pool.Spec.Size == pool.Status.Ready
 			}, timeout, interval).Should(BeTrue())
+		})
+	})
+})
+
+var _ = Describe("Handle waiting reservations", func() {
+	Context("When there are more reservations than ready namespaces", func() {
+		It("", func() {
+			ctx := context.Background()
+
+			resName1 := "test-res-07"
+			resName2 := "test-res-08"
+			resName3 := "test-res-09"
+			resName4 := "test-res-10"
+			resName5 := "test-res-11"
+
+			res1 := newReservation(resName1, "30m", "test-user-07", "minimal")
+			res2 := newReservation(resName2, "30m", "test-user-08", "minimal")
+			res3 := newReservation(resName3, "30m", "test-user-09", "minimal")
+			res4 := newReservation(resName4, "30m", "test-user-10", "minimal")
+			res5 := newReservation(resName5, "30m", "test-user-11", "minimal")
+
+			Expect(k8sClient.Create(ctx, res1)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, res2)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, res3)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, res4)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, res5)).Should(Succeed())
+
+			updatedRes5 := &crd.NamespaceReservation{}
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName5}, updatedRes5)
+				Expect(err).NotTo(HaveOccurred())
+
+				return updatedRes5.Status.State == "waiting"
+			}, timeout, interval).Should(BeTrue())
+
 		})
 	})
 })
