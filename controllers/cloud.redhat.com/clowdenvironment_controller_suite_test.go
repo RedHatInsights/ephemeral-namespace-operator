@@ -2,12 +2,26 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
+	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
+
+func newClowdEnv(spec clowder.ClowdEnvironmentSpec, nsName string) clowder.ClowdEnvironment {
+	env := clowder.ClowdEnvironment{
+		Spec: spec,
+	}
+	env.SetName(fmt.Sprintf("env-%s", nsName))
+	env.Spec.TargetNamespace = nsName
+
+	return env
+}
 
 var _ = Describe("Clowdenvironment controller basic update", func() {
 	const (
@@ -56,6 +70,30 @@ var _ = Describe("Clowdenvironment controller basic update", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(isOwnedByPool(ctx, k8sClient, ns.Name)).To(Equal(false))
+		})
+	})
+})
+
+var _ = Describe("Basic creation of a Clowdenvironment", func() {
+	Context("", func() {
+		It("", func() {
+			ctx := context.Background()
+			minimalPool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "minimal"}, &minimalPool)
+			Expect(err).NotTo(HaveOccurred())
+
+			clowdEnv := newClowdEnv(minimalPool.Spec.ClowdEnvironment, "test-namespace-1")
+
+			Expect(k8sClient.Create(ctx, clowdEnv)).Should(Succeed())
+
+			updatedClowdEnv := clowder.ClowdEnvironment{}
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-namespace-1"}, &updatedClowdEnv)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
 		})
 	})
 })
