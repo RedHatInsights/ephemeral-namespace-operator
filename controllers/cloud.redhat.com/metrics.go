@@ -6,32 +6,12 @@ import (
 )
 
 var (
-	totalReservationCountMetrics = prometheus.NewGauge(
+	totalPoolReservationsCountMetrics = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "total_reservation_counter",
-			Help: "Total reservations",
+			Name: "total_pool_reservation_counter",
+			Help: "Total reservations from each pool",
 		},
-	)
-
-	totalDefaultPoolReservationsCountMetrics = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "total_default_pool_reservation_counter",
-			Help: "Total reservations from the 'default' pool",
-		},
-	)
-
-	totalMinimalPoolReservationsCountMetrics = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "total_minimal_pool_reservation_counter",
-			Help: "Total reservations from the 'minimal' pool",
-		},
-	)
-
-	totalManagedKafkaPoolReservationsCountMetrics = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "total_managed_kafka_pool_reservation_counter",
-			Help: "Total reservations from the 'managed-kafka' pool",
-		},
+		[]string{"pool"},
 	)
 
 	averageRequestedDurationMetrics = prometheus.NewHistogramVec(
@@ -56,9 +36,7 @@ var (
 func init() {
 	metrics.Registry.MustRegister(
 		totalReservationCountMetrics,
-		totalDefaultPoolReservationsCountMetrics,
-		totalMinimalPoolReservationsCountMetrics,
-		totalManagedKafkaPoolReservationsCountMetrics,
+		totalPoolReservationsCountMetrics,
 		averageRequestedDurationMetrics,
 		averageReservationToDeploymentMetrics,
 	)

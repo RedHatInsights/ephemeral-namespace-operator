@@ -197,12 +197,8 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		averageRequestedDurationMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(duration.Hours()))
 
-		defer func() {
-			t := time.Now()
-
-			elapsed := t.Sub(start)
-			averageReservationToDeploymentMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(elapsed.Milliseconds()))
-		}()
+		elapsed := start.Sub(start)
+		averageReservationToDeploymentMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(elapsed.Milliseconds()))
 
 		return ctrl.Result{}, nil
 	}
@@ -248,15 +244,7 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 	}
 
 	defer func() {
-		if res.Spec.Pool == "default" {
-			totalDefaultPoolReservationsCountMetrics.Inc()
-		} else if res.Spec.Pool == "minimal" {
-			totalMinimalPoolReservationsCountMetrics.Inc()
-		} else if res.Spec.Pool == "managed-kafka" {
-			totalManagedKafkaPoolReservationsCountMetrics.Inc()
-		}
-
-		totalReservationCountMetrics.Inc()
+		totalPoolReservationsCountMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Inc()
 	}()
 
 	return nil
