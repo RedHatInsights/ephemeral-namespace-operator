@@ -130,7 +130,6 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 
 func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.NamespacePool) (map[string]int, []string, error) {
 	nsList := core.NamespaceList{}
-	//errNamespace := core.Namespace{}
 	var errNamespaceList []string
 
 	labelSelector, _ := labels.Parse("operator-ns=true")
@@ -154,10 +153,6 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 				case "error":
 					r.Log.Info("Error status for namespace. Prepping for deletion.", "ns-name", ns.Name)
 					errNamespaceList = append(errNamespaceList, ns.Name)
-					// err := r.Client.Get(ctx, types.NamespacedName{Namespace: ns.Name}, &errNamespace)
-					// if err != nil {
-					// 	r.Log.Error(err, "Unable to retrieve namespace with 'error' status")
-					// }
 				}
 			}
 		}
