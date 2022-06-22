@@ -35,7 +35,6 @@ var (
 
 func init() {
 	metrics.Registry.MustRegister(
-		totalReservationCountMetrics,
 		totalPoolReservationsCountMetrics,
 		averageRequestedDurationMetrics,
 		averageReservationToDeploymentMetrics,
