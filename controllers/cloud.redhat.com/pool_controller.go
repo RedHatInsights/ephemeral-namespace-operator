@@ -50,10 +50,14 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	status, err := r.getPoolStatus(ctx, pool)
+	status, errNamespaceList, err := r.getPoolStatus(ctx, pool)
 	if err != nil {
 		r.Log.Error(err, "Unable to get status of owned namespaces")
 		return ctrl.Result{}, err
+	}
+
+	if len(errNamespaceList) != 0 {
+		r.handleErrorNamespaces(ctx, errNamespaceList)
 	}
 
 	r.Log.Info("Pool status", "ready", status["ready"], "creating", status["creating"])
@@ -111,13 +115,29 @@ func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.NamespacePool) (map[string]int, error) {
+func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, errNamespaceList []string) {
+	for _, nsName := range errNamespaceList {
+		r.Log.Info("Error status for namespace. Prepping for deletion.", "ns-name", nsName)
+		DeleteNamespace(ctx, r.Client, nsName)
+
+		r.Log.Info("Removing prometheus-operator associated with", "ns-name", nsName)
+		err := DeletePrometheusOperator(ctx, r.Client, nsName)
+		if err != nil {
+			r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", nsName))
+		}
+	}
+}
+
+func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.NamespacePool) (map[string]int, []string, error) {
 	nsList := core.NamespaceList{}
+	//errNamespace := core.Namespace{}
+	var errNamespaceList []string
+
 	labelSelector, _ := labels.Parse("operator-ns=true")
 	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
 	if err := r.Client.List(ctx, &nsList, nsListOptions); err != nil {
 		r.Log.Error(err, "Unable to retrieve list of existing ready namespaces")
-		return nil, err
+		return nil, errNamespaceList, err
 	}
 
 	var readyNS int
@@ -132,14 +152,12 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 				case "creating":
 					creatingNS++
 				case "error":
-					r.Log.Info("Error status for namespace. Deleting", "ns-name", ns.Name)
-					DeleteNamespace(ctx, r.Client, ns.Name)
-
-					r.Log.Info("Removing prometheus-operator associated with", "ns-name", ns.Name)
-					err := DeletePrometheusOperator(ctx, r.Client, ns.Name)
-					if err != nil {
-						r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", ns.Name))
-					}
+					r.Log.Info("Error status for namespace. Prepping for deletion.", "ns-name", ns.Name)
+					errNamespaceList = append(errNamespaceList, ns.Name)
+					// err := r.Client.Get(ctx, types.NamespacedName{Namespace: ns.Name}, &errNamespace)
+					// if err != nil {
+					// 	r.Log.Error(err, "Unable to retrieve namespace with 'error' status")
+					// }
 				}
 			}
 		}
@@ -149,7 +167,7 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 	status["ready"] = readyNS
 	status["creating"] = creatingNS
 
-	return status, nil
+	return status, errNamespaceList, nil
 }
 
 func (r *NamespacePoolReconciler) underManaged(pool crd.NamespacePool) int {
