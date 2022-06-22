@@ -169,16 +169,6 @@ var _ = Describe("Handle reservation without defined pool type", func() {
 
 				return pool.Spec.Size == pool.Status.Ready
 			}, timeout, interval).Should(BeTrue())
-
-			By("Creating the number of ready namespaces as the pool size")
-			pool = crd.NamespacePool{}
-
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "minimal"}, &pool)
-				Expect(err).NotTo(HaveOccurred())
-
-				return pool.Spec.Size == pool.Status.Ready
-			}, timeout, interval).Should(BeTrue())
 		})
 	})
 })
