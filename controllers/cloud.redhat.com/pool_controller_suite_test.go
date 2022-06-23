@@ -14,19 +14,19 @@ import (
 
 var _ = Describe("Pool controller basic functionality", func() {
 	const (
-		timeout  = time.Second * 90
-		duration = time.Second * 90
+		timeout  = time.Second * 30
+		duration = time.Second * 30
 		interval = time.Millisecond * 25
 	)
 
 	Context("When a pool is reconciled", func() {
-		It("Should reconcile the number of managed namespaces", func() {
+		It("Should reconcile the number of managed namespaces for each pool", func() {
 			By("Comparing pool status to pool size")
 			ctx := context.Background()
 			pool := crd.NamespacePool{}
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-pool"}, &pool)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
 				Expect(err).NotTo(HaveOccurred())
 
 				return pool.Spec.Size == (pool.Status.Ready + pool.Status.Creating)
@@ -39,7 +39,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 				err := k8sClient.List(ctx, &nsList)
 				ownedCount := 0
 				for _, ns := range nsList.Items {
-					if isOwnedByPool(ctx, k8sClient, ns.Name) {
+					if isOwnedBySpecificPool(ctx, k8sClient, ns.Name, pool.UID) {
 						ownedCount++
 					}
 				}
@@ -48,14 +48,14 @@ var _ = Describe("Pool controller basic functionality", func() {
 				return ownedCount == pool.Spec.Size
 			}, timeout, interval).Should(BeTrue())
 
-			By("By creating new namespaces as needed")
+			By("Creating new namespaces as needed")
 			pool.Spec.Size++
 
 			err := k8sClient.Update(ctx, &pool)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "test-pool"}, &pool)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
 				Expect(err).NotTo(HaveOccurred())
 
 				return pool.Spec.Size == pool.Status.Ready

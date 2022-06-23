@@ -79,7 +79,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			}
 
 		} else {
-			r.Log.Info("Setting up new namespace", "ns-name", nsName)
+			r.Log.Info("Setting up new namespace", "ns-name", nsName, "pool-type", pool.Name)
 			if err := SetupNamespace(ctx, r.Client, pool, nsName); err != nil {
 				r.Log.Error(err, "Error while setting up namespace", "ns-name", nsName)
 				if err := UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, nsName); err != nil {
