@@ -190,7 +190,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
-		duration, err := ParseDurationTime(res.Spec.Duration)
+		duration, err := parseDurationTime(res.Spec.Duration)
 		if err != nil {
 			r.Log.Error(err, "Cannot parse duration")
 		}
@@ -243,15 +243,13 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 		return err
 	}
 
-	defer func() {
-		totalPoolReservationsCountMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Inc()
-	}()
+	totalSuccessfulPoolReservationsCountMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Inc()
 
 	return nil
 }
 
 func getExpirationTime(res *crd.NamespaceReservation) (metav1.Time, error) {
-	duration, err := ParseDurationTime(res.Spec.Duration)
+	duration, err := parseDurationTime(res.Spec.Duration)
 	if err != nil {
 		return metav1.Time{}, err
 	}
@@ -330,7 +328,7 @@ func hardCodedUserList() map[string]string {
 	}
 }
 
-func ParseDurationTime(duration *string) (time.Duration, error) {
+func parseDurationTime(duration *string) (time.Duration, error) {
 	var durationTime time.Duration
 	var err error
 
