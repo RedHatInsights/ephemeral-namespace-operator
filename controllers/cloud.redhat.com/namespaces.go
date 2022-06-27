@@ -263,6 +263,17 @@ func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error
 	return nil
 }
 
+func GetPrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
+	prometheusOperator := unstructured.Unstructured{}
+
+	err := cl.Get(ctx, types.NamespacedName{Name: fmt.Sprintf("prometheus.%s", nsName)}, &prometheusOperator)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
 	prometheusOperator := unstructured.Unstructured{}
 
