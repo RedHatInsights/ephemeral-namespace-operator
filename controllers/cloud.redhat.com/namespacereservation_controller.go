@@ -190,7 +190,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
-		duration, err := parseDurationTime(res.Spec.Duration)
+		duration, err := parseDurationTime(*res.Spec.Duration)
 		if err != nil {
 			r.Log.Error(err, "Cannot parse duration")
 			return ctrl.Result{}, err
@@ -252,7 +252,7 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 }
 
 func getExpirationTime(res *crd.NamespaceReservation) (metav1.Time, error) {
-	duration, err := parseDurationTime(res.Spec.Duration)
+	duration, err := parseDurationTime(*res.Spec.Duration)
 	if err != nil {
 		return metav1.Time{}, err
 	}
