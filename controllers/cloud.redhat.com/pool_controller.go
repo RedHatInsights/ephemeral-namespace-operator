@@ -56,11 +56,9 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	if len(errNamespaceList) != 0 {
-		err := r.handleErrorNamespaces(ctx, errNamespaceList)
-		if err != nil {
-			r.Log.Error(err, "Unable to delete object.")
-		}
+	err = r.handleErrorNamespaces(ctx, errNamespaceList)
+	if err != nil {
+		r.Log.Error(err, "Unable to delete object.")
 	}
 
 	r.Log.Info("Pool status", "ready", status["ready"], "creating", status["creating"])
@@ -124,14 +122,14 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 		err := DeleteNamespace(ctx, r.Client, nsName)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("Error deleting namespace: %s", nsName))
-			return err
+			return fmt.Errorf("handleErrorNamespace error: Couldn't delete namespace: %v", err)
 		}
 
 		r.Log.Info("Removing prometheus-operator associated with", "ns-name", nsName)
 		err = DeletePrometheusOperator(ctx, r.Client, nsName)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", nsName))
-			return err
+			return fmt.Errorf("handleErrorNamespace error: Couldn't delete prometheus operator: %v", err)
 		}
 	}
 
@@ -146,7 +144,7 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
 	if err := r.Client.List(ctx, &nsList, nsListOptions); err != nil {
 		r.Log.Error(err, "Unable to retrieve list of existing ready namespaces")
-		return nil, errNamespaceList, err
+		return nil, nil, err
 	}
 
 	var readyNS int
