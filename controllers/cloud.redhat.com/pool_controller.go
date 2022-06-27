@@ -59,6 +59,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	err = r.handleErrorNamespaces(ctx, errNamespaceList)
 	if err != nil {
 		r.Log.Error(err, "Unable to delete object.")
+		return ctrl.Result{}, err
 	}
 
 	r.Log.Info("Pool status", "ready", status["ready"], "creating", status["creating"])
