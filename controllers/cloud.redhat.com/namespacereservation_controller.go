@@ -193,11 +193,14 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		duration, err := parseDurationTime(res.Spec.Duration)
 		if err != nil {
 			r.Log.Error(err, "Cannot parse duration")
+			return ctrl.Result{}, err
 		}
 
 		averageRequestedDurationMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(duration.Hours()))
 
-		elapsed := start.Sub(start)
+		end := time.Now()
+		elapsed := start.Sub(end)
+
 		averageReservationToDeploymentMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(elapsed.Milliseconds()))
 
 		return ctrl.Result{}, nil
@@ -328,12 +331,12 @@ func hardCodedUserList() map[string]string {
 	}
 }
 
-func parseDurationTime(duration *string) (time.Duration, error) {
+func parseDurationTime(duration string) (time.Duration, error) {
 	var durationTime time.Duration
 	var err error
 
-	if duration != nil {
-		durationTime, err = time.ParseDuration(*duration)
+	if duration != "" {
+		durationTime, err = time.ParseDuration(duration)
 	} else {
 		// Defaults to 1 hour if not specified in spec
 		durationTime, err = time.ParseDuration("1h")
