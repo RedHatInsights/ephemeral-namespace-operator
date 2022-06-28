@@ -44,7 +44,7 @@ var (
 func init() {
 	metrics.Registry.MustRegister(
 		totalSuccessfulPoolReservationsCountMetrics,
-		totalFailedPoolReservationsCountMetrics
+		totalFailedPoolReservationsCountMetrics,
 		averageRequestedDurationMetrics,
 		averageReservationToDeploymentMetrics,
 	)
