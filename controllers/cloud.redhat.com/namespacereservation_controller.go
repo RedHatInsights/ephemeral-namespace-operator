@@ -107,12 +107,13 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			err := GetPrometheusOperator(ctx, r.Client, res.Status.Namespace)
 			if err != nil {
 				r.Log.Error(err, fmt.Sprintf("prometheus.%s does not exist. Skipping deletion.", res.Status.Namespace))
+				return ctrl.Result{}, err
 			}
 
 			err = DeletePrometheusOperator(ctx, r.Client, res.Status.Namespace)
 			if err != nil {
 				r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", res.Status.Namespace))
-				return ctrl.Result{}, err
+				return ctrl.Result{Requeue: true}, err
 			}
 
 			if err := r.Client.Delete(ctx, &res); err != nil {
