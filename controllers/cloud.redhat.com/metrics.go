@@ -8,8 +8,16 @@ import (
 var (
 	totalSuccessfulPoolReservationsCountMetrics = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "total_pool_reservation_counter",
-			Help: "Total reservations from each pool",
+			Name: "total_successful_pool_reservation_counter",
+			Help: "Total successful reservations from each pool",
+		},
+		[]string{"pool"},
+	)
+
+	totalFailedPoolReservationsCountMetrics = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "total_failed_pool_reservation_counter",
+			Help: "Total failed reservations from each pool",
 		},
 		[]string{"pool"},
 	)
@@ -36,6 +44,7 @@ var (
 func init() {
 	metrics.Registry.MustRegister(
 		totalSuccessfulPoolReservationsCountMetrics,
+		totalFailedPoolReservationsCountMetrics
 		averageRequestedDurationMetrics,
 		averageReservationToDeploymentMetrics,
 	)

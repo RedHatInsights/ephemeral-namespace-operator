@@ -167,6 +167,9 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		// Resolve the requested namespace and remove it from the pool
 		if err := r.reserveNamespace(ctx, readyNsName, &res); err != nil {
 			r.Log.Error(err, fmt.Sprintf("Could not reserve namespace from '%s' pool", res.Status.Pool), "ns-name", readyNsName)
+
+			totalFailedPoolReservationsCountMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Inc()
+
 			return ctrl.Result{Requeue: true}, err
 		}
 
