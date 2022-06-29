@@ -8,9 +8,7 @@ import (
 
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
@@ -261,21 +259,4 @@ func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error
 	}
 
 	return nil
-}
-
-func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
-	prometheusOperator := unstructured.Unstructured{}
-
-	gvk := schema.GroupVersionKind{
-		Group:   "operators.coreos.com",
-		Version: "v1",
-		Kind:    "Operator",
-	}
-
-	prometheusOperator.SetGroupVersionKind(gvk)
-	prometheusOperator.SetName(fmt.Sprintf("prometheus.%s", nsName))
-
-	err := cl.Delete(ctx, &prometheusOperator)
-
-	return err
 }
