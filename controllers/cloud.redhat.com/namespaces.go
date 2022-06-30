@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	core "k8s.io/api/core/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
@@ -271,8 +272,8 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 	prometheusOperator := unstructured.Unstructured{}
 
 	err := cl.Get(ctx, types.NamespacedName{Name: GetPrometheusOperatorName(nsName)}, &prometheusOperator)
-	if err != nil {
-		return fmt.Errorf("error retrieving prometheus operator %s: %v", GetPrometheusOperatorName(nsName), err)
+	if k8serr.IsNotFound(err) {
+		return nil
 	}
 
 	gvk := schema.GroupVersionKind{
