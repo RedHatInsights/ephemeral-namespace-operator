@@ -263,19 +263,17 @@ func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error
 	return nil
 }
 
-func GetPrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
-	prometheusOperator := unstructured.Unstructured{}
-
-	err := cl.Get(ctx, types.NamespacedName{Name: fmt.Sprintf("prometheus.%s", nsName)}, &prometheusOperator)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func GetPrometheusOperatorName(nsName string) string {
+	return fmt.Sprintf("prometheus.%s", nsName)
 }
 
 func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
 	prometheusOperator := unstructured.Unstructured{}
+
+	err := cl.Get(ctx, types.NamespacedName{Name: GetPrometheusOperatorName(nsName)}, &prometheusOperator)
+	if err != nil {
+		return fmt.Errorf("error retrieving prometheus operator %s: %v", GetPrometheusOperatorName(nsName), err)
+	}
 
 	gvk := schema.GroupVersionKind{
 		Group:   "operators.coreos.com",
@@ -284,9 +282,12 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 	}
 
 	prometheusOperator.SetGroupVersionKind(gvk)
-	prometheusOperator.SetName(fmt.Sprintf("prometheus.%s", nsName))
+	prometheusOperator.SetName(GetPrometheusOperatorName(nsName))
 
-	err := cl.Delete(ctx, &prometheusOperator)
+	err = cl.Delete(ctx, &prometheusOperator)
+	if err != nil {
+		return fmt.Errorf("error deleting prometheus operator %s: %v", GetPrometheusOperatorName(nsName), err)
+	}
 
-	return err
+	return nil
 }
