@@ -94,7 +94,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			r.Log.Error(err, "Cannot update reservation status", "name", res.Name)
 			return ctrl.Result{}, err
 		}
-
 		return ctrl.Result{}, nil
 
 	case "waiting":
