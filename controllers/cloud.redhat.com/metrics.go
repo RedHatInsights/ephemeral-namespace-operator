@@ -56,7 +56,7 @@ func init() {
 		totalSuccessfulPoolReservationsCountMetrics,
 		totalFailedPoolReservationsCountMetrics,
 		averageRequestedDurationMetrics,
-		averageNamespaceReadyMetrics,
+		averageNamespaceCreationMetrics,
 		averageReservationToDeploymentMetrics,
 	)
 }
