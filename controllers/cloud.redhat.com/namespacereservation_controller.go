@@ -60,7 +60,7 @@ type NamespaceReservationReconciler struct {
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings;roles,verbs=get;list;watch;create;update;patch;delete
 
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	start := time.Now()
+	timer_res_to_deployment_start := time.Now()
 
 	// Fetch the reservation
 	res := crd.NamespaceReservation{}
