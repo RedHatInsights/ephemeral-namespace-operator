@@ -106,8 +106,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		if r.Poller.namespaceIsExpired(expirationTS) {
 			if err := r.Client.Delete(ctx, &res); err != nil {
 				r.Log.Error(err, "Unable to delete waiting reservation", "res-name", res.Name)
-			} else {
-				r.Log.Info("Reservation for namespace has expired while waiting. Deleting.", "res-name", res.Name)
 			}
 			return ctrl.Result{}, nil
 		}
