@@ -208,3 +208,35 @@ var _ = Describe("Handle waiting reservations", func() {
 		})
 	})
 })
+
+var _ = Describe("Handle deletion of the prometheus operator when namespace is deleted", func() {
+	Context("When an ephemeral namespace is deleted", func() {
+		It("Should ensure deletion of the prometheus operator associated with the deleted namespace", func() {
+			ctx := context.Background()
+
+			By("Creating a reservation")
+			resName6 := "test-res-12"
+
+			res6 := newReservation(resName6, "30m", "test-user-12", "default")
+
+			Expect(k8sClient.Create(ctx, res6)).Should(Succeed())
+
+			By("Creating a prometheus operator for the newly reserved namespace")
+
+			// TODO: Create a prometheus operator resource
+
+			By("Deleting the namespace")
+
+			err := UpdateAnnotations(ctx, k8sClient, map[string]string{"env-status": "error"}, res6.Status.Namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Checking that the prometheus operator was deleted")
+			Eventually(func() error {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: fmt.Sprintf("prometheus.%s", res6.Status.Namespace)}, updatedRes5)
+
+				return err
+			}, timeout, interval).ShouldNot(BeNil())
+
+		})
+	})
+})
