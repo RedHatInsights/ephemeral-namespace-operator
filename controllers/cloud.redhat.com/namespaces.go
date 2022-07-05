@@ -20,9 +20,8 @@ import (
 )
 
 var initialAnnotations = map[string]string{
-	"status":      "creating", // TODO: Remove this annotation after Bonfire is updated
-	"env-status":  "creating",
-	"operator-ns": "true",
+	"status":     "creating", // TODO: Remove this annotation after Bonfire is updated
+	"env-status": "creating",
 }
 
 var initialLabels = map[string]string{
