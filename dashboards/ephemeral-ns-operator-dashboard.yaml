@@ -24,7 +24,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 400,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -36,8 +35,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "dark-green",
-            "mode": "fixed"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisLabel": "",
@@ -72,7 +70,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-green",
                 "value": null
               },
               {
@@ -108,8 +106,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "dark-green",
-            "mode": "fixed"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisLabel": "",
@@ -144,7 +141,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-green",
                 "value": null
               },
               {
@@ -186,8 +183,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "dark-green",
-            "mode": "fixed"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisLabel": "",
@@ -222,7 +218,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-green",
                 "value": null
               },
               {
@@ -264,8 +260,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "dark-green",
-            "mode": "fixed"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisLabel": "",
@@ -300,7 +295,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-green",
                 "value": null
               },
               {
@@ -342,8 +337,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "dark-red",
-            "mode": "fixed"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisLabel": "",
@@ -378,7 +372,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-red",
                 "value": null
               },
               {
@@ -408,7 +402,7 @@
           "sort": "none"
         }
       },
-      "title": "Total Failed Reservations For All Pools",
+      "title": "Total Failed Reservations From All Pools",
       "transparent": true,
       "type": "timeseries"
     },
@@ -420,8 +414,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "dark-red",
-            "mode": "fixed"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisLabel": "",
@@ -456,7 +449,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-red",
                 "value": null
               },
               {
@@ -498,8 +491,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "dark-red",
-            "mode": "fixed"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisLabel": "",
@@ -534,7 +526,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-red",
                 "value": null
               },
               {
@@ -576,8 +568,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "dark-red",
-            "mode": "fixed"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisLabel": "",
@@ -612,7 +603,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-red",
                 "value": null
               },
               {
@@ -702,10 +693,241 @@
         "overrides": []
       },
       "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 0,
+        "y": 6
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "title": "Average Namespace Creation Time in \"default\" Pool",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tuHy3WB7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 7,
+        "x": 9,
+        "y": 6
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "title": "Average Namespace Creation Time in \"minimal\" Pool",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tuHy3WB7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 7,
+        "x": 17,
+        "y": 6
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "title": "Average Namespace Creation Time in \"managed-kafka\" Pool",
+      "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tuHy3WB7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 6
+        "y": 11
       },
       "id": 12,
       "options": {
@@ -782,7 +1004,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 6
+        "y": 11
       },
       "id": 14,
       "options": {
@@ -796,11 +1018,88 @@
           "sort": "none"
         }
       },
-      "title": "Total Deployed Apps",
+      "title": "Requester Usage By Reservation Quantity",
       "transparent": true,
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "tuHy3WB7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 11,
+        "x": 1,
+        "y": 19
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "title": "Time Elapsed From Reservation to Fulfillment",
       "type": "timeseries"
     }
   ],
+  "refresh": false,
   "schemaVersion": 36,
   "style": "dark",
   "tags": [],
@@ -808,13 +1107,13 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
-    "to": "now"
+    "from": "2022-07-05T11:19:52.780Z",
+    "to": "2022-07-06T03:19:52.780Z"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Ephemeral Namespace Operator Metrics",
   "uid": "pFwxk9C7k",
-  "version": 6,
+  "version": 7,
   "weekStart": ""
 }
