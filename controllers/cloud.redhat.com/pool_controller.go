@@ -139,7 +139,7 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 
 func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.NamespacePool) (map[string]int, []string, error) {
 	nsList := core.NamespaceList{}
-	var errNamespaceList []string
+	errNamespaceList := []string{}
 
 	labelSelector, _ := labels.Parse("operator-ns=true")
 	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
