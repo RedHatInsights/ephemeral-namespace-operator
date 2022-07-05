@@ -60,8 +60,6 @@ type NamespaceReservationReconciler struct {
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings;roles,verbs=get;list;watch;create;update;patch;delete
 
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	timer_res_to_deployment_start := time.Now()
-
 	// Fetch the reservation
 	res := crd.NamespaceReservation{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &res); err != nil {
@@ -72,6 +70,8 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		r.Log.Error(err, "Reservation Not Found")
 		return ctrl.Result{}, err
 	}
+
+	timer_res_to_deployment_start := res.CreationTimestamp
 
 	if res.Status.Pool == "" {
 		if res.Spec.Pool == "" {
