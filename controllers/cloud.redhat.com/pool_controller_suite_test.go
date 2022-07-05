@@ -9,14 +9,16 @@ import (
 	. "github.com/onsi/gomega"
 	core "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 var _ = Describe("Pool controller basic functionality", func() {
 	const (
-		timeout  = time.Second * 30
+		timeout  = time.Second * 35
 		duration = time.Second * 30
-		interval = time.Millisecond * 25
+		interval = time.Millisecond * 30
 	)
 
 	Context("When a pool is reconciled", func() {
@@ -93,6 +95,64 @@ var _ = Describe("Pool controller basic functionality", func() {
 					return true
 				}
 				return false
+			}, timeout, interval).Should(BeTrue())
+		})
+	})
+})
+
+var _ = Describe("Handle deletion of the prometheus operator when namespace is deleted", func() {
+	Context("When an ephemeral namespace is deleted", func() {
+		It("Should ensure deletion of the prometheus operator associated with the deleted namespace", func() {
+			ctx := context.Background()
+			nsList := core.NamespaceList{}
+
+			By("Choosing a namespace to be associated with prometheus operator")
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			ownedNs := core.Namespace{}
+			for _, ns := range nsList.Items {
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						ownedNs = ns
+						break
+					}
+				}
+			}
+
+			By("Creating a prometheus operator for the newly reserved namespace")
+			prometheusOperator := unstructured.Unstructured{}
+
+			gvk := schema.GroupVersionKind{
+				Group:   "operators.coreos.com",
+				Version: "v1",
+				Kind:    "Operator",
+			}
+			prometheusOperator.SetGroupVersionKind(gvk)
+			prometheusOperator.SetName(GetPrometheusOperatorName(ownedNs.Name))
+			Expect(ownedNs.Name).NotTo(BeEmpty())
+
+			err = k8sClient.Create(ctx, &prometheusOperator)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Deleting the namespace")
+
+			err = UpdateAnnotations(ctx, k8sClient, map[string]string{"env-status": "error"}, ownedNs.Name)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: ownedNs.Name}, &ownedNs)
+				if k8serr.IsNotFound(err) || ownedNs.Status.Phase == "Terminating" {
+					return true
+				}
+				return false
+			}, timeout, interval).Should(BeTrue())
+
+			By("Checking that the prometheus operator was deleted")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: GetPrometheusOperatorName(ownedNs.Name)}, &prometheusOperator)
+
+				return err != nil
 			}, timeout, interval).Should(BeTrue())
 		})
 	})
