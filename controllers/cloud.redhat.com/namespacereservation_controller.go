@@ -94,6 +94,12 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			r.Log.Error(err, "Cannot update reservation status", "name", res.Name)
 			return ctrl.Result{}, err
 		}
+
+		err = GetClowdAppData(ctx, r.Client, res.Status.Namespace)
+		if err != nil {
+			r.Log.Error(err, "Error encountered with retrieving ClowdApps for", "ClowdEnvironment name", res.Status.Namespace)
+		}
+
 		return ctrl.Result{}, nil
 
 	case "waiting":
