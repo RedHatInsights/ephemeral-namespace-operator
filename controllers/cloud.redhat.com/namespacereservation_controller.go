@@ -104,6 +104,12 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 		if r.Poller.namespaceIsExpired(expirationTS) {
+			err = DeletePrometheusOperator(ctx, r.Client, res.Status.Namespace)
+			if err != nil {
+				r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", res.Status.Namespace))
+				return ctrl.Result{Requeue: true}, err
+			}
+
 			if err := r.Client.Delete(ctx, &res); err != nil {
 				r.Log.Error(err, "Unable to delete waiting reservation", "res-name", res.Name)
 			}
