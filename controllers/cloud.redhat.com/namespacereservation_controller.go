@@ -32,6 +32,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/prometheus/client_golang/prometheus"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,6 +70,8 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		r.Log.Error(err, "Reservation Not Found")
 		return ctrl.Result{}, err
 	}
+
+	timer_res_to_deployment_start := res.CreationTimestamp
 
 	if res.Status.Pool == "" {
 		if res.Spec.Pool == "" {
@@ -168,6 +171,9 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		// Resolve the requested namespace and remove it from the pool
 		if err := r.reserveNamespace(ctx, readyNsName, &res); err != nil {
 			r.Log.Error(err, fmt.Sprintf("Could not reserve namespace from '%s' pool", res.Status.Pool), "ns-name", readyNsName)
+
+			totalFailedPoolReservationsCountMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Inc()
+
 			return ctrl.Result{Requeue: true}, err
 		}
 
@@ -190,6 +196,19 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			r.Log.Error(err, "Cannot update status")
 			return ctrl.Result{}, err
 		}
+
+		duration, err := parseDurationTime(*res.Spec.Duration)
+		if err != nil {
+			r.Log.Error(err, "Cannot parse duration")
+			return ctrl.Result{}, err
+		}
+
+		averageRequestedDurationMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(duration.Hours()))
+
+		timer_res_to_deployment_end := time.Now()
+		elapsed := timer_res_to_deployment_start.Sub(timer_res_to_deployment_end)
+
+		averageReservationToDeploymentMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(elapsed.Milliseconds()))
 
 		return ctrl.Result{}, nil
 	}
@@ -234,18 +253,13 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 		return err
 	}
 
+	totalSuccessfulPoolReservationsCountMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Inc()
+
 	return nil
 }
 
 func getExpirationTime(res *crd.NamespaceReservation) (metav1.Time, error) {
-	var duration time.Duration
-	var err error
-	if res.Spec.Duration != nil {
-		duration, err = time.ParseDuration(*res.Spec.Duration)
-	} else {
-		// Defaults to 1 hour if not specified in spec
-		duration, err = time.ParseDuration("1h")
-	}
+	duration, err := parseDurationTime(*res.Spec.Duration)
 	if err != nil {
 		return metav1.Time{}, err
 	}
@@ -322,4 +336,18 @@ func hardCodedUserList() map[string]string {
 		"ephemeral-users":      "Group",
 		"system:authenticated": "Group",
 	}
+}
+
+func parseDurationTime(duration string) (time.Duration, error) {
+	var durationTime time.Duration
+	var err error
+
+	if duration != "" {
+		durationTime, err = time.ParseDuration(duration)
+	} else {
+		// Defaults to 1 hour if not specified in spec
+		durationTime, err = time.ParseDuration("1h")
+	}
+
+	return durationTime, err
 }
