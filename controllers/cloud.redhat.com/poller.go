@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
@@ -42,6 +43,15 @@ func (p *Poller) Poll() error {
 				res := crd.NamespaceReservation{}
 				if err := p.Client.Get(ctx, types.NamespacedName{Name: k}, &res); err != nil {
 					p.Log.Error(err, "Unable to retrieve reservation")
+				}
+
+				p.Log.Info("Reservation scheduled for deletion, deleting", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))
+				err := DeletePrometheusOperator(ctx, p.Client, res.Status.Namespace)
+				if err != nil {
+					p.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", res.Status.Namespace))
+					return err
+				} else {
+					p.Log.Info("Successfully deleting", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))
 				}
 
 				if err := p.Client.Delete(ctx, &res); err != nil {

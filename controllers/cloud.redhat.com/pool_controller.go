@@ -140,6 +140,8 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", nsName))
 			return fmt.Errorf("handleErrorNamespace error: Couldn't delete prometheus operator: %v", err)
+		} else {
+			r.Log.Info("Successfully deleting", "prometheus-operator", fmt.Sprintf("prometheus.%s", r.Status.Namespace))
 		}
 	}
 
