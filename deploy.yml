@@ -1383,6 +1383,18 @@ objects:
     - list
     - watch
   - apiGroups:
+    - operators.coreos.com
+    resources:
+    - operators
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
     - project.openshift.io
     resources:
     - projectrequests
