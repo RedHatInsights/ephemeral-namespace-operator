@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	core "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -291,4 +292,34 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 	}
 
 	return nil
+}
+
+func DeleteSubscriptionPrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
+	subscriptionsPrometheusOperator := unstructured.Unstructured{}
+
+	err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
+	if k8serr.IsNotFound(err) {
+		return fmt.Errorf("prometheus operator subscription for namespace %s does not exist: %v", nsName, err)
+	} else if err != nil {
+		return fmt.Errorf("error retrieving prometheus operator subscription in namespace %s: %v", nsName, err)
+	}
+
+	gvk := schema.GroupVersionKind{
+		Group:   "operators.coreos.com",
+		Version: "v1alpha1",
+		Kind:    "Subscription",
+	}
+
+	subscriptionsPrometheusOperator.SetGroupVersionKind(gvk)
+	subscriptionsPrometheusOperator.SetName(GetPrometheusOperatorName(nsName))
+
+	err = cl.Delete(ctx, &subscriptionsPrometheusOperator)
+	if err != nil {
+		return fmt.Errorf("error deleting prometheus operator subscription in namespace %s: %v", nsName, err)
+	}
+
+	time.Sleep(10 * time.Second)
+
+	return nil
+
 }
