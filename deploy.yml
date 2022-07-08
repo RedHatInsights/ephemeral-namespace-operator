@@ -1510,6 +1510,7 @@ objects:
   metadata:
     labels:
       control-plane: controller-manager
+      operator-name: ephemeral-namespace-operator
     name: ephemeral-namespace-operator-controller-manager-metrics-service
     namespace: ephemeral-namespace-operator-system
   spec:
@@ -1524,6 +1525,7 @@ objects:
   metadata:
     labels:
       control-plane: controller-manager
+      operator-name: ephemeral-namespace-operator
     name: ephemeral-namespace-operator-controller-manager
     namespace: ephemeral-namespace-operator-system
   spec:
@@ -1531,10 +1533,12 @@ objects:
     selector:
       matchLabels:
         control-plane: controller-manager
+        operator-name: ephemeral-namespace-operator
     template:
       metadata:
         labels:
           control-plane: controller-manager
+          operator-name: ephemeral-namespace-operator
       spec:
         containers:
         - args:
