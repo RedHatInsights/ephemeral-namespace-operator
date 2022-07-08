@@ -112,6 +112,8 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			if err != nil {
 				r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", res.Status.Namespace))
 				return ctrl.Result{Requeue: true}, err
+			} else {
+				r.Log.Info("Successfully deleting", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))
 			}
 
 			if err := r.Client.Delete(ctx, &res); err != nil {
