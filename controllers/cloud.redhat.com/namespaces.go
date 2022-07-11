@@ -320,14 +320,10 @@ func DeleteSubscriptionPrometheusOperator(ctx context.Context, cl client.Client,
 
 		err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
 		if err != nil {
-			fmt.Sprintf("Prometheus operator subscription in namespace %s was successfully deleted", nsName)
+			fmt.Printf("prometheus operator subscription in namespace %s was successfully deleted", nsName)
 			break
 		}
 	}
 
 	return nil
-}
-
-func CheckSubscriptionPrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
-
 }
