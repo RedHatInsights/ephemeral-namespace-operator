@@ -12,15 +12,18 @@ metadata:
   namespace: system
   labels:
     control-plane: controller-manager
+    operator-name: ephemeral-namespace-operator
 spec:
   selector:
     matchLabels:
       control-plane: controller-manager
+      operator-name: ephemeral-namespace-operator
   replicas: 1
   template:
     metadata:
       labels:
         control-plane: controller-manager
+        operator-name: ephemeral-namespace-operator
     spec:
       securityContext:
         runAsNonRoot: true
@@ -31,6 +34,9 @@ spec:
         - --leader-elect
         image: controller:latest
         name: manager
+        ports:
+          - containerPort: 9000
+            name: metrics
         securityContext:
           allowPrivilegeEscalation: false
         livenessProbe:

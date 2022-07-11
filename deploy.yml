@@ -1519,11 +1519,26 @@ objects:
       targetPort: https
     selector:
       control-plane: controller-manager
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      operator-name: ephemeral-namespace-operator
+    name: ephemeral-namespace-operator-controller-manager-metrics-service-non-auth
+    namespace: ephemeral-namespace-operator-system
+  spec:
+    ports:
+    - name: metrics
+      port: 9000
+      targetPort: metrics
+    selector:
+      operator-name: ephemeral-namespace-operator
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
     labels:
       control-plane: controller-manager
+      operator-name: ephemeral-namespace-operator
     name: ephemeral-namespace-operator-controller-manager
     namespace: ephemeral-namespace-operator-system
   spec:
@@ -1531,10 +1546,12 @@ objects:
     selector:
       matchLabels:
         control-plane: controller-manager
+        operator-name: ephemeral-namespace-operator
     template:
       metadata:
         labels:
           control-plane: controller-manager
+          operator-name: ephemeral-namespace-operator
       spec:
         containers:
         - args:
@@ -1552,6 +1569,9 @@ objects:
             initialDelaySeconds: 15
             periodSeconds: 20
           name: manager
+          ports:
+          - containerPort: 9000
+            name: metrics
           readinessProbe:
             httpGet:
               path: /readyz
@@ -1571,6 +1591,24 @@ objects:
           runAsNonRoot: true
         serviceAccountName: ephemeral-namespace-operator-controller-manager
         terminationGracePeriodSeconds: 10
+- apiVersion: monitoring.coreos.com/v1
+  kind: ServiceMonitor
+  metadata:
+    labels:
+      control-plane: controller-manager
+    name: ephemeral-namespace-operator-controller-manager-metrics-monitor
+    namespace: ephemeral-namespace-operator-system
+  spec:
+    endpoints:
+    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      path: /metrics
+      port: metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+    selector:
+      matchLabels:
+        operator-name: ephemeral-namespace-operator
 parameters:
 - name: IMAGE_TAG
   value: latest
