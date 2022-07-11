@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	core "k8s.io/api/core/v1"
-	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
@@ -272,8 +271,8 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 	prometheusOperator := unstructured.Unstructured{}
 
 	err := cl.Get(ctx, types.NamespacedName{Name: GetPrometheusOperatorName(nsName)}, &prometheusOperator)
-	if k8serr.IsNotFound(err) {
-		return nil
+	if err != nil {
+		return err
 	}
 
 	gvk := schema.GroupVersionKind{
@@ -297,9 +296,7 @@ func DeleteSubscriptionPrometheusOperator(ctx context.Context, cl client.Client,
 	subscriptionsPrometheusOperator := unstructured.Unstructured{}
 
 	err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
-	if k8serr.IsNotFound(err) {
-		return fmt.Errorf("prometheus operator subscription for namespace %s does not exist: %v", nsName, err)
-	} else if err != nil {
+	if err != nil {
 		return fmt.Errorf("error retrieving prometheus operator subscription in namespace %s: %v", nsName, err)
 	}
 
