@@ -1524,7 +1524,7 @@ objects:
   metadata:
     labels:
       operator-name: ephemeral-namespace-operator
-    name: ephemeral-namespace-operator-controller-manager-metrics-service-non-auth
+    name: ephemeral-namespace-operator-controller-metrics-non-auth
     namespace: ephemeral-namespace-operator-system
   spec:
     ports:

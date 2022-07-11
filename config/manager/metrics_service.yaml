@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     operator-name: ephemeral-namespace-operator
-  name: controller-manager-metrics-service-non-auth
+  name: controller-metrics-non-auth
   namespace: system
 spec:
   ports:
