@@ -104,8 +104,8 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			pool.Status.Creating++
 		}
 
-		end_create_ns_timer := time.Now()
-		elapsed := end_create_ns_timer.Sub(start_create_ns_timer)
+		endCreateNamespaceTimer := time.Now()
+		elapsed := endCreateNamespaceTimer.Sub(endCreateNamespaceTimer)
 
 		averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": pool.Name}).Observe(float64(elapsed.Seconds()))
 	}
