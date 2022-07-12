@@ -159,7 +159,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Total Reservations From \"default\" Pool",
+          "title": "Total Successful Reservations From \"default\" Pool",
           "transparent": true,
           "type": "stat"
         },
@@ -225,7 +225,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Total Reservations From \"minimal\" Pool",
+          "title": "Total Successful Reservations From \"minimal\" Pool",
           "transparent": true,
           "type": "stat"
         },
@@ -291,7 +291,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Total Reservations From \"managed-kafka\" Pool",
+          "title": "Total Successful Reservations From \"managed-kafka\" Pool",
           "transparent": true,
           "type": "stat"
         },
@@ -570,6 +570,6 @@ data:
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 7,
+      "version": 8,
       "weekStart": ""
     }
