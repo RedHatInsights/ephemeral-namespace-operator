@@ -34,6 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
+      "iteration": 1657664982842,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -358,6 +359,7 @@ data:
             }
           ],
           "title": "Total Failed Reservations From All Pools",
+          "transparent": true,
           "type": "stat"
         },
         {
@@ -423,6 +425,7 @@ data:
             }
           ],
           "title": "Total Failed Reservations From \"default\" Pool",
+          "transparent": true,
           "type": "stat"
         },
         {
@@ -488,6 +491,7 @@ data:
             }
           ],
           "title": "Total Failed Reservations From \"minimal\" Pool",
+          "transparent": true,
           "type": "stat"
         },
         {
@@ -553,23 +557,120 @@ data:
             }
           ],
           "title": "Total Failed Reservations From \"managed-kafka\" Pool",
+          "transparent": true,
           "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "73Hs3WBnk"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": [],
+              "unit": "Total"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 14,
+            "w": 6,
+            "x": 0,
+            "y": 6
+          },
+          "id": 17,
+          "options": {
+            "displayLabels": [
+              "percent",
+              "value",
+              "name"
+            ],
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "values": [
+                "value"
+              ]
+            },
+            "pieType": "donut",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.0.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "73Hs3WBnk"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "namespace_reservation_duration_average_bucket{controller=\"namespacereservation\"} ",
+              "format": "heatmap",
+              "instant": false,
+              "legendFormat": "{{le}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Namespace Reservation Duration Total (In Hours)",
+          "transparent": true,
+          "type": "piechart"
         }
       ],
+      "refresh": "5s",
       "schemaVersion": 36,
       "style": "dark",
       "tags": [],
       "templating": {
-        "list": []
+        "list": [
+          {
+            "current": {
+              "selected": true,
+              "text": "crcd01ue1-prometheus",
+              "value": "crcd01ue1-prometheus"
+            },
+            "hide": 0,
+            "includeAll": false,
+            "multi": false,
+            "name": "datasource",
+            "options": [],
+            "query": "prometheus",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "/crcd[0-9a-zA-Z]*?-prometheus|eph[0-9a-zA-Z]*?-prometheus/",
+            "skipUrlSync": false,
+            "type": "datasource"
+          }
+        ]
       },
       "time": {
-        "from": "now-5m",
-        "to": "now"
+        "from": "2022-07-12T22:39:42.980Z",
+        "to": "2022-07-12T22:44:42.980Z"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 8,
+      "version": 9,
       "weekStart": ""
     }
