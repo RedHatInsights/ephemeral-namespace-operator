@@ -71,7 +71,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	pool.Status.Creating = status["creating"]
 
 	for i := r.underManaged(pool); i > 0; i-- {
-		start_create_ns_timer := time.Now()
+		startCreateNamespaceTimer := time.Now()
 
 		nsName, err := CreateNamespace(ctx, r.Client, &pool)
 		if err != nil {
@@ -105,7 +105,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 
 		endCreateNamespaceTimer := time.Now()
-		elapsed := endCreateNamespaceTimer.Sub(endCreateNamespaceTimer)
+		elapsed := endCreateNamespaceTimer.Sub(startCreateNamespaceTimer)
 
 		averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": pool.Name}).Observe(float64(elapsed.Seconds()))
 	}
