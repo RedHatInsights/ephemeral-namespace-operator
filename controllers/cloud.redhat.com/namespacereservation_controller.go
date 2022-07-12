@@ -208,9 +208,9 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		averageRequestedDurationMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(duration.Hours()))
 
-		timer_res_to_deployment_start := res.CreationTimestamp.Time
-		timer_res_to_deployment_end := time.Now()
-		elapsed := timer_res_to_deployment_end.Sub(timer_res_to_deployment_start)
+		startTimerResToDeployment := res.CreationTimestamp.Time
+		endTimerResToDeployment := time.Now()
+		elapsed := endTimerResToDeployment.Sub(startTimerResToDeployment)
 
 		averageReservationToDeploymentMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(elapsed.Milliseconds()))
 
