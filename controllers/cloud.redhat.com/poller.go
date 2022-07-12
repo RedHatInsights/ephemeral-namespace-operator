@@ -10,6 +10,7 @@ import (
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -21,7 +22,7 @@ type Poller struct {
 
 const POLL_CYCLE time.Duration = 10
 
-func (p *Poller) Poll() error {
+func (p *Poller) Poll() (ctrl.Result, error) {
 	ctx := context.Background()
 	p.Log.Info("Starting poller...")
 
@@ -32,7 +33,7 @@ func (p *Poller) Poll() error {
 	p.Log.Info("Populating poller with active reservations")
 	if err := p.populateActiveReservations(ctx); err != nil {
 		p.Log.Error(err, "Unable to populate pool with active reservations")
-		return err
+		return ctrl.Result{}, err
 	}
 
 	for {
@@ -49,9 +50,9 @@ func (p *Poller) Poll() error {
 				err := DeleteSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
 				if k8serr.IsNotFound(err) {
 					p.Log.Error(err, fmt.Sprintf("cannot find prometheus operator for namespace %s.", res.Status.Namespace))
-					return err
 				} else if err != nil {
 					p.Log.Error(err, fmt.Sprintf("cannot delete prometheus operator subscription for namespace %s", res.Status.Namespace))
+					return ctrl.Result{Requeue: true}, err
 				} else {
 					p.Log.Info("Successfully deleted", "prometheus-operator subscription", fmt.Sprint(res.Status.Namespace))
 				}
@@ -60,9 +61,9 @@ func (p *Poller) Poll() error {
 				err = DeletePrometheusOperator(ctx, p.Client, res.Status.Namespace)
 				if k8serr.IsNotFound(err) {
 					p.Log.Error(err, fmt.Sprintf("the prometheus operator prometheus.%s does not exist.", res.Status.Namespace))
-					return err
 				} else if err != nil {
 					p.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", res.Status.Namespace))
+					return ctrl.Result{Requeue: true}, err
 				} else {
 					p.Log.Info("Successfully deleted", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))
 				}
