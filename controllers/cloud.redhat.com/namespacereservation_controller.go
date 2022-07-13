@@ -72,8 +72,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{}, err
 	}
 
-	timer_res_to_deployment_start := res.CreationTimestamp
-
 	if res.Status.Pool == "" {
 		if res.Spec.Pool == "" {
 			res.Status.Pool = "default"
@@ -210,10 +208,9 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		averageRequestedDurationMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(duration.Hours()))
 
-		timer_res_to_deployment_end := time.Now()
-		elapsed := timer_res_to_deployment_start.Sub(timer_res_to_deployment_end)
+		elapsed := time.Now().Sub(res.CreationTimestamp.Time)
 
-		averageReservationToDeploymentMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(elapsed.Milliseconds()))
+		averageReservationToDeploymentMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(elapsed.Seconds()))
 
 		return ctrl.Result{}, nil
 	}

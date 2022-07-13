@@ -36,7 +36,7 @@ var (
 		prometheus.HistogramOpts{
 			Name:    "namespace_creation_average_seconds",
 			Help:    "Average time namespace creation occurs'",
-			Buckets: prometheus.LinearBuckets(30, 30, 12),
+			Buckets: []float64{1, 2, 3, 4, 5, 7, 14, 28, 56, 112, 224},
 		},
 		[]string{"pool"},
 	)
@@ -45,7 +45,7 @@ var (
 		prometheus.HistogramOpts{
 			Name:    "average_time_reservation_to_deployment_seconds",
 			Help:    "Average time it takes from reservation to deployment in milliseconds",
-			Buckets: prometheus.LinearBuckets(5, 10, 10),
+			Buckets: []float64{1, 2, 3, 4, 5, 7, 14, 28, 56, 112, 224},
 		},
 		[]string{"controller"},
 	)
