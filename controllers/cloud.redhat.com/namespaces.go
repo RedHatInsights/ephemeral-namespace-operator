@@ -270,11 +270,6 @@ func GetPrometheusOperatorName(nsName string) string {
 func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
 	prometheusOperator := unstructured.Unstructured{}
 
-	err := cl.Get(ctx, types.NamespacedName{Name: GetPrometheusOperatorName(nsName)}, &prometheusOperator)
-	if err != nil {
-		return err
-	}
-
 	gvk := schema.GroupVersionKind{
 		Group:   "operators.coreos.com",
 		Version: "v1",
@@ -283,6 +278,11 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 
 	prometheusOperator.SetGroupVersionKind(gvk)
 	prometheusOperator.SetName(GetPrometheusOperatorName(nsName))
+
+	err := cl.Get(ctx, types.NamespacedName{Name: GetPrometheusOperatorName(nsName)}, &prometheusOperator)
+	if err != nil {
+		return err
+	}
 
 	err = cl.Delete(ctx, &prometheusOperator)
 	if err != nil {
@@ -295,11 +295,6 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 func DeleteSubscriptionPrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
 	subscriptionsPrometheusOperator := unstructured.Unstructured{}
 
-	err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
-	if err != nil {
-		return fmt.Errorf("error retrieving prometheus operator subscription in namespace %s: %v", nsName, err)
-	}
-
 	gvk := schema.GroupVersionKind{
 		Group:   "operators.coreos.com",
 		Version: "v1alpha1",
@@ -307,19 +302,17 @@ func DeleteSubscriptionPrometheusOperator(ctx context.Context, cl client.Client,
 	}
 
 	subscriptionsPrometheusOperator.SetGroupVersionKind(gvk)
-	subscriptionsPrometheusOperator.SetName(GetPrometheusOperatorName(nsName))
+	subscriptionsPrometheusOperator.SetName("prometheus")
+	subscriptionsPrometheusOperator.SetNamespace(nsName)
 
-	for {
-		err = cl.Delete(ctx, &subscriptionsPrometheusOperator)
-		if err != nil {
-			return fmt.Errorf("error deleting prometheus operator subscription in namespace %s: %v", nsName, err)
-		}
+	err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
+	if err != nil {
+		return err
+	}
 
-		err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
-		if err != nil {
-			fmt.Printf("prometheus operator subscription in namespace %s was successfully deleted", nsName)
-			break
-		}
+	err = cl.Delete(ctx, &subscriptionsPrometheusOperator)
+	if err != nil {
+		return fmt.Errorf("error deleting prometheus operator subscription in namespace %s: %v", nsName, err)
 	}
 
 	return nil

@@ -69,7 +69,6 @@ Spec:
                                 Optional:
                                   description:  Specify whether the ConfigMap or its key must be defined
                                   type:         "boolean"
-                              Required: key
                               type:  "object"
                             fieldRef:
                               description:  'Selects a field of the pod: supports spec.name, spec.namespace, spec.labels[<KEY>], `spec.annotations[<KEY>], spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.'
@@ -80,7 +79,6 @@ Spec:
                                 fieldPath:
                                   description:  Path of the field to select in the specified apiVersion.
                                   type:         "string"
-                              Required: fieldPath
                               type:  object
                             resourceFieldRef:
                               description:  'Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.'
@@ -98,7 +96,6 @@ Spec:
                                 Resource:
                                   description:  'Required: resource to select'
                                   type:         string
-                              Required: resource
                               type:  object
                             secretKeyRef:
                               description:  Selects a key of a secret in the pod's namespace
@@ -112,10 +109,8 @@ Spec:
                                 Optional:
                                   description:  Specify whether the Secret or its key must be defined
                                   type:         boolean
-                              Required: key
                               type:  object
                           type:      object
-                      Required: name
                       type:  object
                     type:    array
                   envFrom:
@@ -188,8 +183,6 @@ Spec:
                               Items:
                                 type:  string
                               type:    array
-                          Required: key
-                            operator
                           type:  object
                         type:    array
                       MatchLabels:
@@ -244,9 +237,6 @@ Spec:
                         Sub Path Expr:
                           description:  Expanded path within the volume from which the container's volume should be mounted. Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment. Defaults to "" (volume's root). SubPathExpr and SubPath are mutually exclusive.
                           type:         string
-                      Required:
-                      - mountPath
-                      - name
                       type:  object
                     type:    array
                   volumes:
@@ -270,7 +260,6 @@ Spec:
                             Volume ID:
                               description:  'Unique ID of the persistent disk resource in AWS (Amazon EBS volume). More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore'
                               type:         string
-                          Required: volumeID
                           type:  object
                         Azure Disk:
                           description:  AzureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.
@@ -293,9 +282,6 @@ Spec:
                             Read Only:
                               description:  Defaults to false (read/write). ReadOnly here will force the ReadOnly setting in VolumeMounts.
                               type:         boolean
-                          Required:
-                          - diskName
-                          - diskURI
                           type:  object
                         Azure File:
                           description:  AzureFile represents an Azure File Service mount on the host and bind mount to the pod.
@@ -309,9 +295,6 @@ Spec:
                             Share Name:
                               description:  Share Name
                               type:         string
-                          Required:
-                          - secretName
-                          - shareName
                           type:  object
                         Cephfs:
                           description:  CephFS represents a Ceph FS mount on the host that shares a pod's lifetime
@@ -340,8 +323,6 @@ Spec:
                             User:
                               description:  "Optional: User is the rados user name, default is admin More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it"
                               type:         string
-                          Required:
-                          - monitors
                           type:  object
                         Cinder:
                           description:  "Cinder represents a cinder volume attached and mounted on kubelets host machine. More info: https://examples.k8s.io/mysql-cinder-pd/README.md"
@@ -362,8 +343,6 @@ Spec:
                             Volume ID:
                               description:  "volume id used to identify the volume in cinder. More info: https://examples.k8s.io/mysql-cinder-pd/README.md"
                               type:         string
-                          Required:
-                          - volumeID
                           type:  object
                         Config Map:
                           description:  ConfigMap represents a configMap that should populate this volume
@@ -387,9 +366,6 @@ Spec:
                                   Path:
                                     description:  The relative path of the file to map the key to. May not be an absolute path. May not contain the path element '..'. May not start with the string '..'.
                                     type:         string
-                                Required:
-                                - key
-                                - path
                                 type:  object
                               type:    array
                             Name:
@@ -423,8 +399,6 @@ Spec:
                                 type:       string
                               description:  VolumeAttributes stores driver-specific properties that are passed to the CSI driver. Consult your driver's documentation for supported values.
                               type:         object
-                          Required:
-                          - driver
                           type:  object
                         Downward API:
                           description:  DownwardAPI represents downward API about the pod that should populate this volume
@@ -447,8 +421,6 @@ Spec:
                                       Field Path:
                                         description:  Path of the field to select in the specified apiVersion.
                                         type:         string
-                                    Required:
-                                    - fieldPath
                                     type:  object
                                   Mode:
                                     description:  "Optional: mode bits used to set permissions on this file, must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. If not specified, the volume defaultMode will be used. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set."
@@ -473,11 +445,7 @@ Spec:
                                       Resource:
                                         description:  "Required: resource to select"
                                         type:         string
-                                    Required:
-                                    - resource
                                     type:  object
-                                Required:
-                                - path
                                 type:  object
                               type:    array
                           type:        object
@@ -523,7 +491,7 @@ Spec:
                                       Items:
                                         type:  string
                                       type:    array
-                                    Data Source:
+                                    DataSource:
                                       description:  "This field can be used to specify either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot) * An existing PVC (PersistentVolumeClaim) If the provisioner or an external controller can support the specified data source, it will create a new volume based on the contents of the specified data source. If the AnyVolumeDataSource feature gate is enabled, this field will always have the same contents as the DataSourceRef field."
                                       Properties:
                                         API Group:
@@ -535,9 +503,6 @@ Spec:
                                         Name:
                                           description:  Name is the name of resource being referenced
                                           type:         string
-                                      Required:
-                                      - kind
-                                      - name
                                       type:  object
                                     Data Source Ref:
                                       description:  "Specifies the object from which to populate the volume with data, if a non-empty volume is desired. This may be any local object from a non-empty API group (non core object) or a PersistentVolumeClaim object. When this field is specified, volume binding will only succeed if the type of the specified object matches some installed volume populator or dynamic provisioner. This field will replace the functionality of the DataSource field and as such if both fields are non-empty, they must have the same value. For backwards compatibility, both fields (DataSource and DataSourceRef) will be set to the same value automatically if one of them is empty and the other is non-empty. There are two important differences between DataSource and DataSourceRef: * While DataSource only allows two specific types of objects, DataSourceRef   allows any non-core object, as well as PersistentVolumeClaim objects. * While DataSource ignores disallowed values (dropping them), DataSourceRef   preserves all values, and generates an error if a disallowed value is   specified. (Alpha) Using this field requires the AnyVolumeDataSource feature gate to be enabled."
@@ -551,9 +516,6 @@ Spec:
                                         Name:
                                           description:  Name is the name of resource being referenced
                                           type:         string
-                                      Required:
-                                      - kind
-                                      - name
                                       type:  object
                                     Resources:
                                       description:  "Resources represents the minimum resources the volume should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources"
@@ -596,9 +558,6 @@ Spec:
                                                 Items:
                                                   type:  string
                                                 type:    array
-                                            Required:
-                                            - key
-                                            - operator
                                             type:  object
                                           type:    array
                                         Match Labels:
@@ -617,8 +576,6 @@ Spec:
                                       description:  VolumeName is the binding reference to the PersistentVolume backing this claim.
                                       type:         string
                                   type:             object
-                              Required:
-                              - spec
                               type:  object
                           type:      object
                         Fc:
@@ -669,8 +626,6 @@ Spec:
                                   description:  "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?"
                                   type:         string
                               type:             object
-                          Required:
-                          - driver
                           type:  object
                         Flocker:
                           description:  Flocker represents a Flocker volume attached to a kubelet's host machine. This depends on the Flocker control service being running
@@ -698,8 +653,6 @@ Spec:
                             Read Only:
                               description:  "ReadOnly here will force the ReadOnly setting in VolumeMounts. Defaults to false. More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk"
                               type:         boolean
-                          Required:
-                          - pdName
                           type:  object
                         Git Repo:
                           description:  "GitRepo represents a git repository at a particular revision. DEPRECATED: GitRepo is deprecated. To provision a container with a git repo, mount an EmptyDir into an InitContainer that clones the repo using git, then mount the EmptyDir into the Pod's container."
@@ -713,8 +666,6 @@ Spec:
                             Revision:
                               description:  Commit hash for the specified revision.
                               type:         string
-                          Required:
-                          - repository
                           type:  object
                         Glusterfs:
                           description:  "Glusterfs represents a Glusterfs mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/glusterfs/README.md"
@@ -728,9 +679,6 @@ Spec:
                             Read Only:
                               description:  "ReadOnly here will force the Glusterfs volume to be mounted with read-only permissions. Defaults to false. More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod"
                               type:         boolean
-                          Required:
-                          - endpoints
-                          - path
                           type:  object
                         Host Path:
                           description:  "HostPath represents a pre-existing file or directory on the host machine that is directly exposed to the container. This is generally used for system agents or other privileged things that are allowed to see the host machine. Most containers will NOT need this. More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath --- TODO(jonesdl) We need to restrict who can use host directory mounts and who can/can not mount host directories as read/write."
@@ -741,8 +689,6 @@ Spec:
                             type:
                               description:  'type for HostPath Volume Defaults to "" More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath'
                               type:         string
-                          Required:
-                          - path
                           type:  object
                         Iscsi:
                           description:  "ISCSI represents an ISCSI Disk resource that is attached to a kubelet's host machine and then exposed to the pod. More info: https://examples.k8s.io/volumes/iscsi/README.md"
@@ -787,10 +733,6 @@ Spec:
                             Target Portal:
                               description:  iSCSI Target Portal. The Portal is either an IP or ip_addr:port if the port is other than default (typically TCP ports 860 and 3260).
                               type:         string
-                          Required:
-                          - iqn
-                          - lun
-                          - targetPortal
                           type:  object
                         Name:
                           description:  "Volume's name. Must be a DNS_LABEL and unique within the pod. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
@@ -807,9 +749,6 @@ Spec:
                             Server:
                               description:  "Server is the hostname or IP address of the NFS server. More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs"
                               type:         string
-                          Required:
-                          - path
-                          - server
                           type:  object
                         Persistent Volume Claim:
                           description:  "PersistentVolumeClaimVolumeSource represents a reference to a PersistentVolumeClaim in the same namespace. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims"
@@ -820,8 +759,6 @@ Spec:
                             Read Only:
                               description:  Will force the ReadOnly setting in VolumeMounts. Default false.
                               type:         boolean
-                          Required:
-                          - claimName
                           type:  object
                         Photon Persistent Disk:
                           description:  PhotonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine
@@ -832,8 +769,6 @@ Spec:
                             Pd ID:
                               description:  ID that identifies Photon Controller persistent disk
                               type:         string
-                          Required:
-                          - pdID
                           type:  object
                         Portworx Volume:
                           description:  PortworxVolume represents a portworx volume attached and mounted on kubelets host machine
@@ -847,8 +782,6 @@ Spec:
                             Volume ID:
                               description:  VolumeID uniquely identifies a Portworx volume
                               type:         string
-                          Required:
-                          - volumeID
                           type:  object
                         Projected:
                           description:  Items for all in one resources secrets, configmaps, and downward API
@@ -880,9 +813,6 @@ Spec:
                                             Path:
                                               description:  The relative path of the file to map the key to. May not be an absolute path. May not contain the path element '..'. May not start with the string '..'.
                                               type:         string
-                                          Required:
-                                          - key
-                                          - path
                                           type:  object
                                         type:    array
                                       Name:
@@ -909,8 +839,6 @@ Spec:
                                                 Field Path:
                                                   description:  Path of the field to select in the specified apiVersion.
                                                   type:         string
-                                              Required:
-                                              - fieldPath
                                               type:  object
                                             Mode:
                                               description:  "Optional: mode bits used to set permissions on this file, must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON requires decimal values for mode bits. If not specified, the volume defaultMode will be used. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set."
@@ -935,11 +863,7 @@ Spec:
                                                 Resource:
                                                   description:  "Required: resource to select"
                                                   type:         string
-                                              Required:
-                                              - resource
                                               type:  object
-                                          Required:
-                                          - path
                                           type:  object
                                         type:    array
                                     type:        object
@@ -961,9 +885,6 @@ Spec:
                                             Path:
                                               description:  The relative path of the file to map the key to. May not be an absolute path. May not contain the path element '..'. May not start with the string '..'.
                                               type:         string
-                                          Required:
-                                          - key
-                                          - path
                                           type:  object
                                         type:    array
                                       Name:
@@ -986,8 +907,6 @@ Spec:
                                       Path:
                                         description:  Path is the path relative to the mount point of the file to project the token into.
                                         type:         string
-                                    Required:
-                                    - path
                                     type:  object
                                 type:      object
                               type:        array
@@ -1013,9 +932,6 @@ Spec:
                             Volume:
                               description:  Volume is a string that references an already created Quobyte volume by name.
                               type:         string
-                          Required:
-                          - registry
-                          - volume
                           type:  object
                         Rbd:
                           description:  "RBD represents a Rados Block Device mount on the host that shares a pod's lifetime. More info: https://examples.k8s.io/volumes/rbd/README.md"
@@ -1050,9 +966,6 @@ Spec:
                             User:
                               description:  "The rados user name. Default is admin. More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it"
                               type:         string
-                          Required:
-                          - image
-                          - monitors
                           type:  object
                         Scale IO:
                           description:  ScaleIO represents a ScaleIO persistent volume attached and mounted on Kubernetes nodes.
@@ -1091,10 +1004,6 @@ Spec:
                             Volume Name:
                               description:  The name of a volume already created in the ScaleIO system that is associated with this volume source.
                               type:         string
-                          Required:
-                          - gateway
-                          - secretRef
-                          - system
                           type:  object
                         Secret:
                           description:  "Secret represents a secret that should populate this volume. More info: https://kubernetes.io/docs/concepts/storage/volumes#secret"
@@ -1118,9 +1027,6 @@ Spec:
                                   Path:
                                     description:  The relative path of the file to map the key to. May not be an absolute path. May not contain the path element '..'. May not start with the string '..'.
                                     type:         string
-                                Required:
-                                - key
-                                - path
                                 type:  object
                               type:    array
                             Optional:
@@ -1168,11 +1074,7 @@ Spec:
                             Volume Path:
                               description:  Path that identifies vSphere volume vmdk
                               type:         string
-                          Required:
-                          - volumePath
                           type:  object
-                      Required:
-                      - name
                       type:  object
                     type:    array
                 type:        object
@@ -1183,14 +1085,11 @@ Spec:
                 type:  string
               Source:
                 type:  string
-              Source Namespace:
+              SourceNamespace:
                 type:  string
               Starting CSV:
                 type:  string
-            Required:
-            - name
-            - source
-            - sourceNamespace
+
             type:  object
           Status:
             Properties:
@@ -1231,10 +1130,6 @@ Spec:
                       description:  LastUpdated represents the last time that the CatalogSourceHealth changed
                       Format:       date-time
                       type:         string
-                  Required:
-                  - catalogSourceRef
-                  - healthy
-                  - lastUpdated
                   type:  object
                 type:    array
               Conditions:
@@ -1262,9 +1157,6 @@ Spec:
                     type:
                       description:  type is the type of Subscription condition.
                       type:         string
-                  Required:
-                  - status
-                  - type
                   type:  object
                 type:    array
               Current CSV:
@@ -1313,11 +1205,6 @@ Spec:
                   Uuid:
                     description:  UID is a type that holds unique ID values, including UUIDs.  Because we don't ONLY use UUIDs, this is an alias to string.  Being a type captures intent and helps make sure that UIDs and names do not get conflated.
                     type:         string
-                Required:
-                - apiVersion
-                - kind
-                - name
-                - uuid
                 type:  object
               LastUpdated:
                 description:  LastUpdated represents the last time that the Subscription status was updated.
@@ -1329,12 +1216,7 @@ Spec:
               State:
                 description:  State represents the current state of the Subscription
                 type:         string
-            Required:
-            - lastUpdated
             type:  object
-        Required:
-        - spec
-        - spec
         type:  object
     Served:    true
     Storage:   true

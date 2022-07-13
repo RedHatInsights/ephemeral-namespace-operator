@@ -49,7 +49,7 @@ func (p *Poller) Poll() (ctrl.Result, error) {
 
 				err := DeleteSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
 				if k8serr.IsNotFound(err) {
-					p.Log.Error(err, fmt.Sprintf("cannot find prometheus operator for namespace %s.", res.Status.Namespace))
+					p.Log.Info(fmt.Sprintf("cannot find prometheus operator for namespace %s.", res.Status.Namespace))
 				} else if err != nil {
 					p.Log.Error(err, fmt.Sprintf("cannot delete prometheus operator subscription for namespace %s", res.Status.Namespace))
 					return ctrl.Result{Requeue: true}, err

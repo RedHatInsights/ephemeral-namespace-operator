@@ -51,14 +51,14 @@ var _ = Describe("Reservation controller basic reservation", func() {
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
-			updatedReservation := &crd.NamespaceReservation{}
+			updatedRes1 := &crd.NamespaceReservation{}
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedRes1)
 				if err != nil {
 					return false
 				}
-				if updatedReservation.Status.State == "active" {
+				if updatedRes1.Status.State == "active" {
 					return true
 				}
 				return false
@@ -74,10 +74,10 @@ var _ = Describe("Reservation controller basic reservation", func() {
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
-			updatedReservation := &crd.NamespaceReservation{}
+			updatedRes2 := &crd.NamespaceReservation{}
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedRes2)
 				return errors.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 		})
@@ -225,11 +225,11 @@ var _ = Describe("Handle deletion of the prometheus operator when reservation is
 
 			updatedRes6 := &crd.NamespaceReservation{}
 
-			Eventually(func() bool {
+			Eventually(func() string {
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName6}, updatedRes6)
 				Expect(err).NotTo(HaveOccurred())
 
-				return updatedRes6.Status.Namespace != ""
+				return updatedRes6.Status.Namespace
 			}, timeout, interval).ShouldNot(BeEmpty())
 
 			By("Creating a subscription for the prometheus operator for the newly reserved namespace")
@@ -242,7 +242,7 @@ var _ = Describe("Handle deletion of the prometheus operator when reservation is
 			}
 
 			subscription.SetGroupVersionKind(gvkSubscription)
-			subscription.SetName(updatedRes6.Status.Namespace)
+			subscription.SetName("prometheus")
 			subscription.SetNamespace(updatedRes6.Status.Namespace)
 			Expect(updatedRes6.Name).NotTo(BeEmpty())
 
@@ -258,7 +258,7 @@ var _ = Describe("Handle deletion of the prometheus operator when reservation is
 				Kind:    "Operator",
 			}
 			prometheusOperator.SetGroupVersionKind(gvkPrometheus)
-			prometheusOperator.SetName(GetPrometheusOperatorName(updatedRes6.Name))
+			prometheusOperator.SetName(GetPrometheusOperatorName(updatedRes6.Status.Namespace))
 			prometheusOperator.SetNamespace(updatedRes6.Status.Namespace)
 			Expect(updatedRes6.Name).NotTo(BeEmpty())
 
@@ -267,7 +267,7 @@ var _ = Describe("Handle deletion of the prometheus operator when reservation is
 
 			By("Deleting the reservation")
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: res6.Name}, updatedRes6)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: updatedRes6.Status.Namespace}, updatedRes6)
 				return errors.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 
