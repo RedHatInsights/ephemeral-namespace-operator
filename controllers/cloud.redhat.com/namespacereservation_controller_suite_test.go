@@ -51,14 +51,14 @@ var _ = Describe("Reservation controller basic reservation", func() {
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
-			updatedRes1 := &crd.NamespaceReservation{}
+			updatedReservation := &crd.NamespaceReservation{}
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedRes1)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
 				if err != nil {
 					return false
 				}
-				if updatedRes1.Status.State == "active" {
+				if updatedReservation.Status.State == "active" {
 					return true
 				}
 				return false
@@ -74,10 +74,10 @@ var _ = Describe("Reservation controller basic reservation", func() {
 
 			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
 
-			updatedRes2 := &crd.NamespaceReservation{}
+			updatedReservation := &crd.NamespaceReservation{}
 
 			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedRes2)
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
 				return errors.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 		})
