@@ -75,7 +75,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -89,8 +89,11 @@ data:
                 "type": "prometheus",
                 "uid": "73Hs3WBnk"
               },
-              "editorMode": "builder",
+              "editorMode": "code",
+              "exemplar": false,
               "expr": "sum(successful_pool_reservations_total)",
+              "format": "time_series",
+              "instant": false,
               "interval": "",
               "legendFormat": "{{pool}}",
               "range": true,
@@ -144,7 +147,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -215,7 +218,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -230,7 +233,9 @@ data:
                 "uid": "73Hs3WBnk"
               },
               "editorMode": "code",
+              "exemplar": false,
               "expr": "sum(successful_pool_reservations_total{pool=\"minimal\"})",
+              "instant": false,
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -282,7 +287,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -349,7 +354,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -416,7 +421,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -483,7 +488,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -550,7 +555,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
