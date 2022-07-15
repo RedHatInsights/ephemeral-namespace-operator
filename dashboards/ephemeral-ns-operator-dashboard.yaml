@@ -685,7 +685,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "avg(rate(namespace_creation_average_seconds_bucket{pool=\"default\"}[1m]))",
+              "expr": "avg(increase(namespace_creation_average_seconds_bucket{pool=\"default\"}[1m]))",
               "format": "time_series",
               "instant": false,
               "legendFormat": "default",
@@ -699,7 +699,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "avg(rate(namespace_creation_average_seconds_bucket{pool=\"minimal\"}[1m]))",
+              "expr": "avg(increase(namespace_creation_average_seconds_bucket{pool=\"minimal\"}[1m]))",
               "format": "time_series",
               "hide": false,
               "instant": false,
@@ -1100,7 +1100,7 @@ data:
         ]
       },
       "time": {
-        "from": "now-30m",
+        "from": "now-1h",
         "to": "now"
       },
       "timepicker": {},
