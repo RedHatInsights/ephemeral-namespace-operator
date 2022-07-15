@@ -34,14 +34,29 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1657664982842,
+      "iteration": 1657838720194,
       "links": [],
       "liveNow": false,
       "panels": [
         {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 29,
+          "panels": [],
+          "repeat": "datasource",
+          "repeatDirection": "h",
+          "title": "Namespace Reservation Counter",
+          "type": "row"
+        },
+        {
           "datasource": {
             "type": "prometheus",
-            "uid": "73Hs3WBnk"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -49,6 +64,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -65,6 +81,12 @@ data:
             },
             "overrides": []
           },
+          "gridPos": {
+            "h": 3,
+            "w": 6,
+            "x": 0,
+            "y": 1
+          },
           "id": 10,
           "options": {
             "colorMode": "value",
@@ -73,7 +95,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -85,7 +107,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "73Hs3WBnk"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(successful_pool_reservations_total)",
@@ -101,7 +123,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "73Hs3WBnk"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -109,6 +131,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -129,7 +152,7 @@ data:
             "h": 3,
             "w": 6,
             "x": 6,
-            "y": 0
+            "y": 1
           },
           "id": 7,
           "options": {
@@ -139,7 +162,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -151,7 +174,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "73Hs3WBnk"
+                "uid": "${datasource}"
               },
               "editorMode": "builder",
               "expr": "successful_pool_reservations_total{pool=\"default\"}",
@@ -167,7 +190,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "73Hs3WBnk"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -175,6 +198,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -195,7 +219,7 @@ data:
             "h": 3,
             "w": 6,
             "x": 12,
-            "y": 0
+            "y": 1
           },
           "id": 9,
           "options": {
@@ -205,7 +229,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -217,7 +241,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "73Hs3WBnk"
+                "uid": "${datasource}"
               },
               "editorMode": "builder",
               "expr": "successful_pool_reservations_total{pool=\"minimal\"}",
@@ -233,7 +257,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "73Hs3WBnk"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -241,6 +265,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -261,7 +286,7 @@ data:
             "h": 3,
             "w": 6,
             "x": 18,
-            "y": 0
+            "y": 1
           },
           "id": 8,
           "options": {
@@ -271,7 +296,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -283,7 +308,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "73Hs3WBnk"
+                "uid": "${datasource}"
               },
               "editorMode": "builder",
               "expr": "successful_pool_reservations_total{pool=\"managed-kafka\"}",
@@ -299,7 +324,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "73Hs3WBnk"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -307,6 +332,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -327,7 +353,7 @@ data:
             "h": 3,
             "w": 6,
             "x": 0,
-            "y": 3
+            "y": 4
           },
           "id": 12,
           "options": {
@@ -337,7 +363,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -349,7 +375,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "73Hs3WBnk"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "expr": "sum(failed_pool_reservations_total)",
@@ -373,6 +399,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -393,7 +420,7 @@ data:
             "h": 3,
             "w": 6,
             "x": 6,
-            "y": 3
+            "y": 4
           },
           "id": 13,
           "options": {
@@ -403,7 +430,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -439,6 +466,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -459,9 +487,9 @@ data:
             "h": 3,
             "w": 6,
             "x": 12,
-            "y": 3
+            "y": 4
           },
-          "id": 14,
+          "id": 26,
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -469,7 +497,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -505,6 +533,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -525,9 +554,9 @@ data:
             "h": 3,
             "w": 6,
             "x": 18,
-            "y": 3
+            "y": 4
           },
-          "id": 15,
+          "id": 27,
           "options": {
             "colorMode": "value",
             "graphMode": "area",
@@ -535,7 +564,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -561,9 +590,147 @@ data:
           "type": "stat"
         },
         {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 7
+          },
+          "id": 25,
+          "panels": [],
+          "repeat": "datasource",
+          "repeatDirection": "h",
+          "title": "Miscellaneous Namespace Reservation Metrics",
+          "type": "row"
+        },
+        {
           "datasource": {
             "type": "prometheus",
-            "uid": "73Hs3WBnk"
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 8
+          },
+          "id": 23,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "avg(increase(namespace_creation_average_seconds_bucket{pool=\"default\"}[1m]))",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "default",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "avg(increase(namespace_creation_average_seconds_bucket{pool=\"minimal\"}[1m]))",
+              "format": "time_series",
+              "hide": false,
+              "instant": false,
+              "legendFormat": "minimal",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "avg(rate(namespace_creation_average_seconds_bucket{pool=\"managed-kafka\"}[1m]))",
+              "format": "time_series",
+              "hide": false,
+              "instant": false,
+              "legendFormat": "managed-kafka",
+              "range": true,
+              "refId": "C"
+            }
+          ],
+          "title": "Average Namespace Creation Time (In Seconds)",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -578,15 +745,93 @@ data:
                 }
               },
               "mappings": [],
+              "noValue": "No reservations found",
               "unit": "Total"
             },
             "overrides": []
           },
           "gridPos": {
-            "h": 14,
+            "h": 10,
             "w": 6,
-            "x": 0,
-            "y": 6
+            "x": 12,
+            "y": 8
+          },
+          "id": 18,
+          "options": {
+            "displayLabels": [
+              "percent",
+              "value",
+              "name"
+            ],
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "values": [
+                "value"
+              ]
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "range"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.0.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "namespace_reservation_duration_average_bucket{controller=\"namespacereservation\"} ",
+              "format": "heatmap",
+              "instant": false,
+              "legendFormat": "{{le}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Namespace Reservation Duration Total (In Hours)",
+          "transparent": true,
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": [],
+              "noValue": "No reservations found",
+              "unit": "Total"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 6,
+            "x": 18,
+            "y": 8
           },
           "id": 17,
           "options": {
@@ -602,10 +847,10 @@ data:
                 "value"
               ]
             },
-            "pieType": "donut",
+            "pieType": "pie",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -620,11 +865,11 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "73Hs3WBnk"
+                "uid": "${datasource}"
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "namespace_reservation_duration_average_bucket{controller=\"namespacereservation\"} ",
+              "expr": "average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}",
               "format": "heatmap",
               "instant": false,
               "legendFormat": "{{le}}",
@@ -632,9 +877,200 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Namespace Reservation Duration Total (In Hours)",
+          "title": "Average Time From Reservation To Deployment (In Seconds)",
           "transparent": true,
           "type": "piechart"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 18
+          },
+          "id": 31,
+          "panels": [],
+          "repeat": "datasource",
+          "repeatDirection": "h",
+          "title": "Pod Metrics for \"ephemeral-namespace-operator-system\"",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 50,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "displayName": "Memory Usage",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "id": 20,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "avg(container_memory_working_set_bytes{namespace=\"ephemeral-namespace-operator-system\", container=\"manager\"})",
+              "refId": "A"
+            }
+          ],
+          "title": "Memory Usage",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 50,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "displayName": "CPU Usage",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 19
+          },
+          "id": 21,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "asc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "avg(rate(container_cpu_usage_seconds_total{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"}[5m]))",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU Usage",
+          "transparent": true,
+          "type": "timeseries"
         }
       ],
       "refresh": "5s",
@@ -664,13 +1100,13 @@ data:
         ]
       },
       "time": {
-        "from": "2022-07-12T22:39:42.980Z",
-        "to": "2022-07-12T22:44:42.980Z"
+        "from": "now-3h",
+        "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 9,
+      "version": 10,
       "weekStart": ""
     }
