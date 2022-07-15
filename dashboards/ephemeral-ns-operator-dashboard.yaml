@@ -773,7 +773,7 @@ data:
             "pieType": "pie",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -850,7 +850,7 @@ data:
             "pieType": "pie",
             "reduceOptions": {
               "calcs": [
-                "lastNotNull"
+                "range"
               ],
               "fields": "",
               "values": false
@@ -1100,7 +1100,7 @@ data:
         ]
       },
       "time": {
-        "from": "now-1h",
+        "from": "now-3h",
         "to": "now"
       },
       "timepicker": {},
