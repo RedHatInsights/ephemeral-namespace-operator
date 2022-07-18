@@ -173,9 +173,32 @@ var _ = Describe("Handle reservation without defined pool type", func() {
 	})
 })
 
+var _ = Describe("Handle reservation without duration specified", func() {
+	Context("When creating a Reservation Resource without specifying the duration", func() {
+		It("Should be able to set the reservation duration to the default of 1 hour", func() {
+			ctx := context.Background()
+			resName := "test-res-00"
+			reservation := newReservation(resName, "", "test-user-06", "default")
+
+			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
+			updatedR1 := &crd.NamespaceReservation{}
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedR1)
+				Expect(err).NotTo(HaveOccurred())
+
+				duration, err := parseDurationTime(*updatedR1.Spec.Duration)
+				Expect(err).NotTo(HaveOccurred())
+
+				return duration.String() == "1h0m0s"
+			}, timeout, interval).Should(BeTrue())
+		})
+	})
+})
+
 var _ = Describe("Handle waiting reservations", func() {
 	Context("When there are more reservations than ready namespaces", func() {
-		It("Should create a new reservation", func() {
+		It("Should create an excess of reservations to force some into a waiting state", func() {
 			ctx := context.Background()
 
 			resName1 := "test-res-07"
