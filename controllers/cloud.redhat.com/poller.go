@@ -50,6 +50,7 @@ func (p *Poller) Poll() (ctrl.Result, error) {
 				err := CheckForSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
 				if err != nil {
 					p.Log.Error(err, fmt.Sprintf("prometheus operator subscription for namespace %s still exists.", res.Status.Namespace))
+					return ctrl.Result{Requeue: true}, err
 				} else {
 					p.Log.Info("Subscription for prometheus operator does not exist", "prometheus-operator subscription", fmt.Sprint(res.Status.Namespace))
 				}

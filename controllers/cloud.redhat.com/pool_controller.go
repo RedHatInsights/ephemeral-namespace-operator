@@ -141,6 +141,7 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 		err = CheckForSubscriptionPrometheusOperator(ctx, r.Client, nsName)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("prometheus operator subscription for namespace %s still exists.", nsName))
+			return err
 		} else {
 			r.Log.Info("Subscription for prometheus operator does not exist", "prometheus-operator subscription", fmt.Sprint(nsName))
 		}
