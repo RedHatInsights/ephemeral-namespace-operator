@@ -232,7 +232,7 @@ var _ = Describe("Handle deletion of the prometheus operator when reservation is
 				return updatedRes6.Status.Namespace
 			}, timeout, interval).ShouldNot(BeEmpty())
 
-			By("Creating a subscription for the prometheus operator for the newly reserved namespace")
+			By("Ensuring the subscription for the prometheus operator does not exist")
 			subscription := unstructured.Unstructured{}
 
 			gvkSubscription := schema.GroupVersionKind{
@@ -246,8 +246,8 @@ var _ = Describe("Handle deletion of the prometheus operator when reservation is
 			subscription.SetNamespace(updatedRes6.Status.Namespace)
 			Expect(updatedRes6.Name).NotTo(BeEmpty())
 
-			err := k8sClient.Create(ctx, &subscription)
-			Expect(err).NotTo(HaveOccurred())
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: updatedRes6.Status.Namespace}, &subscription)
+			Expect(err).To(HaveOccurred())
 
 			By("Creating a prometheus operator for the newly reserved namespace")
 			prometheusOperator := unstructured.Unstructured{}
