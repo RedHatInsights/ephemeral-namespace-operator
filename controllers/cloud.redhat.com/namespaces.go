@@ -306,7 +306,7 @@ func CheckForSubscriptionPrometheusOperator(ctx context.Context, cl client.Clien
 	subscriptionsPrometheusOperator.SetNamespace(nsName)
 
 	err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
-	if err != nil {
+	if err == nil {
 		return err
 	}
 
