@@ -51,7 +51,7 @@ func (p *Poller) Poll() (ctrl.Result, error) {
 				if err != nil {
 					p.Log.Error(err, fmt.Sprintf("prometheus operator subscription for namespace %s still exists.", res.Status.Namespace))
 				} else {
-					p.Log.Info("Subscription for prometheus operator was deleted", "prometheus-operator subscription", fmt.Sprint(res.Status.Namespace))
+					p.Log.Info("Subscription for prometheus operator does not exist", "prometheus-operator subscription", fmt.Sprint(res.Status.Namespace))
 				}
 
 				p.Log.Info("Reservation scheduled for deletion, deleting", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))

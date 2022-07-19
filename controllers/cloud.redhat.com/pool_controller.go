@@ -142,7 +142,7 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("prometheus operator subscription for namespace %s still exists.", nsName))
 		} else {
-			r.Log.Info("Subscription for prometheus operator was deleted", "prometheus-operator subscription", fmt.Sprint(nsName))
+			r.Log.Info("Subscription for prometheus operator does not exist", "prometheus-operator subscription", fmt.Sprint(nsName))
 		}
 
 		r.Log.Info("Removing prometheus-operator associated with", "ns-name", nsName)
