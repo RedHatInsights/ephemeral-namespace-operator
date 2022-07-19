@@ -292,7 +292,7 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 	return nil
 }
 
-func DeleteSubscriptionPrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
+func CheckForSubscriptionPrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
 	subscriptionsPrometheusOperator := unstructured.Unstructured{}
 
 	gvk := schema.GroupVersionKind{
@@ -308,11 +308,6 @@ func DeleteSubscriptionPrometheusOperator(ctx context.Context, cl client.Client,
 	err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
 	if err != nil {
 		return err
-	}
-
-	err = cl.Delete(ctx, &subscriptionsPrometheusOperator)
-	if err != nil {
-		return fmt.Errorf("error deleting prometheus operator subscription in namespace %s: %v", nsName, err)
 	}
 
 	return nil

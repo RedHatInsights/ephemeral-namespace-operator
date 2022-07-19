@@ -47,14 +47,11 @@ func (p *Poller) Poll() (ctrl.Result, error) {
 					p.Log.Error(err, "Unable to retrieve reservation")
 				}
 
-				err := DeleteSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
-				if k8serr.IsNotFound(err) {
-					p.Log.Info(fmt.Sprintf("cannot find prometheus operator for namespace %s.", res.Status.Namespace))
-				} else if err != nil {
-					p.Log.Error(err, fmt.Sprintf("cannot delete prometheus operator subscription for namespace %s", res.Status.Namespace))
-					return ctrl.Result{Requeue: true}, err
+				err := CheckForSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
+				if err != nil {
+					p.Log.Error(err, fmt.Sprintf("prometheus operator subscription for namespace %s still exists.", res.Status.Namespace))
 				} else {
-					p.Log.Info("Successfully deleted", "prometheus-operator subscription", fmt.Sprint(res.Status.Namespace))
+					p.Log.Info("Subscription for prometheus operator was deleted", "prometheus-operator subscription", fmt.Sprint(res.Status.Namespace))
 				}
 
 				p.Log.Info("Reservation scheduled for deletion, deleting", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))
