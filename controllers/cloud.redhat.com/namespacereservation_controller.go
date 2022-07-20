@@ -117,6 +117,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			removed, err = DeletePrometheusOperator(ctx, r.Client, res.Status.Namespace)
 			if err != nil {
 				r.Log.Error(err, fmt.Sprintf("prometheus operator subscription for namespace %s still exists.", res.Status.Namespace))
+				return ctrl.Result{Requeue: true}, err
 			} else if removed {
 				r.Log.Info("Subscription for prometheus operator does not exist", "prometheus-operator subscription", fmt.Sprint(res.Status.Namespace))
 			}
