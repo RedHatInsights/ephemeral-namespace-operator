@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	core "k8s.io/api/core/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
@@ -267,7 +268,7 @@ func GetPrometheusOperatorName(nsName string) string {
 	return fmt.Sprintf("prometheus.%s", nsName)
 }
 
-func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
+func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName string) (bool, error) {
 	prometheusOperator := unstructured.Unstructured{}
 
 	gvk := schema.GroupVersionKind{
@@ -280,19 +281,21 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 	prometheusOperator.SetName(GetPrometheusOperatorName(nsName))
 
 	err := cl.Get(ctx, types.NamespacedName{Name: GetPrometheusOperatorName(nsName)}, &prometheusOperator)
-	if err != nil {
-		return err
+	if k8serr.IsNotFound(err) {
+		return true, nil
+	} else if err != nil {
+		return false, err
 	}
 
 	err = cl.Delete(ctx, &prometheusOperator)
 	if err != nil {
-		return fmt.Errorf("error deleting prometheus operator %s: %v", GetPrometheusOperatorName(nsName), err)
+		return false, fmt.Errorf("error deleting prometheus operator %s: %v", GetPrometheusOperatorName(nsName), err)
 	}
 
-	return nil
+	return true, nil
 }
 
-func CheckForSubscriptionPrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
+func CheckForSubscriptionPrometheusOperator(ctx context.Context, cl client.Client, nsName string) (bool, error) {
 	subscriptionsPrometheusOperator := unstructured.Unstructured{}
 
 	gvk := schema.GroupVersionKind{
@@ -306,9 +309,11 @@ func CheckForSubscriptionPrometheusOperator(ctx context.Context, cl client.Clien
 	subscriptionsPrometheusOperator.SetNamespace(nsName)
 
 	err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
-	if err == nil {
-		return err
+	if k8serr.IsNotFound(err) {
+		return true, nil
+	} else if err == nil {
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }

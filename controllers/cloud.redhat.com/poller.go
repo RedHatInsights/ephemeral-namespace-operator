@@ -10,7 +10,6 @@ import (
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -22,7 +21,7 @@ type Poller struct {
 
 const POLL_CYCLE time.Duration = 10
 
-func (p *Poller) Poll() (ctrl.Result, error) {
+func (p *Poller) Poll() error {
 	ctx := context.Background()
 	p.Log.Info("Starting poller...")
 
@@ -33,7 +32,7 @@ func (p *Poller) Poll() (ctrl.Result, error) {
 	p.Log.Info("Populating poller with active reservations")
 	if err := p.populateActiveReservations(ctx); err != nil {
 		p.Log.Error(err, "Unable to populate pool with active reservations")
-		return ctrl.Result{}, err
+		return err
 	}
 
 	for {
@@ -47,22 +46,22 @@ func (p *Poller) Poll() (ctrl.Result, error) {
 					p.Log.Error(err, "Unable to retrieve reservation")
 				}
 
-				err := CheckForSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
+				removed, err := CheckForSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
 				if err != nil {
 					p.Log.Error(err, fmt.Sprintf("prometheus operator subscription for namespace %s still exists.", res.Status.Namespace))
-					return ctrl.Result{Requeue: true}, err
-				} else {
+					return err
+				} else if removed {
 					p.Log.Info("Subscription for prometheus operator does not exist", "prometheus-operator subscription", fmt.Sprint(res.Status.Namespace))
 				}
 
 				p.Log.Info("Reservation scheduled for deletion, deleting", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))
-				err = DeletePrometheusOperator(ctx, p.Client, res.Status.Namespace)
+				removed, err = DeletePrometheusOperator(ctx, p.Client, res.Status.Namespace)
 				if k8serr.IsNotFound(err) {
 					p.Log.Error(err, fmt.Sprintf("the prometheus operator prometheus.%s does not exist.", res.Status.Namespace))
 				} else if err != nil {
 					p.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", res.Status.Namespace))
-					return ctrl.Result{Requeue: true}, err
-				} else {
+					return err
+				} else if removed {
 					p.Log.Info("Successfully deleted", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))
 				}
 

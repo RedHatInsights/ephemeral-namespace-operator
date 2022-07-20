@@ -138,22 +138,22 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 			return fmt.Errorf("handleErrorNamespace error: Couldn't delete namespace: %v", err)
 		}
 
-		err = CheckForSubscriptionPrometheusOperator(ctx, r.Client, nsName)
+		removed, err := CheckForSubscriptionPrometheusOperator(ctx, r.Client, nsName)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("prometheus operator subscription for namespace %s still exists.", nsName))
 			return err
-		} else {
+		} else if removed {
 			r.Log.Info("Subscription for prometheus operator does not exist", "prometheus-operator subscription", fmt.Sprint(nsName))
 		}
 
 		r.Log.Info("Removing prometheus-operator associated with", "ns-name", nsName)
-		err = DeletePrometheusOperator(ctx, r.Client, nsName)
+		removed, err = DeletePrometheusOperator(ctx, r.Client, nsName)
 		if k8serr.IsNotFound(err) {
 			r.Log.Error(err, fmt.Sprintf("the prometheus operator prometheus.%s does not exist.", nsName))
 		} else if err != nil {
 			r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", nsName))
 			return err
-		} else {
+		} else if removed {
 			r.Log.Info("Successfully deleted", "prometheus-operator", fmt.Sprintf("prometheus.%s", nsName))
 		}
 	}
