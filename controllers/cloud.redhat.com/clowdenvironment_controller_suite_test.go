@@ -59,3 +59,27 @@ var _ = Describe("Clowdenvironment controller basic update", func() {
 		})
 	})
 })
+
+var _ = Describe("Ensure successful creation of a clowdenvironment in a new namespace", func() {
+	Context("When a new namespace is created", func() {
+		It("Should successfully create the clowdenvironment", func() {
+			ctx := context.Background()
+
+			By("Ensuring creation of the clowdenvironemnt was successful")
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			for _, ns := range nsList.Items {
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						ready, _, err := GetClowdEnv(ctx, k8sClient, ns.Name)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(ready).To(BeTrue())
+					}
+				}
+			}
+		})
+	})
+})
