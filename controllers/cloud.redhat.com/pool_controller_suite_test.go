@@ -99,7 +99,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 	})
 })
 
-var _ = Describe("Ensure new namespaces contains secrets", func() {
+var _ = Describe("Ensure new namespaces contain secrets", func() {
 	Context("When a new namespace is created", func() {
 		It("Should successfully copy secrets", func() {
 			ctx := context.Background()
@@ -133,8 +133,8 @@ var _ = Describe("Ensure new namespaces contains secrets", func() {
 						operatorNamespaceVal := nsLabels["operator-ns"]
 						Expect(operatorNamespaceVal).To(Equal("true"))
 
-						_, ok := nsAnnotations["pool"]
-						Expect(ok).To(BeTrue())
+						poolTypeVal := nsAnnotations["pool"]
+						Expect(poolTypeVal).To(Equal("true"))
 					}
 				}
 			}
