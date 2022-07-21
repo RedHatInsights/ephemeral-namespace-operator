@@ -272,7 +272,6 @@ var _ = Describe("Handle deletion of the prometheus operator when reservation is
 			}, timeout, interval).Should(BeTrue())
 
 			By("Checking that the subscription for the prometheus operator was deleted")
-
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, types.NamespacedName{Namespace: res6.Status.Namespace, Name: "prometheus"}, &subscription)
 
