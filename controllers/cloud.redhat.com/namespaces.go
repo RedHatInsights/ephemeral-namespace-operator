@@ -311,9 +311,7 @@ func CheckForSubscriptionPrometheusOperator(ctx context.Context, cl client.Clien
 	err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
 	if k8serr.IsNotFound(err) {
 		return true, nil
-	} else if err == nil {
-		return false, err
 	}
 
-	return true, nil
+	return false, err
 }
