@@ -10,6 +10,7 @@ import (
 	core "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Pool controller basic functionality", func() {
@@ -95,5 +96,49 @@ var _ = Describe("Pool controller basic functionality", func() {
 				return false
 			}, timeout, interval).Should(BeTrue())
 		})
+	})
+})
+
+var _ = Describe("Ensure new namespaces contain secrets", func() {
+	Context("When a new namespace is created", func() {
+		It("Should successfully copy secrets", func() {
+			ctx := context.Background()
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			secrets := core.SecretList{}
+			for _, ns := range nsList.Items {
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						err := k8sClient.List(ctx, &secrets, client.InNamespace(ns.Name))
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+			}
+		})
+
+		It("Should contain necessary labels and annotations", func() {
+			ctx := context.Background()
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			for _, ns := range nsList.Items {
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						nsLabels := ns.GetLabels()
+						nsAnnotations := ns.GetAnnotations()
+
+						operatorNamespaceVal := nsLabels["operator-ns"]
+						Expect(operatorNamespaceVal).To(Equal("true"))
+
+						poolTypeVal := nsAnnotations["pool"]
+						Expect(poolTypeVal).To(Equal("true"))
+					}
+				}
+			}
+		})
+
 	})
 })
