@@ -245,7 +245,7 @@ func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 }
 
 func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error {
-	UpdateAnnotations(ctx, cl, map[string]string{"env-status": "deleting", "status": "deleting"}, nsName)
+	UpdateAnnotations(ctx, cl, map[string]string{"env-status": "deleting"}, nsName)
 
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {
