@@ -19,10 +19,8 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/prometheus/client_golang/prometheus"
 	core "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
@@ -101,15 +99,6 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			}
 			pool.Status.Creating++
 		}
-
-		ns, err := GetNamespace(ctx, r.Client, nsName)
-		if err != nil {
-			r.Log.Error(err, "Could not retrieve newly created namespace", "ns-name", nsName)
-		}
-
-		elapsed := time.Since(ns.CreationTimestamp.Time)
-
-		averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": pool.Name}).Observe(float64(elapsed.Seconds()))
 	}
 
 	if err := r.Status().Update(ctx, &pool); err != nil {
