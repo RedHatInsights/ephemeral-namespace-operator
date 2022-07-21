@@ -19,9 +19,11 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/go-logr/logr"
+	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -63,6 +65,15 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		} else {
 			r.Log.Info("Namespace ready", "ns-name", ns)
 			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "ready", "status": "ready"}, ns)
+
+			newNamespace, err := GetNamespace(ctx, r.Client, ns)
+			if err != nil {
+				r.Log.Error(err, "Could not retrieve newly created namespace", "ns-name", ns)
+			}
+
+			elapsed := time.Since(newNamespace.CreationTimestamp.Time)
+
+			averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": newNamespace.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
 		}
 	}
 
