@@ -18,6 +18,7 @@ import (
 
 	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
+	"github.com/go-logr/logr"
 	projectv1 "github.com/openshift/api/project/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -268,13 +269,8 @@ func GetPrometheusOperatorName(nsName string) string {
 	return fmt.Sprintf("prometheus.%s", nsName)
 }
 
-func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName string) error {
+func DeletePrometheusOperator(ctx context.Context, cl client.Client, log logr.Logger, nsName string) (bool, error) {
 	prometheusOperator := unstructured.Unstructured{}
-
-	err := cl.Get(ctx, types.NamespacedName{Name: GetPrometheusOperatorName(nsName)}, &prometheusOperator)
-	if k8serr.IsNotFound(err) {
-		return nil
-	}
 
 	gvk := schema.GroupVersionKind{
 		Group:   "operators.coreos.com",
@@ -285,10 +281,40 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 	prometheusOperator.SetGroupVersionKind(gvk)
 	prometheusOperator.SetName(GetPrometheusOperatorName(nsName))
 
-	err = cl.Delete(ctx, &prometheusOperator)
-	if err != nil {
-		return fmt.Errorf("error deleting prometheus operator %s: %v", GetPrometheusOperatorName(nsName), err)
+	err := cl.Get(ctx, types.NamespacedName{Name: GetPrometheusOperatorName(nsName)}, &prometheusOperator)
+	if k8serr.IsNotFound(err) {
+		return true, nil
+	} else if err != nil {
+		return false, err
 	}
 
-	return nil
+	err = cl.Delete(ctx, &prometheusOperator)
+	if err != nil {
+		return false, fmt.Errorf("error deleting prometheus operator %s: %v", GetPrometheusOperatorName(nsName), err)
+	} else {
+		log.Info("Deletion successful")
+	}
+
+	return true, nil
+}
+
+func CheckForSubscriptionPrometheusOperator(ctx context.Context, cl client.Client, nsName string) (bool, error) {
+	subscriptionsPrometheusOperator := unstructured.Unstructured{}
+
+	gvk := schema.GroupVersionKind{
+		Group:   "operators.coreos.com",
+		Version: "v1alpha1",
+		Kind:    "Subscription",
+	}
+
+	subscriptionsPrometheusOperator.SetGroupVersionKind(gvk)
+	subscriptionsPrometheusOperator.SetName("prometheus")
+	subscriptionsPrometheusOperator.SetNamespace(nsName)
+
+	err := cl.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: nsName}, &subscriptionsPrometheusOperator)
+	if k8serr.IsNotFound(err) {
+		return true, nil
+	}
+
+	return false, err
 }

@@ -12,6 +12,8 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -175,7 +177,7 @@ var _ = Describe("Handle reservation without defined pool type", func() {
 
 var _ = Describe("Handle waiting reservations", func() {
 	Context("When there are more reservations than ready namespaces", func() {
-		It("", func() {
+		It("Should create a new reservation", func() {
 			ctx := context.Background()
 
 			resName1 := "test-res-07"
@@ -205,6 +207,83 @@ var _ = Describe("Handle waiting reservations", func() {
 				return updatedRes5.Status.State == "waiting"
 			}, timeout, interval).Should(BeTrue())
 
+		})
+	})
+})
+
+var _ = Describe("Handle deletion of the prometheus operator when reservation is deleted", func() {
+	Context("When an reservation is deleted", func() {
+		It("Should ensure deletion of the prometheus operator associated with the deleted namespace", func() {
+			ctx := context.Background()
+
+			By("Creating a new reservation")
+			resName6 := "test-res-12"
+
+			res6 := newReservation(resName6, "35s", "test-user-12", "default")
+
+			Expect(k8sClient.Create(ctx, res6)).Should(Succeed())
+
+			updatedRes6 := &crd.NamespaceReservation{}
+
+			Eventually(func() string {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName6}, updatedRes6)
+				Expect(err).NotTo(HaveOccurred())
+
+				return updatedRes6.Status.Namespace
+			}, timeout, interval).ShouldNot(BeEmpty())
+
+			By("Ensuring the subscription for the prometheus operator does not exist")
+			subscription := unstructured.Unstructured{}
+
+			gvkSubscription := schema.GroupVersionKind{
+				Group:   "operators.coreos.com",
+				Version: "v1alpha1",
+				Kind:    "Subscription",
+			}
+
+			subscription.SetGroupVersionKind(gvkSubscription)
+			subscription.SetName("prometheus")
+			subscription.SetNamespace(updatedRes6.Status.Namespace)
+			Expect(updatedRes6.Name).NotTo(BeEmpty())
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "prometheus", Namespace: updatedRes6.Status.Namespace}, &subscription)
+			Expect(err).To(HaveOccurred())
+
+			By("Creating a prometheus operator for the newly reserved namespace")
+			prometheusOperator := unstructured.Unstructured{}
+
+			gvkPrometheus := schema.GroupVersionKind{
+				Group:   "operators.coreos.com",
+				Version: "v1",
+				Kind:    "Operator",
+			}
+			prometheusOperator.SetGroupVersionKind(gvkPrometheus)
+			prometheusOperator.SetName(GetPrometheusOperatorName(updatedRes6.Status.Namespace))
+			prometheusOperator.SetNamespace(updatedRes6.Status.Namespace)
+			Expect(updatedRes6.Name).NotTo(BeEmpty())
+
+			err = k8sClient.Create(ctx, &prometheusOperator)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Deleting the reservation")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: updatedRes6.Status.Namespace}, updatedRes6)
+				return errors.IsNotFound(err)
+			}, timeout, interval).Should(BeTrue())
+
+			By("Checking that the subscription for the prometheus operator was deleted")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Namespace: res6.Status.Namespace, Name: "prometheus"}, &subscription)
+
+				return err != nil
+			}, timeout, interval).Should(BeTrue())
+
+			By("Checking that the prometheus operator was deleted")
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: GetPrometheusOperatorName(res6.Status.Namespace)}, &prometheusOperator)
+
+				return err != nil
+			}, timeout, interval).Should(BeTrue())
 		})
 	})
 })
