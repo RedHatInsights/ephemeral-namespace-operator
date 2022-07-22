@@ -18,6 +18,7 @@ import (
 
 	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
+	"github.com/go-logr/logr"
 	projectv1 "github.com/openshift/api/project/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -268,7 +269,7 @@ func GetPrometheusOperatorName(nsName string) string {
 	return fmt.Sprintf("prometheus.%s", nsName)
 }
 
-func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName string) (bool, error) {
+func DeletePrometheusOperator(ctx context.Context, cl client.Client, log logr.Logger, nsName string) (bool, error) {
 	prometheusOperator := unstructured.Unstructured{}
 
 	gvk := schema.GroupVersionKind{
@@ -290,6 +291,8 @@ func DeletePrometheusOperator(ctx context.Context, cl client.Client, nsName stri
 	err = cl.Delete(ctx, &prometheusOperator)
 	if err != nil {
 		return false, fmt.Errorf("error deleting prometheus operator %s: %v", GetPrometheusOperatorName(nsName), err)
+	} else {
+		log.Info("Deletion successful")
 	}
 
 	return true, nil
