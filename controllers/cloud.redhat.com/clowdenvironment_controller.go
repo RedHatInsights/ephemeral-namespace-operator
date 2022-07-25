@@ -71,11 +71,15 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 				r.Log.Error(err, "Could not retrieve newly created namespace", "ns-name", nsName)
 			}
 
-			if ns.Annotations["completion-time"] == "" {
-				nsCreationTime := time.Now()
-				ns.Annotations["completion-time"] = nsCreationTime.String()
+			if val := ns.Annotations["completion-time"]; val == "" {
+				nsCompletionTime := time.Now()
+				ns.Annotations["completion-time"] = nsCompletionTime.String()
 
-				elapsed := nsCreationTime.Sub(ns.CreationTimestamp.Time)
+				if err := r.Client.Update(ctx, &ns); err != nil {
+					return ctrl.Result{}, err
+				}
+
+				elapsed := nsCompletionTime.Sub(ns.CreationTimestamp.Time)
 
 				averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
 			}
