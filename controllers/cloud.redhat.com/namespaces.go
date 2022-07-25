@@ -36,8 +36,6 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	// Create project or namespace depending on environment
 	ns := core.Namespace{}
 
-	pool.Status.CreationTime = ns.CreationTimestamp.Time.String()
-
 	labels := map[string]string{}
 	for k, v := range initialLabels {
 		labels[k] = v

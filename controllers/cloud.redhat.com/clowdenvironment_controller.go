@@ -56,24 +56,30 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	)
 
 	if ready, _ := VerifyClowdEnvReady(env); ready {
-		ns := env.Spec.TargetNamespace
-		r.Log.Info("Clowdenvironment ready", "ns-name", ns)
+		nsName := env.Spec.TargetNamespace
+		r.Log.Info("Clowdenvironment ready", "ns-name", nsName)
 
-		if err := CreateFrontendEnv(ctx, r.Client, ns, env); err != nil {
-			r.Log.Error(err, "Error encountered with frontend environment", "ns-name", ns)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error", "status": "error"}, ns)
+		if err := CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
+			r.Log.Error(err, "Error encountered with frontend environment", "ns-name", nsName)
+			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error", "status": "error"}, nsName)
 		} else {
-			r.Log.Info("Namespace ready", "ns-name", ns)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "ready", "status": "ready"}, ns)
+			r.Log.Info("Namespace ready", "ns-name", nsName)
+			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "ready", "status": "ready"}, nsName)
 
-			newNamespace, err := GetNamespace(ctx, r.Client, ns)
+			ns, err := GetNamespace(ctx, r.Client, nsName)
 			if err != nil {
-				r.Log.Error(err, "Could not retrieve newly created namespace", "ns-name", ns)
+				r.Log.Error(err, "Could not retrieve newly created namespace", "ns-name", nsName)
 			}
 
-			elapsed := time.Since(newNamespace.CreationTimestamp.Time)
+			if ns.Annotations["completion-time"] == "" {
+				nsCreationTime := time.Now()
+				ns.Annotations["completion-time"] = nsCreationTime.String()
 
-			averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": newNamespace.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
+				elapsed := nsCreationTime.Sub(ns.CreationTimestamp.Time)
+
+				averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
+			}
+
 		}
 	}
 

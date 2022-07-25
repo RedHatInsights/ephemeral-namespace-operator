@@ -40,9 +40,8 @@ type NamespacePoolSpec struct {
 
 // NamespacePoolStatus defines the observed state of Pool
 type NamespacePoolStatus struct {
-	Ready        int    `json:"ready"`
-	Creating     int    `json:"creating"`
-	CreationTime string `json:"creationTime"`
+	Ready    int `json:"ready"`
+	Creating int `json:"creating"`
 }
 
 //+kubebuilder:object:root=true

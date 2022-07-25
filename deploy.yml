@@ -1072,13 +1072,10 @@ objects:
               properties:
                 creating:
                   type: integer
-                creationTime:
-                  type: string
                 ready:
                   type: integer
               required:
               - creating
-              - creationTime
               - ready
               type: object
           type: object
