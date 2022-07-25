@@ -22,7 +22,6 @@ import (
 
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
-	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -85,7 +84,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			r.Log.Info("Setting up new namespace", "ns-name", nsName, "pool-type", pool.Name)
 			if err := SetupNamespace(ctx, r.Client, pool, nsName); err != nil {
 				r.Log.Error(err, "Error while setting up namespace", "ns-name", nsName)
-				if err := UpdateAnnotations(ctx, r.Client, map[string]string{"status": "error"}, nsName); err != nil {
+				if err := UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error"}, nsName); err != nil {
 					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", nsName)
 					// Last resort - if annotations can't be updated attempt manual deletion of namespace
 					ns, err := GetNamespace(ctx, r.Client, nsName)
@@ -127,15 +126,17 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 			return fmt.Errorf("handleErrorNamespace error: Couldn't delete namespace: %v", err)
 		}
 
-		r.Log.Info("Removing prometheus-operator associated with", "ns-name", nsName)
-		err = DeletePrometheusOperator(ctx, r.Client, nsName)
-		if k8serr.IsNotFound(err) {
-			r.Log.Error(err, fmt.Sprintf("the prometheus operator prometheus.%s does not exist.", nsName))
+		removed, err := CheckForSubscriptionPrometheusOperator(ctx, r.Client, nsName)
+		if !removed {
+			err := fmt.Errorf("subscription not yet removed from [%s]", nsName)
 			return err
 		} else if err != nil {
-			r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", nsName))
-		} else {
-			r.Log.Info("Successfully deleted", "prometheus-operator", fmt.Sprintf("prometheus.%s", nsName))
+			return err
+		}
+
+		_, err = DeletePrometheusOperator(ctx, r.Client, r.Log, nsName)
+		if err != nil {
+			return fmt.Errorf("error deleting prom operator: %s", err.Error())
 		}
 	}
 

@@ -106,14 +106,17 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 		if r.Poller.namespaceIsExpired(expirationTS) {
-			err = DeletePrometheusOperator(ctx, r.Client, res.Status.Namespace)
-			if k8serr.IsNotFound(err) {
-				r.Log.Error(err, fmt.Sprintf("the prometheus operator prometheus.%s does not exist.", res.Status.Namespace))
+			removed, err := CheckForSubscriptionPrometheusOperator(ctx, r.Client, res.Status.Namespace)
+			if !removed {
+				err := fmt.Errorf("subscription not yet removed from [%s]", res.Status.Namespace)
 				return ctrl.Result{Requeue: true}, err
 			} else if err != nil {
-				r.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", res.Status.Namespace))
-			} else {
-				r.Log.Info("Successfully deleted", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))
+				return ctrl.Result{Requeue: true}, err
+			}
+
+			_, err = DeletePrometheusOperator(ctx, r.Client, r.Log, res.Status.Namespace)
+			if err != nil {
+				return ctrl.Result{Requeue: true}, fmt.Errorf("error deleting prom operator: %s", err.Error())
 			}
 
 			if err := r.Client.Delete(ctx, &res); err != nil {

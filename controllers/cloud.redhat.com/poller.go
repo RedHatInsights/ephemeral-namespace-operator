@@ -7,7 +7,6 @@ import (
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	"github.com/go-logr/logr"
-	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -46,15 +45,19 @@ func (p *Poller) Poll() error {
 					p.Log.Error(err, "Unable to retrieve reservation")
 				}
 
-				p.Log.Info("Reservation scheduled for deletion, deleting", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))
-				err := DeletePrometheusOperator(ctx, p.Client, res.Status.Namespace)
-				if k8serr.IsNotFound(err) {
-					p.Log.Error(err, fmt.Sprintf("the prometheus operator prometheus.%s does not exist.", res.Status.Namespace))
-					return err
+				removed, err := CheckForSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
+				if !removed {
+					p.Log.Error(fmt.Errorf("subscription not yet removed from [%s]", res.Status.Namespace), "subscription still exists")
+					continue
 				} else if err != nil {
-					p.Log.Error(err, fmt.Sprintf("Error deleting prometheus.%s", res.Status.Namespace))
-				} else {
-					p.Log.Info("Successfully deleted", "prometheus-operator", fmt.Sprintf("prometheus.%s", res.Status.Namespace))
+					p.Log.Error(err, "error checking for subscription [%s]", res.Status.Namespace)
+					continue
+				}
+
+				_, err = DeletePrometheusOperator(ctx, p.Client, p.Log, res.Status.Namespace)
+				if err != nil {
+					p.Log.Error(err, "error deleting prom operator")
+					continue
 				}
 
 				if err := p.Client.Delete(ctx, &res); err != nil {

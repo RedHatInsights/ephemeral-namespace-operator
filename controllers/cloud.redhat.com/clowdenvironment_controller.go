@@ -59,27 +59,12 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		nsName := env.Spec.TargetNamespace
 		r.Log.Info("Clowdenvironment ready", "ns-name", nsName)
 
-		if err := CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
-			r.Log.Error(err, "Error encountered with frontend environment", "ns-name", nsName)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error", "status": "error"}, nsName)
+		if err := CreateFrontendEnv(ctx, r.Client, ns, env); err != nil {
+			r.Log.Error(err, "Error encountered with frontend environment", "ns-name", ns)
+			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error"}, ns)
 		} else {
-			r.Log.Info("Namespace ready", "ns-name", nsName)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "ready", "status": "ready"}, nsName)
-
-			ns, err := GetNamespace(ctx, r.Client, nsName)
-			if err != nil {
-				r.Log.Error(err, "Could not retrieve newly created namespace", "ns-name", nsName)
-			}
-
-			if ns.Annotations["completion-time"] == "" {
-				nsCreationTime := time.Now()
-				ns.Annotations["completion-time"] = nsCreationTime.String()
-
-				elapsed := nsCreationTime.Sub(ns.CreationTimestamp.Time)
-
-				averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
-			}
-
+			r.Log.Info("Namespace ready", "ns-name", ns)
+			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "ready"}, ns)
 		}
 	}
 
