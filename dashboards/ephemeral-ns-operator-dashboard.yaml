@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1657838720194,
+      "iteration": 1658861179746,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -71,10 +71,6 @@ data:
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -102,7 +98,7 @@ data:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -111,6 +107,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(successful_pool_reservations_total)",
+              "format": "table",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -138,10 +135,6 @@ data:
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -169,7 +162,7 @@ data:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -178,6 +171,7 @@ data:
               },
               "editorMode": "builder",
               "expr": "successful_pool_reservations_total{pool=\"default\"}",
+              "format": "table",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -205,10 +199,6 @@ data:
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -236,7 +226,7 @@ data:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -245,6 +235,7 @@ data:
               },
               "editorMode": "builder",
               "expr": "successful_pool_reservations_total{pool=\"minimal\"}",
+              "format": "table",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -272,10 +263,6 @@ data:
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -303,7 +290,7 @@ data:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -312,6 +299,7 @@ data:
               },
               "editorMode": "builder",
               "expr": "successful_pool_reservations_total{pool=\"managed-kafka\"}",
+              "format": "table",
               "legendFormat": "__auto",
               "range": true,
               "refId": "A"
@@ -339,10 +327,6 @@ data:
                   {
                     "color": "red",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -370,7 +354,7 @@ data:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -379,6 +363,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(failed_pool_reservations_total)",
+              "format": "table",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -406,10 +391,6 @@ data:
                   {
                     "color": "red",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -437,7 +418,7 @@ data:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -446,6 +427,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(failed_pool_reservations_total{pool=\"default\"})",
+              "format": "table",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -473,10 +455,6 @@ data:
                   {
                     "color": "red",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -504,7 +482,7 @@ data:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -513,6 +491,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(failed_pool_reservations_total{pool=\"minimal\"})",
+              "format": "table",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -540,10 +519,6 @@ data:
                   {
                     "color": "red",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -571,7 +546,7 @@ data:
             },
             "textMode": "auto"
           },
-          "pluginVersion": "9.0.1",
+          "pluginVersion": "9.0.3",
           "targets": [
             {
               "datasource": {
@@ -580,6 +555,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(failed_pool_reservations_total{pool=\"managed-kafka\"})",
+              "format": "table",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -649,19 +625,16 @@ data:
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
-              }
+              },
+              "unit": "s"
             },
             "overrides": []
           },
           "gridPos": {
-            "h": 10,
-            "w": 12,
+            "h": 9,
+            "w": 9,
             "x": 0,
             "y": 8
           },
@@ -685,45 +658,15 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "avg(increase(namespace_creation_average_seconds_bucket{pool=\"default\"}[1m]))",
+              "expr": "histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"(default|minimal|managed-kafka)\"}[1h]))",
               "format": "time_series",
               "instant": false,
-              "legendFormat": "default",
+              "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "avg(increase(namespace_creation_average_seconds_bucket{pool=\"minimal\"}[1m]))",
-              "format": "time_series",
-              "hide": false,
-              "instant": false,
-              "legendFormat": "minimal",
-              "range": true,
-              "refId": "B"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "avg(rate(namespace_creation_average_seconds_bucket{pool=\"managed-kafka\"}[1m]))",
-              "format": "time_series",
-              "hide": false,
-              "instant": false,
-              "legendFormat": "managed-kafka",
-              "range": true,
-              "refId": "C"
             }
           ],
-          "title": "Average Namespace Creation Time (In Seconds)",
+          "title": "Namespace Creation Time (In Seconds)",
           "transparent": true,
           "type": "timeseries"
         },
@@ -745,15 +688,17 @@ data:
                 }
               },
               "mappings": [],
+              "max": 336,
+              "min": 1,
               "noValue": "No reservations found",
               "unit": "Total"
             },
             "overrides": []
           },
           "gridPos": {
-            "h": 10,
-            "w": 6,
-            "x": 12,
+            "h": 9,
+            "w": 5,
+            "x": 9,
             "y": 8
           },
           "id": 18,
@@ -791,10 +736,11 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "exemplar": false,
+              "exemplar": true,
               "expr": "namespace_reservation_duration_average_bucket{controller=\"namespacereservation\"} ",
               "format": "heatmap",
               "instant": false,
+              "interval": "",
               "legendFormat": "{{le}}",
               "range": true,
               "refId": "A"
@@ -815,45 +761,64 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
                   "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
                 }
               },
               "mappings": [],
               "noValue": "No reservations found",
-              "unit": "Total"
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "s"
             },
             "overrides": []
           },
           "gridPos": {
-            "h": 10,
-            "w": 6,
-            "x": 18,
+            "h": 9,
+            "w": 9,
+            "x": 14,
             "y": 8
           },
           "id": 17,
           "options": {
-            "displayLabels": [
-              "percent",
-              "value",
-              "name"
-            ],
             "legend": {
-              "displayMode": "table",
-              "placement": "right",
-              "values": [
-                "value"
-              ]
-            },
-            "pieType": "pie",
-            "reduceOptions": {
-              "calcs": [
-                "range"
-              ],
-              "fields": "",
-              "values": false
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
             },
             "tooltip": {
               "mode": "single",
@@ -869,17 +834,17 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}",
-              "format": "heatmap",
+              "expr": "histogram_quantile(0.9, rate(average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}[1h]))",
+              "format": "time_series",
               "instant": false,
-              "legendFormat": "{{le}}",
+              "legendFormat": "__auto",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Average Time From Reservation To Deployment (In Seconds)",
+          "title": "Time From Reservation To Deployment (In Seconds)",
           "transparent": true,
-          "type": "piechart"
+          "type": "timeseries"
         },
         {
           "collapsed": false,
@@ -887,7 +852,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 18
+            "y": 17
           },
           "id": 31,
           "panels": [],
@@ -956,7 +921,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 19
+            "y": 18
           },
           "id": 20,
           "options": {
@@ -1044,7 +1009,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 19
+            "y": 18
           },
           "id": 21,
           "options": {
@@ -1081,7 +1046,7 @@ data:
         "list": [
           {
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "crcd01ue1-prometheus",
               "value": "crcd01ue1-prometheus"
             },
@@ -1100,13 +1065,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-3h",
+        "from": "now-12h",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 10,
+      "version": 11,
       "weekStart": ""
     }
