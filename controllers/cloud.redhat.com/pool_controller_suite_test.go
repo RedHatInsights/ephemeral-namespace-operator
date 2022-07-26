@@ -133,8 +133,8 @@ var _ = Describe("Ensure new namespaces contain secrets", func() {
 						operatorNamespaceVal := nsLabels["operator-ns"]
 						Expect(operatorNamespaceVal).To(Equal("true"))
 
-						poolTypeVal := nsAnnotations["pool"]
-						Expect(poolTypeVal).To(Equal("true"))
+						_, ok := nsAnnotations["pool"]
+						Expect(ok).To(BeTrue())
 					}
 				}
 			}
