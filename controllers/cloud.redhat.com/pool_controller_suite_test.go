@@ -17,7 +17,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 	const (
 		timeout  = time.Second * 35
 		duration = time.Second * 30
-		interval = time.Millisecond * 25
+		interval = time.Millisecond * 30
 	)
 
 	Context("When a pool is reconciled", func() {
