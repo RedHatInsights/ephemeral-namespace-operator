@@ -18,23 +18,11 @@ var _ = Describe("Clowdenvironment controller basic update", func() {
 
 	Context("When a clowdenvironment is created", func() {
 		It("Should update the namespace annotations when ready if owned by the pool", func() {
-			By("Ensuring creation of the clowdenvironemnt was successful")
 			ctx := context.Background()
 
 			nsList := core.NamespaceList{}
 			err := k8sClient.List(ctx, &nsList)
 			Expect(err).NotTo(HaveOccurred())
-
-			for _, ns := range nsList.Items {
-				for _, owner := range ns.GetOwnerReferences() {
-					if owner.Kind == "NamespacePool" {
-						ready, _, err := GetClowdEnv(ctx, k8sClient, ns.Name)
-						Expect(err).NotTo(HaveOccurred())
-
-						Expect(ready).To(BeTrue())
-					}
-				}
-			}
 
 			By("Checking the clowdenvironment conditions")
 			Eventually(func() bool {
@@ -75,11 +63,29 @@ var _ = Describe("Clowdenvironment controller basic update", func() {
 	})
 })
 
-// var _ = Describe("Ensure successful creation of a clowdenvironment in a new namespace", func() {
-// 	Context("When a new namespace is created", func() {
-// 		It("Should successfully create the clowdenvironment", func() {
-// 			ctx := context.Background()
+var _ = Describe("Ensure successful creation of a clowdenvironment in a new namespace", func() {
+	Context("When a new namespace is created", func() {
+		It("Should successfully create the clowdenvironment", func() {
+			ctx := context.Background()
 
-// 		})
-// 	})
-// })
+			By("Ensuring creation of the clowdenvironemnt was successful")
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() bool {
+				for _, ns := range nsList.Items {
+					for _, owner := range ns.GetOwnerReferences() {
+						if owner.Kind == "NamespacePool" {
+							ready, _, err := GetClowdEnv(ctx, k8sClient, ns.Name)
+							Expect(err).NotTo(HaveOccurred())
+
+							Expect(ready).To(BeTrue())
+						}
+					}
+				}
+				return true
+			}, timeout, interval).Should(BeTrue())
+		})
+	})
+})
