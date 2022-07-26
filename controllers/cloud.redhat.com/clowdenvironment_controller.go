@@ -71,7 +71,7 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 				r.Log.Error(err, "Could not retrieve newly created namespace", "ns-name", nsName)
 			}
 
-			if val := ns.Annotations["completion-time"]; val == "" {
+			if _, ok := ns.Annotations["completion-time"]; !ok {
 				nsCompletionTime := time.Now()
 				ns.Annotations["completion-time"] = nsCompletionTime.String()
 
