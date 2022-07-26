@@ -42,6 +42,12 @@ type ClowdenvironmentReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/status,verbs=get
 
+const (
+	ENV_STATUS_READY = "ready"
+	ENV_STATUS_ERROR = "error"
+	COMPLETION_TIME  = "completion-time"
+)
+
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	env := clowder.ClowdEnvironment{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &env); err != nil {
@@ -61,10 +67,10 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 		if err := CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
 			r.Log.Error(err, "Error encountered with frontend environment", "ns-name", nsName)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error", "status": "error"}, nsName)
+			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": ENV_STATUS_ERROR, "status": "error"}, nsName)
 		} else {
 			r.Log.Info("Namespace ready", "ns-name", nsName)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "ready", "status": "ready"}, nsName)
+			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": ENV_STATUS_READY, "status": "ready"}, nsName)
 
 			ns, err := GetNamespace(ctx, r.Client, nsName)
 			if err != nil {
