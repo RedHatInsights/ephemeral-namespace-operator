@@ -15,7 +15,7 @@ import (
 
 var _ = Describe("Pool controller basic functionality", func() {
 	const (
-		timeout  = time.Second * 30
+		timeout  = time.Second * 35
 		duration = time.Second * 30
 		interval = time.Millisecond * 25
 	)
@@ -128,17 +128,14 @@ var _ = Describe("Ensure new namespaces contain secrets", func() {
 				for _, owner := range ns.GetOwnerReferences() {
 					if owner.Kind == "NamespacePool" {
 						nsLabels := ns.GetLabels()
-						nsAnnotations := ns.GetAnnotations()
 
-						operatorNamespaceVal := nsLabels["operator-ns"]
-						Expect(operatorNamespaceVal).To(Equal("true"))
+						Expect(nsLabels["operator-ns"]).To(Equal("true"))
 
-						poolTypeVal := nsAnnotations["pool"]
-						Expect(poolTypeVal).To(Equal("true"))
+						_, ok := ns.Labels["pool"]
+						Expect(ok).To(BeTrue())
 					}
 				}
 			}
 		})
-
 	})
 })
