@@ -108,7 +108,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	return ctrl.Result{}, nil
 }
 
-//namespaceCreationTimeMetricsontroller with the Manager.
+// SetupWithManager sets up the controller with the Manager.
 func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&crd.NamespacePool{}).

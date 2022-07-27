@@ -72,11 +72,6 @@ spec:
             description: NamespaceReservationStatus defines the observed state of
               NamespaceReservation
             properties:
-              completionTime:
-                description: Specifies the completion time for when a user has their
-                  reserved namespace
-                format: date-time
-                type: string
               expiration:
                 description: Expiration of reservation
                 format: date-time
