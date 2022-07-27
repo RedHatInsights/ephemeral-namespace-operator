@@ -1,10 +1,11 @@
-= Ephemeral Namespace Operator
-
-The ephemeral namespace operator (ENO) manages namespace reservations.
-Given a `NamespaceReservation`, the ENO will provide the user a namespace with various resources created in it.
+= Ephemeral Namespace Operator (ENO)
 
 image:https://img.shields.io/github/workflow/status/RedHatInsights/ephemeral-namespace-operator/Run%20Unit%20Tests[Build Passing]
 image:https://goreportcard.com/badge/github.com/RedHatInsights/ephemeral-namespace-operator[Go Report Card]
+
+What is the Ephemeral Namespace Operator?
+The ephemeral namespace operator (ENO) manages namespace reservations.
+Given a `NamespaceReservation`, the ENO will provide the user a namespace with various resources created in it.
 
 == Why
 
