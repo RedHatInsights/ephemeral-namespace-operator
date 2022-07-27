@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1658861179746,
+      "iteration": 1658932133192,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -107,7 +107,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(successful_pool_reservations_total)",
-              "format": "table",
+              "format": "time_series",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -169,9 +169,9 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "editorMode": "builder",
-              "expr": "successful_pool_reservations_total{pool=\"default\"}",
-              "format": "table",
+              "editorMode": "code",
+              "expr": "sum(successful_pool_reservations_total{pool=\"default\"})",
+              "format": "time_series",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -219,7 +219,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -233,9 +233,9 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "editorMode": "builder",
-              "expr": "successful_pool_reservations_total{pool=\"minimal\"}",
-              "format": "table",
+              "editorMode": "code",
+              "expr": "sum(successful_pool_reservations_total{pool=\"minimal\"})",
+              "format": "time_series",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -297,9 +297,9 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "editorMode": "builder",
-              "expr": "successful_pool_reservations_total{pool=\"managed-kafka\"}",
-              "format": "table",
+              "editorMode": "code",
+              "expr": "sum(successful_pool_reservations_total{pool=\"managed-kafka\"})",
+              "format": "time_series",
               "legendFormat": "__auto",
               "range": true,
               "refId": "A"
@@ -363,7 +363,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(failed_pool_reservations_total)",
-              "format": "table",
+              "format": "time_series",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -427,7 +427,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(failed_pool_reservations_total{pool=\"default\"})",
-              "format": "table",
+              "format": "time_series",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -491,7 +491,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(failed_pool_reservations_total{pool=\"minimal\"})",
-              "format": "table",
+              "format": "time_series",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -555,7 +555,7 @@ data:
               },
               "editorMode": "code",
               "expr": "sum(failed_pool_reservations_total{pool=\"managed-kafka\"})",
-              "format": "table",
+              "format": "time_series",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -658,7 +658,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"(default|minimal|managed-kafka)\"}[1h]))",
+              "expr": "sum(histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"(default|minimal|managed-kafka)\"}[1h]))) by (pool)",
               "format": "time_series",
               "instant": false,
               "legendFormat": "{{pool}}",
@@ -737,7 +737,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "namespace_reservation_duration_average_bucket{controller=\"namespacereservation\"} ",
+              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\"}) by (le)",
               "format": "heatmap",
               "instant": false,
               "interval": "",
@@ -761,7 +761,7 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
-                "axisLabel": "",
+                "axisLabel": "Seconds",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
@@ -788,6 +788,7 @@ data:
                   "mode": "off"
                 }
               },
+              "displayName": "Reservations",
               "mappings": [],
               "noValue": "No reservations found",
               "thresholds": {
@@ -834,7 +835,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "histogram_quantile(0.9, rate(average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}[1h]))",
+              "expr": "sum(histogram_quantile(0.9, rate(average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}[1h]))) by (pool)",
               "format": "time_series",
               "instant": false,
               "legendFormat": "__auto",
@@ -1065,13 +1066,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-12h",
+        "from": "now-24h",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 11,
+      "version": 12,
       "weekStart": ""
     }
