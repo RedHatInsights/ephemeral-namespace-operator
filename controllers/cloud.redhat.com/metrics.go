@@ -22,19 +22,19 @@ var (
 		[]string{"pool"},
 	)
 
-	averageRequestedDurationMetrics = prometheus.NewHistogramVec(
+	requestedDurationTimeMetrics = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name: "namespace_reservation_duration_average",
-			Help: "Average duration for namespace reservations (In hours)",
+			Help: "Average duration for namespace reservations",
 			// Inf+ bucket is made implicitly by the prometheus library
 			Buckets: []float64{1, 2, 4, 8, 24, 48, 168, 336},
 		},
 		[]string{"controller"},
 	)
 
-	averageNamespaceCreationMetrics = prometheus.NewHistogramVec(
+	namespaceCreationTimeMetrics = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "namespace_creation_average_seconds",
+			Name:    "namespace_creation_time_minutes",
 			Help:    "Average time namespace creation occurs'",
 			Buckets: []float64{1, 2, 3, 4, 5, 7, 14, 28, 56, 112, 224},
 		},
@@ -43,8 +43,8 @@ var (
 
 	averageReservationToDeploymentMetrics = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "average_time_reservation_to_deployment_seconds",
-			Help:    "Average time it takes from reservation to deployment in milliseconds",
+			Name:    "reservation_to_deployment_time_seconds",
+			Help:    "Average time it takes from reservation to deployment",
 			Buckets: []float64{1, 2, 3, 4, 5, 7, 14, 28, 56, 112, 224},
 		},
 		[]string{"controller"},
@@ -55,8 +55,8 @@ func init() {
 	metrics.Registry.MustRegister(
 		totalSuccessfulPoolReservationsCountMetrics,
 		totalFailedPoolReservationsCountMetrics,
-		averageRequestedDurationMetrics,
-		averageNamespaceCreationMetrics,
+		requestedDurationTimeMetrics,
+		namespaceCreationTimeMetrics,
 		averageReservationToDeploymentMetrics,
 	)
 }
