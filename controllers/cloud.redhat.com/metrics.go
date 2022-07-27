@@ -41,7 +41,7 @@ var (
 		[]string{"pool"},
 	)
 
-	averageReservationToDeploymentMetrics = prometheus.NewHistogramVec(
+	reservationToDeploymentTimeMetrics = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "reservation_to_deployment_time_seconds",
 			Help:    "Average time it takes from reservation to deployment",
@@ -57,6 +57,6 @@ func init() {
 		totalFailedPoolReservationsCountMetrics,
 		requestedDurationTimeMetrics,
 		namespaceCreationTimeMetrics,
-		averageReservationToDeploymentMetrics,
+		reservationToDeploymentTimeMetrics,
 	)
 }
