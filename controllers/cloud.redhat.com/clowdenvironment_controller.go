@@ -87,7 +87,7 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 				elapsed := nsCompletionTime.Sub(ns.CreationTimestamp.Time)
 
-				averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
+				namespaceCreationTimeMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
 			}
 
 		}
