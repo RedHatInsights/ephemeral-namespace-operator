@@ -3,6 +3,9 @@
 The ephemeral namespace operator (ENO) manages namespace reservations.
 Given a `NamespaceReservation`, the ENO will provide the user a namespace with various resources created in it.
 
+image:https://img.shields.io/github/workflow/status/RedHatInsights/ephemeral-namespace-operator/Run%20Unit%20Tests[Build Passing]
+image:https://goreportcard.com/badge/github.com/RedHatInsights/ephemeral-namespace-operator[Go Report Card]
+
 == Why
 
 Why not e.g. give each user a static namespace and let them manage the resources themselves?  
@@ -14,12 +17,15 @@ Why not e.g. give each user a static namespace and let them manage the resources
   ephemeral environments should be treated as disposable.
   The problem is that creating a new environment from scratch can take several minutes, which is a significant drag on development time (including PR check durations).
   Thus the operator just needs to keep a few pre-populated namespaces "on deck" ready for the next reservation request.
+- We have also incorporated the use of multiple pools. This feature allows users to choose from different pools with ready namespaces that  
+  contain certain apps. Depending on the use case, this allows namespaces to better fit the needs of the user without having unnecessary apps. 
 
 == How
 
-Each reservation has two optional fields:
+Each reservation has multiple optional fields:
 
 . Duration: how long (in hours) before the namespace is deleted
+. Pool: Define which pool you are requesting a namespace from
 . Requester: Only used to indicate who reserved the namespace.
   This field is not used by any automation.
 
