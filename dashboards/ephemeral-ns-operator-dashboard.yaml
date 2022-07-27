@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1658932133192,
+      "iteration": 1658937643048,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -595,20 +595,23 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
+                "fillOpacity": 42,
+                "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
                   "viz": false
                 },
                 "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
                 "lineWidth": 1,
                 "pointSize": 5,
                 "scaleDistribution": {
                   "type": "linear"
                 },
-                "showPoints": "auto",
+                "showPoints": "never",
                 "spanNulls": false,
                 "stacking": {
                   "group": "A",
@@ -634,7 +637,7 @@ data:
           },
           "gridPos": {
             "h": 9,
-            "w": 9,
+            "w": 8,
             "x": 0,
             "y": 8
           },
@@ -658,15 +661,16 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"(default|minimal|managed-kafka)\"}[1h]))) by (pool)",
+              "expr": "histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"(default|minimal|managed-kafka)\"}[1h]))",
               "format": "time_series",
               "instant": false,
+              "interval": "",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Namespace Creation Time (In Seconds)",
+          "title": "Namespace Creation Time (In Minutes)",
           "transparent": true,
           "type": "timeseries"
         },
@@ -681,47 +685,65 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisLabel": "",
+                "axisPlacement": "left",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 42,
+                "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
                   "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "percent"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
                 }
               },
               "mappings": [],
-              "max": 336,
-              "min": 1,
+              "max": 1,
+              "min": 0,
               "noValue": "No reservations found",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
               "unit": "Total"
             },
             "overrides": []
           },
           "gridPos": {
             "h": 9,
-            "w": 5,
-            "x": 9,
+            "w": 8,
+            "x": 8,
             "y": 8
           },
           "id": 18,
           "options": {
-            "displayLabels": [
-              "percent",
-              "value",
-              "name"
-            ],
             "legend": {
-              "displayMode": "table",
-              "placement": "right",
-              "values": [
-                "value"
-              ]
-            },
-            "pieType": "pie",
-            "reduceOptions": {
-              "calcs": [
-                "range"
-              ],
-              "fields": "",
-              "values": false
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
             },
             "tooltip": {
               "mode": "single",
@@ -737,18 +759,116 @@ data:
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\"}) by (le)",
-              "format": "heatmap",
+              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"1\"})",
+              "format": "time_series",
               "instant": false,
               "interval": "",
-              "legendFormat": "{{le}}",
+              "legendFormat": "1",
               "range": true,
               "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"2\"}) - sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"1\"})",
+              "hide": false,
+              "legendFormat": "2",
+              "range": true,
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"4\"}) - sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"2\"})",
+              "hide": false,
+              "instant": false,
+              "legendFormat": "4",
+              "range": true,
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"8\"}) - sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"4\"})",
+              "hide": false,
+              "legendFormat": "8",
+              "range": true,
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"24\"}) - sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"8\"})",
+              "hide": false,
+              "legendFormat": "24",
+              "range": true,
+              "refId": "E"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"48\"}) - sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"24\"})",
+              "hide": false,
+              "legendFormat": "48",
+              "range": true,
+              "refId": "F"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"168\"}) - sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"48\"})",
+              "hide": false,
+              "legendFormat": "168",
+              "range": true,
+              "refId": "G"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"336\"}) - sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"168\"})",
+              "hide": false,
+              "legendFormat": "336",
+              "range": true,
+              "refId": "H"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"inf+\"}) - sum(namespace_reservation_duration_average_bucket{controller=\"namespacereservation\",le=\"336\"})",
+              "hide": false,
+              "legendFormat": "inf+",
+              "range": true,
+              "refId": "I"
             }
           ],
           "title": "Namespace Reservation Duration Total (In Hours)",
           "transparent": true,
-          "type": "piechart"
+          "type": "timeseries"
         },
         {
           "datasource": {
@@ -765,8 +885,8 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
+                "fillOpacity": 42,
+                "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
@@ -778,7 +898,7 @@ data:
                 "scaleDistribution": {
                   "type": "linear"
                 },
-                "showPoints": "auto",
+                "showPoints": "never",
                 "spanNulls": false,
                 "stacking": {
                   "group": "A",
@@ -810,8 +930,8 @@ data:
           },
           "gridPos": {
             "h": 9,
-            "w": 9,
-            "x": 14,
+            "w": 8,
+            "x": 16,
             "y": 8
           },
           "id": 17,
@@ -835,7 +955,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(histogram_quantile(0.9, rate(average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}[1h]))) by (pool)",
+              "expr": "histogram_quantile(0.9, rate(average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}[1h]))",
               "format": "time_series",
               "instant": false,
               "legendFormat": "__auto",
@@ -878,7 +998,7 @@ data:
                 "barAlignment": 0,
                 "drawStyle": "line",
                 "fillOpacity": 50,
-                "gradientMode": "none",
+                "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
@@ -890,7 +1010,7 @@ data:
                 "scaleDistribution": {
                   "type": "linear"
                 },
-                "showPoints": "auto",
+                "showPoints": "never",
                 "spanNulls": false,
                 "stacking": {
                   "group": "A",
@@ -966,7 +1086,7 @@ data:
                 "barAlignment": 0,
                 "drawStyle": "line",
                 "fillOpacity": 50,
-                "gradientMode": "none",
+                "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
@@ -978,7 +1098,7 @@ data:
                 "scaleDistribution": {
                   "type": "linear"
                 },
-                "showPoints": "auto",
+                "showPoints": "never",
                 "spanNulls": false,
                 "stacking": {
                   "group": "A",
@@ -1066,13 +1186,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-24h",
+        "from": "now-30m",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 12,
+      "version": 13,
       "weekStart": ""
     }
