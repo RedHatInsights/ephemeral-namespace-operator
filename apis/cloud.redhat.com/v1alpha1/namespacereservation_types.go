@@ -41,8 +41,6 @@ type NamespaceReservationStatus struct {
 	Namespace string `json:"namespace"`
 	// Specifies the pool type that the reservation was requested with
 	Pool string `json:"pool,omitempty"`
-	// Specifies the completion time for when a user has their reserved namespace
-	CompletionTime metav1.Time `json:"completionTime,omitempty"`
 }
 
 //+kubebuilder:object:root=true

@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1658945992441,
+      "iteration": 1658944073349,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -866,7 +866,7 @@ data:
               "refId": "I"
             }
           ],
-          "title": "Percent of Requested Duration Time for Reservations (In Hours)",
+          "title": "Namespace Reservation Duration Total (In Hours)",
           "transparent": true,
           "type": "timeseries"
         },
@@ -997,7 +997,7 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 42,
+                "fillOpacity": 50,
                 "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
@@ -1085,7 +1085,7 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 42,
+                "fillOpacity": 50,
                 "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
@@ -1186,13 +1186,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-3h",
+        "from": "now-30m",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 15,
+      "version": 14,
       "weekStart": ""
     }
