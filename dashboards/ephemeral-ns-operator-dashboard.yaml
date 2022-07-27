@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1658937643048,
+      "iteration": 1658944073349,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -661,7 +661,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"(default|minimal|managed-kafka)\"}[1h]))",
+              "expr": "sum(histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"(default|minimal|managed-kafka)\"}[1h]))) by (pool)",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -908,7 +908,7 @@ data:
                   "mode": "off"
                 }
               },
-              "displayName": "Reservations",
+              "displayName": "reservations",
               "mappings": [],
               "noValue": "No reservations found",
               "thresholds": {
@@ -955,7 +955,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "histogram_quantile(0.9, rate(average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}[1h]))",
+              "expr": "sum(histogram_quantile(0.9, rate(average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}[1h])))",
               "format": "time_series",
               "instant": false,
               "legendFormat": "__auto",
@@ -1193,6 +1193,6 @@ data:
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 13,
+      "version": 14,
       "weekStart": ""
     }
