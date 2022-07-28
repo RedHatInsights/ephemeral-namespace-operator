@@ -16,8 +16,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 
-	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/utils"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
+	"github.com/RedHatInsights/rhc-osdk-utils/utils"
 	"github.com/go-logr/logr"
 	projectv1 "github.com/openshift/api/project/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -235,7 +235,7 @@ func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 			Namespace: nsName,
 		}
 
-		err, newNsSecret := utils.CopySecret(ctx, cl, src, dst)
+		newNsSecret, err := utils.CopySecret(ctx, cl, src, dst)
 		if err != nil {
 			return err
 		}
