@@ -38,8 +38,6 @@ func (p *Poller) Poll() error {
 		// Check for expired reservations
 		for k, v := range p.ActiveReservations {
 			if p.namespaceIsExpired(v) {
-				delete(p.ActiveReservations, k)
-
 				res := crd.NamespaceReservation{}
 				if err := p.Client.Get(ctx, types.NamespacedName{Name: k}, &res); err != nil {
 					p.Log.Error(err, "Unable to retrieve reservation")
@@ -67,6 +65,8 @@ func (p *Poller) Poll() error {
 				} else {
 					p.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
 				}
+
+				delete(p.ActiveReservations, k)
 			}
 		}
 

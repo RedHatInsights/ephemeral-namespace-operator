@@ -105,7 +105,13 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			r.Log.Error(err, "Could not get expiration time for reservation", "name", res.Name)
 			return ctrl.Result{}, err
 		}
+
 		if r.Poller.namespaceIsExpired(expirationTS) {
+			if err := r.Client.Delete(ctx, &res); err != nil {
+				r.Log.Error(err, "Unable to delete waiting reservation", "res-name", res.Name)
+				return ctrl.Result{}, nil
+			}
+
 			if res.Status.Namespace != "" {
 				removed, err := CheckForSubscriptionPrometheusOperator(ctx, r.Client, res.Status.Namespace)
 				if !removed {
@@ -120,11 +126,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 					return ctrl.Result{Requeue: true}, fmt.Errorf("prometheus operator deletion was unsuccessful: %s", err.Error())
 				}
 			}
-
-			if err := r.Client.Delete(ctx, &res); err != nil {
-				r.Log.Error(err, "Unable to delete waiting reservation", "res-name", res.Name)
-			}
-			return ctrl.Result{}, nil
 		}
 		fallthrough // fallthrough to default case to check for ns availability if not expired
 
