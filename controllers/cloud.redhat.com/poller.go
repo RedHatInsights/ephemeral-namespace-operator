@@ -43,6 +43,12 @@ func (p *Poller) Poll() error {
 					p.Log.Error(err, "Unable to retrieve reservation")
 				}
 
+				if err := p.Client.Delete(ctx, &res); err != nil {
+					p.Log.Error(err, "Unable to delete reservation", "ns-name", res.Status.Namespace)
+				} else {
+					p.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
+				}
+
 				if res.Status.Namespace != "" {
 					removed, err := CheckForSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
 					if !removed {
@@ -58,12 +64,6 @@ func (p *Poller) Poll() error {
 						p.Log.Error(err, "deletion of prometheus operator was unsuccesful")
 						continue
 					}
-				}
-
-				if err := p.Client.Delete(ctx, &res); err != nil {
-					p.Log.Error(err, "Unable to delete reservation", "ns-name", res.Status.Namespace)
-				} else {
-					p.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
 				}
 
 				delete(p.ActiveReservations, k)
