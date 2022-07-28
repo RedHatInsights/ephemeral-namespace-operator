@@ -45,19 +45,21 @@ func (p *Poller) Poll() error {
 					p.Log.Error(err, "Unable to retrieve reservation")
 				}
 
-				removed, err := CheckForSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
-				if !removed {
-					p.Log.Error(fmt.Errorf("subscription not yet removed from [%s]", res.Status.Namespace), "subscription still exists")
-					continue
-				} else if err != nil {
-					p.Log.Error(err, "error checking for subscription [%s]", res.Status.Namespace)
-					continue
-				}
+				if res.Status.Namespace != "" {
+					removed, err := CheckForSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
+					if !removed {
+						p.Log.Error(fmt.Errorf("subscription not yet removed from [%s]", res.Status.Namespace), "subscription still exists")
+						continue
+					} else if err != nil {
+						p.Log.Error(err, "error checking for subscription [%s]", res.Status.Namespace)
+						continue
+					}
 
-				_, err = DeletePrometheusOperator(ctx, p.Client, p.Log, res.Status.Namespace)
-				if err != nil {
-					p.Log.Error(err, "error deleting prom operator")
-					continue
+					_, err = DeletePrometheusOperator(ctx, p.Client, p.Log, res.Status.Namespace)
+					if err != nil {
+						p.Log.Error(err, "error deleting prom operator")
+						continue
+					}
 				}
 
 				if err := p.Client.Delete(ctx, &res); err != nil {
