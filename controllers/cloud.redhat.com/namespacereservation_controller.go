@@ -106,21 +106,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 		if r.Poller.namespaceIsExpired(expirationTS) {
-			if res.Status.Namespace != "" {
-				removed, err := CheckForSubscriptionPrometheusOperator(ctx, r.Client, res.Status.Namespace)
-				if !removed {
-					err := fmt.Errorf("subscription still exists for [%s]", res.Status.Namespace)
-					return ctrl.Result{Requeue: true}, err
-				} else if err != nil {
-					return ctrl.Result{Requeue: true}, err
-				}
-
-				_, err = DeletePrometheusOperator(ctx, r.Client, r.Log, res.Status.Namespace)
-				if err != nil {
-					return ctrl.Result{Requeue: true}, fmt.Errorf("prometheus operator deletion was unsuccessful: %s", err.Error())
-				}
-			}
-
 			if err := r.Client.Delete(ctx, &res); err != nil {
 				r.Log.Error(err, "Unable to delete waiting reservation", "res-name", res.Name)
 			}
