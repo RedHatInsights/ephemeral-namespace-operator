@@ -136,7 +136,7 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 
 		_, err = DeletePrometheusOperator(ctx, r.Client, r.Log, nsName)
 		if err != nil {
-			return fmt.Errorf("error deleting prom operator: %s", err.Error())
+			return fmt.Errorf("error deleting prometheus operator: %s", err.Error())
 		}
 	}
 
