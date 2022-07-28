@@ -49,25 +49,27 @@ func (p *Poller) Poll() error {
 					p.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
 				}
 
-				if res.Status.Namespace != "" {
-					removed, err := CheckForSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
-					if !removed {
-						p.Log.Error(fmt.Errorf("waiting for subscription to be deleted from [%s]", res.Status.Namespace), "subscription still exists")
-						continue
-					} else if err != nil {
-						p.Log.Error(err, "error checking for subscription [%s]", res.Status.Namespace)
-						continue
-					}
-
-					_, err = DeletePrometheusOperator(ctx, p.Client, p.Log, res.Status.Namespace)
-					if err != nil {
-						p.Log.Error(err, "deletion of prometheus operator was unsuccesful")
-						continue
-					}
+				if !(res.Status.Namespace == "") {
+					break
 				}
 
-				delete(p.ActiveReservations, k)
+				removed, err := CheckForSubscriptionPrometheusOperator(ctx, p.Client, res.Status.Namespace)
+				if !removed {
+					p.Log.Error(fmt.Errorf("waiting for subscription to be deleted from [%s]", res.Status.Namespace), "subscription still exists")
+					continue
+				} else if err != nil {
+					p.Log.Error(err, "error checking for subscription [%s]", res.Status.Namespace)
+					continue
+				}
+
+				_, err = DeletePrometheusOperator(ctx, p.Client, p.Log, res.Status.Namespace)
+				if err != nil {
+					p.Log.Error(err, "deletion of prometheus operator was unsuccesful")
+					continue
+				}
 			}
+
+			delete(p.ActiveReservations, k)
 		}
 
 		time.Sleep(time.Duration(POLL_CYCLE * time.Second))
