@@ -3,13 +3,14 @@ module github.com/RedHatInsights/ephemeral-namespace-operator
 go 1.17
 
 require (
-	github.com/RedHatInsights/clowder v0.32.0
-	github.com/RedHatInsights/frontend-operator v0.0.2
-	github.com/RedHatInsights/rhc-osdk-utils v0.4.2
+	github.com/RedHatInsights/clowder v0.44.0
+	github.com/RedHatInsights/frontend-operator v0.0.3
+	github.com/RedHatInsights/rhc-osdk-utils v0.5.7
 	github.com/go-logr/logr v1.2.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
 	github.com/openshift/api v0.0.0-20200217161739-c99157bc6492
+	github.com/prometheus/client_golang v1.11.0
 	k8s.io/api v0.23.6
 	k8s.io/apimachinery v0.23.6
 	k8s.io/client-go v0.23.6
@@ -25,7 +26,7 @@ require (
 	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
-	github.com/RedHatInsights/strimzi-client-go v0.28.0 // indirect
+	github.com/RedHatInsights/strimzi-client-go v0.28.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -50,7 +51,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
