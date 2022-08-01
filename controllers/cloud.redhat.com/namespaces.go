@@ -39,7 +39,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	labels["pool"] = pool.Name
 
-	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
+	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
 
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &ns); err != nil {
