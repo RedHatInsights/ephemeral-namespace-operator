@@ -18,10 +18,13 @@ var _ = Describe("Clowdenvironment controller basic update", func() {
 
 	Context("When a clowdenvironment is created", func() {
 		It("Should update the namespace annotations when ready if owned by the pool", func() {
-			By("Checking the clowdenvironment conditions")
 			ctx := context.Background()
-			nsList := core.NamespaceList{}
 
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Checking the clowdenvironment conditions")
 			Eventually(func() bool {
 				err := k8sClient.List(ctx, &nsList)
 				Expect(err).NotTo(HaveOccurred())

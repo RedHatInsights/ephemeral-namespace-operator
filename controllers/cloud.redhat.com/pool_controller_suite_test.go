@@ -14,9 +14,9 @@ import (
 
 var _ = Describe("Pool controller basic functionality", func() {
 	const (
-		timeout  = time.Second * 30
+		timeout  = time.Second * 35
 		duration = time.Second * 30
-		interval = time.Millisecond * 25
+		interval = time.Millisecond * 30
 	)
 
 	Context("When a pool is reconciled", func() {
@@ -94,6 +94,30 @@ var _ = Describe("Pool controller basic functionality", func() {
 				}
 				return false
 			}, timeout, interval).Should(BeTrue())
+		})
+	})
+})
+
+var _ = Describe("Ensure new namespaces are setup properly", func() {
+	Context("When a new namespace is created", func() {
+		It("Should contain necessary labels and annotations", func() {
+			ctx := context.Background()
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			for _, ns := range nsList.Items {
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						nsLabels := ns.GetLabels()
+
+						Expect(nsLabels["operator-ns"]).To(Equal("true"))
+
+						_, ok := ns.Labels["pool"]
+						Expect(ok).To(BeTrue())
+					}
+				}
+			}
 		})
 	})
 })
