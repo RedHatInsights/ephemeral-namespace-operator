@@ -50,10 +50,10 @@ var (
 		[]string{"controller"},
 	)
 
-	currentReservationTotalMetrics = prometheus.NewGauge(
+	activeReservationTotalMetrics = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name: "current_reservation_couter",
-			Help: "Total concurrent reservations",
+			Name: "active_reservation_total",
+			Help: "Total active reservations",
 		},
 	)
 )
@@ -65,6 +65,6 @@ func init() {
 		averageRequestedDurationMetrics,
 		averageNamespaceCreationMetrics,
 		averageReservationToDeploymentMetrics,
-		currentReservationTotalMetrics,
+		activeReservationTotalMetrics,
 	)
 }

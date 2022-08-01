@@ -97,7 +97,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
-		currentReservationTotalMetrics.Set(float64(len(r.Poller.ActiveReservations)))
+		activeReservationTotalMetrics.Set(float64(len(r.Poller.ActiveReservations)))
 
 		return ctrl.Result{}, nil
 
