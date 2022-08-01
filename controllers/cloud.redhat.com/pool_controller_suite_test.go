@@ -99,7 +99,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 	})
 })
 
-var _ = Describe("Ensure new namespaces contain secrets", func() {
+var _ = Describe("Ensure new namespaces contains secrets", func() {
 	Context("When a new namespace is created", func() {
 		It("Should successfully copy secrets", func() {
 			ctx := context.Background()
