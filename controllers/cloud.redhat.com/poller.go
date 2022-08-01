@@ -49,6 +49,8 @@ func (p *Poller) Poll() error {
 				} else {
 					p.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
 				}
+
+				currentReservationTotalMetrics.Set(float64(len(p.ActiveReservations)))
 			}
 		}
 
