@@ -4,41 +4,27 @@ image:https://img.shields.io/github/workflow/status/RedHatInsights/ephemeral-nam
 image:https://goreportcard.com/badge/github.com/RedHatInsights/ephemeral-namespace-operator[Go Report Card]
 
 == What is the Ephemeral Namespace Operator?
-The purpose of the ephemeral namespace operator is to have namespace queued up and ready to be reserved. These namespaces  
+The purpose of the ephemeral namespace operator is to have namespaces queued up and ready to be utilized. These namespaces  
 will have Clowdenvironments deployed, and specific resources corresponding to the type of namespace pool a user requests from, ready to go.  
-Creating a new namespace containing all necessary apps for development takes too long, therefore this operator cuts that time  
-down to speed up the development process for our users. 
+
+== Benefits For This Approach
+- Cuts user's wait-time down since namespaces will already be ready-to-go.
+- Ensures that namespaces are not forgotten therefore reducing resource utilization.
+- Long-running environments require work to maintain.
 
 == What Are Namespace Pools?
 Given the various needs of our users, we incorporated different pools of ready namespaces that contain specific resources.  
-This is to help ensure that when users request a namespace, they aren't getting any unnecessary deployments within their namespace.  
+This is to help ensure that when users request a namespace they aren't getting any unnecessary resources within their namespace.  
 The current list of pools are `default`, `minimal`, and `managed-kafka`.
 
 == How does it work?
-A user will request a namespace which creates a reservation request. Additionally, a user can use any of the following optional flags to specify  
-their needs:
+A user will request a namespace which creates a reservation request. From there a namespace is selected from the pool and checkout by that user. The user will have that pool for the specified duration (Or for 1 hour  
+if duration was not specified).
+
+A user can use any of the following optional flags to specify their needs:
 - `--name`: Specify a reservation name. Ex. `--name my-namespace-reservation`
 - `-d, --duration`: Specify the length of time a user wants to reserve the namespace for. Ex. `-d 3h`
 `--pool`: Specify the pool a user wants a namespace from. Ex. `--pool minimal`
-
-== Why
-
-- Users tend to leave resources hanging around after they're done with them.
-  We want to ensure resources are cleaned up with minimal effort from users.
-- Long-running environments require work to maintain.
-  Instead users are encouraged to create new environments from scratch often;
-  ephemeral environments should be treated as disposable.
-  The problem is that creating a new environment from scratch can take several minutes, which is a significant drag on development time (including PR check durations).
-  Thus the operator just needs to keep a few pre-populated namespaces "on deck" ready for the next reservation request.
-- We have also incorporated the use of multiple pools. This feature allows users to choose from different pools with ready namespaces that  
-  contain certain apps. Depending on the use case, this allows namespaces to better fit the needs of the user without having unnecessary apps. 
-
-== How
-
-Once a `NamespaceReservation` resource is created, the controller will pull a ready namespace from its pool of "on-deck" namespaces.
-Users can find the checked out namespace in the status section of their `NamespaceReservation` or just run `oc get` on it.
-Once the specified duration has expired, the namespace and corresponding `NamespaceReservation` will be deleted by the controller.
-A user can simply delete a `NamespaceReservation` to end their reservation early.  This will also delete the corresponding namespace.
 
 When the controller needs to create a new namespace to be added to the "on-deck" pool, it adds the following resources:
 
