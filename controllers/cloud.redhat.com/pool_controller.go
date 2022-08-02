@@ -81,10 +81,10 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	// 	}
 	// } else
 	if currPoolSize > 0 {
-		r.increaseReadyNamespacesQueue(ctx, pool, currPoolSize)
-		// if err != nil {
-		// 	return ctrl.Result{Requeue: true}, err
-		// }
+		err := r.increaseReadyNamespacesQueue(ctx, pool, currPoolSize)
+		if err != nil {
+			return ctrl.Result{Requeue: true}, err
+		}
 	}
 	// ----------------------------------------------------------------------------------------------------------------
 
@@ -163,7 +163,7 @@ func (r *NamespacePoolReconciler) checkPoolSize(pool crd.NamespacePool) int {
 	return size - (ready + creating)
 }
 
-func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) {
+func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
 	for i := 0; i < r.checkPoolSize(pool); i++ {
 		nsName, err := CreateNamespace(ctx, r.Client, &pool)
 		if err != nil {
@@ -172,11 +172,15 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 				err := UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error"}, nsName)
 				if err != nil {
 					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", nsName)
+					return err
 				}
 			}
 
+			return err
 		}
 	}
+
+	return nil
 }
 
 // func (r *NamespacePoolReconciler) decreaseReadyNamespaces(ctx context.Context, pool crd.NamespacePool, decreaseSize int) error {
