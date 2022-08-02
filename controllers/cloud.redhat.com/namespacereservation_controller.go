@@ -96,6 +96,9 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			r.Log.Error(err, "Cannot update reservation status", "name", res.Name)
 			return ctrl.Result{}, err
 		}
+
+		activeReservationTotalMetrics.Set(float64(len(r.Poller.ActiveReservations)))
+
 		return ctrl.Result{}, nil
 
 	case "waiting":
