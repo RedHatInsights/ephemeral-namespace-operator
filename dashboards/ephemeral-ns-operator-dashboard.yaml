@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1658944073349,
+      "iteration": 1659474502575,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -588,6 +588,71 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "noValue": "No Active Reservations",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 3,
+            "x": 0,
+            "y": 8
+          },
+          "id": 33,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.0.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum(active_reservation_total)",
+              "format": "table",
+              "instant": true,
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "Active Reservations",
+          "transparent": true,
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
                 "mode": "palette-classic"
               },
               "custom": {
@@ -633,12 +698,43 @@ data:
               },
               "unit": "s"
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "default"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "minimal"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 9,
-            "w": 8,
-            "x": 0,
+            "w": 7,
+            "x": 3,
             "y": 8
           },
           "id": 23,
@@ -734,8 +830,8 @@ data:
           },
           "gridPos": {
             "h": 9,
-            "w": 8,
-            "x": 8,
+            "w": 7,
+            "x": 10,
             "y": 8
           },
           "id": 18,
@@ -930,8 +1026,8 @@ data:
           },
           "gridPos": {
             "h": 9,
-            "w": 8,
-            "x": 16,
+            "w": 7,
+            "x": 17,
             "y": 8
           },
           "id": 17,
@@ -997,7 +1093,7 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 50,
+                "fillOpacity": 42,
                 "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
@@ -1085,7 +1181,7 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 50,
+                "fillOpacity": 42,
                 "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
@@ -1186,13 +1282,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-30m",
+        "from": "now-12h",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 14,
+      "version": 18,
       "weekStart": ""
     }
