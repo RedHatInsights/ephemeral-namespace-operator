@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1659477448554,
+      "iteration": 1659538120442,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -1282,7 +1282,7 @@ data:
         ]
       },
       "time": {
-        "from": "now-1h",
+        "from": "now-3h",
         "to": "now"
       },
       "timepicker": {},
