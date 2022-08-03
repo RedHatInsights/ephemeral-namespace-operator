@@ -121,3 +121,38 @@ var _ = Describe("Ensure new namespaces are setup properly", func() {
 		})
 	})
 })
+
+var _ = Describe("Remove extra namespaces if total created is above pool spec quantity", func() {
+	Context("When the number of created namespaces is greater than the pool size", func() {
+		It("Should remove excess namespaces", func() {
+			ctx := context.Background()
+			defaultPool := crd.NamespacePool{}
+
+			var initialLabels = map[string]string{
+				"operator-ns": "true",
+				"pool":        "default",
+			}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &defaultPool)
+			Expect(err).NotTo(HaveOccurred())
+
+			ns := core.Namespace{}
+			ns.ObjectMeta.Name = "test-namespace"
+			ns.SetLabels(initialLabels)
+
+			err = k8sClient.Create(ctx, &ns)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = k8sClient.Update(ctx, &defaultPool)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &defaultPool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return defaultPool.Spec.Size != (defaultPool.Status.Ready + defaultPool.Status.Creating)
+			}, timeout, interval).Should(BeTrue())
+
+		})
+	})
+})
