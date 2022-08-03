@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1659474502575,
+      "iteration": 1659477448554,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -91,7 +91,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -155,7 +155,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -283,7 +283,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -347,7 +347,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -411,7 +411,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -475,7 +475,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -539,7 +539,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -579,66 +579,6 @@ data:
           "repeatDirection": "h",
           "title": "Miscellaneous Namespace Reservation Metrics",
           "type": "row"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "tuHy3WB7z"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "mappings": [],
-              "noValue": "No Active Reservations",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "blue",
-                    "value": null
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 7,
-            "w": 3,
-            "x": 0,
-            "y": 8
-          },
-          "id": 33,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "area",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "textMode": "auto"
-          },
-          "pluginVersion": "9.0.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "tuHy3WB7z"
-              },
-              "expr": "sum(active_reservation_total)",
-              "refId": "A"
-            }
-          ],
-          "title": "Active Reservations",
-          "transparent": true,
-          "type": "stat"
         },
         {
           "datasource": {
@@ -1342,13 +1282,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-12h",
+        "from": "now-1h",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 18,
+      "version": 20,
       "weekStart": ""
     }
