@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1659475967515,
+      "iteration": 1659538120442,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -91,7 +91,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -155,7 +155,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -283,7 +283,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -347,7 +347,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -411,7 +411,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -475,7 +475,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -539,7 +539,7 @@ data:
             "orientation": "auto",
             "reduceOptions": {
               "calcs": [
-                "range"
+                "lastNotNull"
               ],
               "fields": "",
               "values": false
@@ -1282,13 +1282,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-12h",
+        "from": "now-3h",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 19,
+      "version": 20,
       "weekStart": ""
     }
