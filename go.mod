@@ -3,7 +3,7 @@ module github.com/RedHatInsights/ephemeral-namespace-operator
 go 1.17
 
 require (
-	github.com/RedHatInsights/clowder v0.45.0
+	github.com/RedHatInsights/clowder v0.44.0
 	github.com/RedHatInsights/frontend-operator v0.0.3
 	github.com/RedHatInsights/rhc-osdk-utils v0.5.7
 	github.com/go-logr/logr v1.2.0
