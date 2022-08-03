@@ -83,8 +83,8 @@ github.com/PuerkitoBio/purell v1.0.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbt
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20160726150825-5bd2802263f2/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=
-github.com/RedHatInsights/clowder v0.44.0 h1:dkES5KyUc13JKPoqEFwEslkZSd26FT6/I+uXWfU5QM8=
-github.com/RedHatInsights/clowder v0.44.0/go.mod h1:ALabkc/7opwIemehsleZQ53BSxmaTjXcqgseRHC52u8=
+github.com/RedHatInsights/clowder v0.45.0 h1:KGUBF5WvFk/GXS+/nXH3Nirw0COfnsZJ0uxDH1VsJeE=
+github.com/RedHatInsights/clowder v0.45.0/go.mod h1:ALabkc/7opwIemehsleZQ53BSxmaTjXcqgseRHC52u8=
 github.com/RedHatInsights/frontend-operator v0.0.3 h1:obnC3MfW11ofK7s30oo1vmul3enLi2ZYsWbza+iGvqQ=
 github.com/RedHatInsights/frontend-operator v0.0.3/go.mod h1:8FhbAzXwkB3A0SXm4WWX5dQpbHwYONkpJy9h/Jzxcd4=
 github.com/RedHatInsights/go-difflib v1.0.0/go.mod h1:UMKOFdypYfrKT1B1nbGodM09nhOiAmcjes8qWP7Myrs=
