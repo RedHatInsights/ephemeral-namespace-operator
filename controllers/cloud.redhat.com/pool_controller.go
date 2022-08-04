@@ -80,8 +80,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	pool.Status.Ready = statusTypeCount[POOL_STATUS_READY]
 	pool.Status.Creating = statusTypeCount[POOL_STATUS_CREATING]
 
-	// ----------------------------------------------------------------------------------------------------------------
-	quantityOfNamespaces := r.checkNamespaceQuantity(pool)
+	quantityOfNamespaces := r.checkReadyNamespaceQuantity(pool)
 
 	if quantityOfNamespaces > 0 {
 		r.Log.Info(fmt.Sprintf("Filling '%s' pool with %d namespace(s)", pool.Name, quantityOfNamespaces))
@@ -90,7 +89,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			r.Log.Error(err, fmt.Sprintf("unable to create more namespaces for '%s' pool.", pool.Name))
 		}
 	} else if quantityOfNamespaces < 0 {
-		r.Log.Info(fmt.Sprintf("Excess number of ready namespaces in '%s' pool detected, removing %d namespace(s)", pool.Name, quantityOfNamespaces))
+		r.Log.Info(fmt.Sprintf("Excess number of ready namespaces in '%s' pool detected, removing %d namespace(s)", pool.Name, (quantityOfNamespaces * -1)))
 		err := r.decreaseReadyNamespaces(ctx, pool, quantityOfNamespaces)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("unable to delete excess namespaces for '%s' pool.", pool.Name))
@@ -115,8 +114,6 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 >>>>>>> 188123344a44df3b5236a00f140b13377ef34f95
 		}
 	}
-	// ----------------------------------------------------------------------------------------------------------------
-
 	// ----------------------------------------------------------------------------------------------------------------
 
 	if err := r.Status().Update(ctx, &pool); err != nil {
@@ -185,7 +182,7 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 	return statusTypeCount, errNamespaceList, nil
 }
 
-func (r *NamespacePoolReconciler) checkNamespaceQuantity(pool crd.NamespacePool) int {
+func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.NamespacePool) int {
 	size := pool.Spec.Size
 	ready := pool.Status.Ready
 	creating := pool.Status.Creating
@@ -208,11 +205,34 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 
 			return err
 		}
+
+		r.Log.Info(fmt.Sprintf("successfully created namespace '%s' in '%s' pool", nsName, pool.Name))
 	}
 
 	return nil
 }
 
+<<<<<<< Updated upstream
 // func (r *NamespacePoolReconciler) decreaseReadyNamespaces(ctx context.Context, pool crd.NamespacePool, decreaseSize int) error {
+=======
+func (r *NamespacePoolReconciler) decreaseReadyNamespaces(ctx context.Context, pool crd.NamespacePool, decreaseSize int) error {
+	nsList, err := GetReadyNamespaces(ctx, r.Client, pool.Name)
+	if err != nil {
+		r.Log.Error(err, fmt.Sprintf("Unable to retrieve list of namespaces from '%s' pool", pool.Name))
+		return err
+	}
+
+	for i := 0; i < (decreaseSize * -1); i++ {
+		for _, ns := range nsList {
+			if ns.Annotations["env-status"] == "ready" && ns.Annotations["reserved"] == "false" {
+				err := r.Client.Delete(ctx, &ns)
+				if err != nil {
+					return err
+				}
+				r.Log.Info(fmt.Sprintf("successfully deleted excess namespace '%s' from '%s' pool", ns.Name, pool.Name))
+			}
+		}
+	}
+>>>>>>> Stashed changes
 
 // }
