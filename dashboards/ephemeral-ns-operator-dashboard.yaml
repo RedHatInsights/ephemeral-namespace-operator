@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1659538120442,
+      "iteration": 1659538852034,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -278,7 +278,7 @@ data:
           "id": 8,
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
@@ -342,7 +342,7 @@ data:
           "id": 12,
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
@@ -406,7 +406,7 @@ data:
           "id": 13,
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
@@ -470,7 +470,7 @@ data:
           "id": 26,
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
@@ -534,7 +534,7 @@ data:
           "id": 27,
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
@@ -660,7 +660,7 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 42,
+                "fillOpacity": 30,
                 "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
@@ -728,6 +728,21 @@ data:
                     }
                   }
                 ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "managed-kafka"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -785,7 +800,7 @@ data:
                 "axisPlacement": "left",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 42,
+                "fillOpacity": 30,
                 "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
@@ -981,7 +996,7 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 42,
+                "fillOpacity": 30,
                 "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
@@ -1093,7 +1108,7 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 42,
+                "fillOpacity": 30,
                 "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
@@ -1181,7 +1196,7 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 42,
+                "fillOpacity": 30,
                 "gradientMode": "hue",
                 "hideFrom": {
                   "legend": false,
@@ -1263,7 +1278,7 @@ data:
         "list": [
           {
             "current": {
-              "selected": false,
+              "selected": true,
               "text": "crcd01ue1-prometheus",
               "value": "crcd01ue1-prometheus"
             },
@@ -1282,13 +1297,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-3h",
+        "from": "now-1h",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 20,
+      "version": 21,
       "weekStart": ""
     }
