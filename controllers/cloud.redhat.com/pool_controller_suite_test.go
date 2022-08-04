@@ -122,36 +122,3 @@ var _ = Describe("Ensure new namespaces are setup properly", func() {
 		})
 	})
 })
-
-// var _ = Describe("Ensure total created namespaces do not exceed pool spec size", func() {
-// 	Context("When the number of created namespaces is greater than the pool size", func() {
-// 		It("Should remove excess namespaces", func() {
-// 			ctx := context.Background()
-// 			defaultPool := crd.NamespacePool{}
-
-// 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &defaultPool)
-// 			Expect(err).NotTo(HaveOccurred())
-
-// 			nsName, err := CreateNamespace(ctx, k8sClient, &defaultPool)
-// 			Expect(nsName).NotTo(BeEmpty())
-// 			Expect(err).NotTo(HaveOccurred())
-
-// 			err = k8sClient.Update(ctx, &defaultPool)
-// 			Expect(err).NotTo(HaveOccurred())
-
-// 			// Eventually(func() bool {
-// 			// 	err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &defaultPool)
-// 			// 	Expect(err).NotTo(HaveOccurred())
-
-// 			// 	return defaultPool.Spec.Size != (defaultPool.Status.Ready + defaultPool.Status.Creating)
-// 			// }, timeout, interval).Should(BeTrue())
-
-// 			Eventually(func() int {
-// 				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &defaultPool)
-// 				Expect(err).NotTo(HaveOccurred())
-
-// 				return (defaultPool.Status.Ready + defaultPool.Status.Creating)
-// 			}, timeout, interval).Should(BeEquivalentTo(3))
-// 		})
-// 	})
-// })
