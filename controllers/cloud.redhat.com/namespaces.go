@@ -21,6 +21,7 @@ import (
 
 var initialAnnotations = map[string]string{
 	"env-status": "creating",
+	"reserved":   "false",
 }
 
 var initialLabels = map[string]string{

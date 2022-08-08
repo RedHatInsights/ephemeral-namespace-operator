@@ -195,14 +195,17 @@ func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Conte
 		return err
 	}
 
-	for i := 0; i < (decreaseSize * -1); i++ {
+	for i := decreaseSize; i < 0; i++ {
 		for _, ns := range nsList {
 			if ns.Annotations["env-status"] == "ready" && ns.Annotations["reserved"] == "false" {
-				err := r.Client.Delete(ctx, &ns)
+				err := UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error"}, ns.Name)
 				if err != nil {
+					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", ns.Name)
 					return err
 				}
+
 				r.Log.Info(fmt.Sprintf("successfully deleted excess namespace '%s' from '%s' pool", ns.Name, pool.Name))
+				break
 			}
 		}
 	}
