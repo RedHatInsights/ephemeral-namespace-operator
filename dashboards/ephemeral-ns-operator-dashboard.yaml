@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1659538852034,
+      "iteration": 1660152759335,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -605,8 +605,8 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 7,
-            "w": 3,
+            "h": 6,
+            "w": 4,
             "x": 0,
             "y": 8
           },
@@ -641,7 +641,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Active Reservations",
+          "title": "Active Reservations (Current)",
           "transparent": true,
           "type": "stat"
         },
@@ -660,23 +660,20 @@ data:
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
-                "fillOpacity": 30,
-                "gradientMode": "hue",
+                "fillOpacity": 42,
+                "gradientMode": "none",
                 "hideFrom": {
                   "legend": false,
                   "tooltip": false,
                   "viz": false
                 },
                 "lineInterpolation": "linear",
-                "lineStyle": {
-                  "fill": "solid"
-                },
                 "lineWidth": 1,
                 "pointSize": 5,
                 "scaleDistribution": {
                   "type": "linear"
                 },
-                "showPoints": "never",
+                "showPoints": "auto",
                 "spanNulls": false,
                 "stacking": {
                   "group": "A",
@@ -686,6 +683,7 @@ data:
                   "mode": "off"
                 }
               },
+              "displayName": "Active Reservations",
               "mappings": [],
               "thresholds": {
                 "mode": "absolute",
@@ -695,64 +693,17 @@ data:
                     "value": null
                   }
                 ]
-              },
-              "unit": "s"
-            },
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "default"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "green",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "minimal"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "yellow",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "managed-kafka"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "blue",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
               }
-            ]
+            },
+            "overrides": []
           },
           "gridPos": {
-            "h": 9,
-            "w": 7,
-            "x": 3,
+            "h": 8,
+            "w": 10,
+            "x": 4,
             "y": 8
           },
-          "id": 23,
+          "id": 35,
           "options": {
             "legend": {
               "calcs": [],
@@ -770,18 +721,11 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "sum(histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"(default|minimal|managed-kafka)\"}[1h]))) by (pool)",
-              "format": "time_series",
-              "instant": false,
-              "interval": "",
-              "legendFormat": "{{pool}}",
-              "range": true,
+              "expr": "active_reservation_total",
               "refId": "A"
             }
           ],
-          "title": "Namespace Creation Time (In Minutes)",
+          "title": "Active Reservations",
           "transparent": true,
           "type": "timeseries"
         },
@@ -844,9 +788,9 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 9,
-            "w": 7,
-            "x": 10,
+            "h": 8,
+            "w": 10,
+            "x": 14,
             "y": 8
           },
           "id": 18,
@@ -992,6 +936,146 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 30,
+                "gradientMode": "hue",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "default"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "minimal"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "managed-kafka"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 7,
+            "x": 0,
+            "y": 16
+          },
+          "id": 23,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum(histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"(default|minimal|managed-kafka)\"}[1h]))) by (pool)",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{pool}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Namespace Creation Time (In Minutes)",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
                 "axisLabel": "Seconds",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -1041,9 +1125,9 @@ data:
           },
           "gridPos": {
             "h": 9,
-            "w": 7,
-            "x": 17,
-            "y": 8
+            "w": 8,
+            "x": 7,
+            "y": 16
           },
           "id": 17,
           "options": {
@@ -1084,7 +1168,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 17
+            "y": 25
           },
           "id": 31,
           "panels": [],
@@ -1153,7 +1237,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 18
+            "y": 26
           },
           "id": 20,
           "options": {
@@ -1241,7 +1325,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 18
+            "y": 26
           },
           "id": 21,
           "options": {
@@ -1278,9 +1362,9 @@ data:
         "list": [
           {
             "current": {
-              "selected": true,
-              "text": "crcd01ue1-prometheus",
-              "value": "crcd01ue1-prometheus"
+              "selected": false,
+              "text": "c-rh-c-eph-prometheus",
+              "value": "c-rh-c-eph-prometheus"
             },
             "hide": 0,
             "includeAll": false,
@@ -1297,13 +1381,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-1h",
+        "from": "now-6h",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 21,
+      "version": 22,
       "weekStart": ""
     }
