@@ -5,6 +5,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
+var userNamespaceReservationCount = map[string]int{}
+
 var (
 	totalSuccessfulPoolReservationsCountMetrics = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -56,6 +58,13 @@ var (
 			Help: "Total active reservations",
 		},
 	)
+
+	resQuantityByUserMetrics = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "res_quantity_by_user_count",
+			Help: "Quantity of reservations by user",
+		},
+	)
 )
 
 func init() {
@@ -66,5 +75,6 @@ func init() {
 		averageNamespaceCreationMetrics,
 		averageReservationToDeploymentMetrics,
 		activeReservationTotalMetrics,
+		resQuantityByUserMetrics,
 	)
 }
