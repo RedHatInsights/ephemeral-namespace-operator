@@ -60,11 +60,12 @@ var (
 		[]string{"pool"},
 	)
 
-	resQuantityByUserMetrics = prometheus.NewGauge(
+	resQuantityByUserMetrics = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "res_quantity_by_user_count",
 			Help: "Quantity of reservations by user",
 		},
+		[]string{"user"},
 	)
 )
 
