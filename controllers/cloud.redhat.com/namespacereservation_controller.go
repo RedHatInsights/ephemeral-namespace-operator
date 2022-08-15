@@ -205,7 +205,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			userNamespaceReservationCount[res.Spec.Requester] += 1
 		}
 
-		resQuantityByUserMetrics.Set(float64(len(userNamespaceReservationCount)))
+		resQuantityByUserMetrics.With(prometheus.Labels{"user": res.Spec.Requester}).Set(float64(userNamespaceReservationCount[res.Spec.Requester]))
 
 		averageRequestedDurationMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Observe(float64(duration.Hours()))
 
