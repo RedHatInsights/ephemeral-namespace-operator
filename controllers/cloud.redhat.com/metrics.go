@@ -29,7 +29,7 @@ var (
 			// Inf+ bucket is made implicitly by the prometheus library
 			Buckets: []float64{1, 2, 4, 8, 24, 48, 168, 336},
 		},
-		[]string{"controller"},
+		[]string{"controller", "pool"},
 	)
 
 	averageNamespaceCreationMetrics = prometheus.NewHistogramVec(
@@ -47,14 +47,15 @@ var (
 			Help:    "Average time it takes from reservation to deployment in milliseconds",
 			Buckets: []float64{1, 2, 3, 4, 5, 7, 14, 28, 56, 112, 224},
 		},
-		[]string{"controller"},
+		[]string{"controller", "pool"},
 	)
 
-	activeReservationTotalMetrics = prometheus.NewGauge(
+	activeReservationTotalMetrics = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "active_reservation_total",
 			Help: "Total active reservations",
 		},
+		[]string{"pool"},
 	)
 )
 
