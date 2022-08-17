@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1660686279104,
+      "iteration": 1660686279152,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -711,6 +711,21 @@ data:
                     }
                   }
                 ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "real-managed-kafka"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "purple",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -957,8 +972,8 @@ data:
           {
             "current": {
               "selected": true,
-              "text": "default",
-              "value": "default"
+              "text": "managed-kafka",
+              "value": "managed-kafka"
             },
             "hide": 0,
             "includeAll": false,
@@ -967,7 +982,7 @@ data:
             "name": "pools",
             "options": [
               {
-                "selected": true,
+                "selected": false,
                 "text": "default",
                 "value": "default"
               },
@@ -977,7 +992,7 @@ data:
                 "value": "minimal"
               },
               {
-                "selected": false,
+                "selected": true,
                 "text": "managed-kafka",
                 "value": "managed-kafka"
               },
