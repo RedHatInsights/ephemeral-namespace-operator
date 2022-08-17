@@ -200,6 +200,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		}
 
 		if _, ok := userNamespaceReservationCount[res.Spec.Requester]; !ok {
+
 			userNamespaceReservationCount[res.Spec.Requester] = 0
 		}
 
