@@ -200,10 +200,10 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		}
 
 		if _, ok := userNamespaceReservationCount[res.Spec.Requester]; !ok {
-			userNamespaceReservationCount[res.Spec.Requester] = 1
-		} else {
-			userNamespaceReservationCount[res.Spec.Requester] += 1
+			userNamespaceReservationCount[res.Spec.Requester] = 0
 		}
+
+		userNamespaceReservationCount[res.Spec.Requester] += 1
 
 		resQuantityByUserMetrics.With(prometheus.Labels{"user": res.Spec.Requester}).Set(float64(userNamespaceReservationCount[res.Spec.Requester]))
 
