@@ -28,9 +28,9 @@ A user can use any of the following optional flags to specify their needs:
 
 When the controller needs to create a new namespace to be added to the "on-deck" pool, it adds the following resources:
 
-- `ClowdEnvironment`:  This will create deployments for Kafka, Kafka Connect, Minio, Prometheus, and feature flags.
-- `FrontendEnvironment`: This sets up environment configurations for the github.com/RedHatInsights/frontend-operator[frontend operator]
-- `RoleBindings`: Access is granted to devs to edit resources in the namespace
-- Secrets are copied from the base namespace.
+- `ClowdEnvironment`:  This will create deployments for Kafka, Kafka Connect, Minio, Prometheus, and feature flags.  
+- `FrontendEnvironment`: This sets up environment configurations for the github.com/RedHatInsights/frontend-operator[frontend operator]  
+- `RoleBindings`: Access is granted to devs to edit resources in the namespace  
+- Secrets are copied from the base namespace.  
 
 image::operator_diagram.png[design]
