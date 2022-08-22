@@ -22,9 +22,10 @@ A user will request a namespace which creates a reservation request. From there 
 The user will have that pool for the specified duration (Or for 1 hour if duration was not specified).
 
 A user can use any of the following optional flags to specify their needs:
-- `name`: Specify a reservation name. Ex. `--name my-namespace-reservation`
-- `duration`: Specify the length of time a user wants to reserve the namespace for. Ex. `-d 3h`
-- `pool`: Specify the pool a user wants a namespace from. Ex. `--pool minimal`
+
+- `--name`: Specify a reservation name. Ex. `--name my-namespace-reservation`
+- `-d, --duration`: Specify the length of time a user wants to reserve the namespace for. Ex. `-d 3h`
+- `--pool`: Specify the pool a user wants a namespace from. Ex. `--pool minimal`
 
 When the controller needs to create a new namespace to be added to the "on-deck" pool, it adds the following resources:
 
