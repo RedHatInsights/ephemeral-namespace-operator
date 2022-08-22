@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1660769257568,
+      "iteration": 1661176177258,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -222,8 +222,8 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 10,
-            "x": 6,
+            "w": 9,
+            "x": 7,
             "y": 0
           },
           "id": 35,
@@ -271,20 +271,15 @@ data:
                 "displayMode": "auto",
                 "filterable": false,
                 "inspect": false,
-                "minWidth": 100
+                "width": 300
               },
               "mappings": [],
-              "noValue": "No reservation data to show",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green",
                     "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               }
@@ -298,19 +293,7 @@ data:
                 "properties": [
                   {
                     "id": "custom.width",
-                    "value": 174
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "user"
-                },
-                "properties": [
-                  {
-                    "id": "custom.width",
-                    "value": 208
+                    "value": 157
                   }
                 ]
               },
@@ -322,14 +305,14 @@ data:
                 "properties": [
                   {
                     "id": "custom.width",
-                    "value": 209
+                    "value": 142
                   }
                 ]
               }
             ]
           },
           "gridPos": {
-            "h": 16,
+            "h": 15,
             "w": 8,
             "x": 16,
             "y": 0
@@ -337,21 +320,14 @@ data:
           "id": 37,
           "options": {
             "footer": {
-              "enablePagination": false,
-              "fields": [],
+              "fields": "",
               "reducer": [
-                "lastNotNull"
+                "sum"
               ],
               "show": false
             },
-            "frameIndex": 0,
             "showHeader": true,
-            "sortBy": [
-              {
-                "desc": true,
-                "displayName": "Value"
-              }
-            ]
+            "sortBy": []
           },
           "pluginVersion": "9.0.3",
           "targets": [
@@ -360,19 +336,31 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
+              "dimensions": {},
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(res_quantity_by_user_count) by (user)",
+              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\"insights-platform-advisor-backend-smoke-test.*\"}))",
+              "expression": "",
               "format": "table",
+              "id": "",
               "instant": true,
-              "interval": "",
+              "label": "",
               "legendFormat": "{{user}}",
+              "matchExact": true,
+              "metricEditorMode": 0,
+              "metricName": "",
+              "metricQueryType": 0,
+              "namespace": "",
+              "period": "",
+              "queryMode": "Metrics",
               "range": false,
-              "refId": "A"
+              "refId": "A",
+              "region": "default",
+              "sqlExpression": "",
+              "statistic": "Average"
             }
           ],
-          "title": "Reservation Count By User",
-          "transparent": true,
+          "title": "Reservation Total By User",
           "type": "table"
         },
         {
@@ -450,103 +438,6 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
-                "axisLabel": "Seconds",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 30,
-                "gradientMode": "hue",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "displayName": "reservations",
-              "mappings": [],
-              "noValue": "No reservations found",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "s"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 0,
-            "y": 8
-          },
-          "id": 17,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom"
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "9.0.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "sum(histogram_quantile(0.9, rate(average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}[1h])))",
-              "format": "time_series",
-              "instant": false,
-              "legendFormat": "__auto",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Time From Reservation To Deployment (In Seconds)",
-          "transparent": true,
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
                 "axisLabel": "",
                 "axisPlacement": "left",
                 "barAlignment": 0,
@@ -596,8 +487,8 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 10,
-            "x": 6,
+            "w": 7,
+            "x": 0,
             "y": 8
           },
           "id": 18,
@@ -743,6 +634,103 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisLabel": "Seconds",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 30,
+                "gradientMode": "hue",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "displayName": "reservations",
+              "mappings": [],
+              "noValue": "No reservations found",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 9,
+            "x": 7,
+            "y": 8
+          },
+          "id": 17,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.0.1",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum(histogram_quantile(0.9, rate(average_time_reservation_to_deployment_seconds_bucket{controller=\"namespacereservation\"}[1h])))",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Time From Reservation To Deployment (In Seconds)",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
                 "axisLabel": "",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -849,9 +837,9 @@ data:
             ]
           },
           "gridPos": {
-            "h": 9,
-            "w": 6,
-            "x": 0,
+            "h": 8,
+            "w": 9,
+            "x": 7,
             "y": 16
           },
           "id": 23,
@@ -925,7 +913,7 @@ data:
                   "mode": "off"
                 }
               },
-              "displayName": "CPU Usage",
+              "displayName": "Memory Usage",
               "mappings": [],
               "thresholds": {
                 "mode": "absolute",
@@ -944,12 +932,12 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 9,
-            "w": 9,
-            "x": 6,
-            "y": 16
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 24
           },
-          "id": 21,
+          "id": 20,
           "options": {
             "legend": {
               "calcs": [],
@@ -958,7 +946,7 @@ data:
             },
             "tooltip": {
               "mode": "single",
-              "sort": "asc"
+              "sort": "none"
             }
           },
           "targets": [
@@ -967,11 +955,11 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "avg(rate(container_cpu_usage_seconds_total{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"}[5m]))",
+              "expr": "avg(container_memory_working_set_bytes{namespace=\"ephemeral-namespace-operator-system\", container=\"manager\"})",
               "refId": "A"
             }
           ],
-          "title": "CPU Usage",
+          "title": "Memory Usage",
           "transparent": true,
           "type": "timeseries"
         },
@@ -1013,7 +1001,7 @@ data:
                   "mode": "off"
                 }
               },
-              "displayName": "Memory Usage",
+              "displayName": "CPU Usage",
               "mappings": [],
               "thresholds": {
                 "mode": "absolute",
@@ -1032,12 +1020,12 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 9,
-            "w": 9,
-            "x": 15,
-            "y": 16
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 24
           },
-          "id": 20,
+          "id": 21,
           "options": {
             "legend": {
               "calcs": [],
@@ -1046,7 +1034,7 @@ data:
             },
             "tooltip": {
               "mode": "single",
-              "sort": "none"
+              "sort": "asc"
             }
           },
           "targets": [
@@ -1055,11 +1043,11 @@ data:
                 "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "expr": "avg(container_memory_working_set_bytes{namespace=\"ephemeral-namespace-operator-system\", container=\"manager\"})",
+              "expr": "avg(rate(container_cpu_usage_seconds_total{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"}[5m]))",
               "refId": "A"
             }
           ],
-          "title": "Memory Usage",
+          "title": "CPU Usage",
           "transparent": true,
           "type": "timeseries"
         }
@@ -1073,8 +1061,8 @@ data:
           {
             "current": {
               "selected": true,
-              "text": "c-rh-c-eph-prometheus",
-              "value": "c-rh-c-eph-prometheus"
+              "text": "crcd01ue1-prometheus",
+              "value": "crcd01ue1-prometheus"
             },
             "hide": 0,
             "includeAll": false,
@@ -1125,11 +1113,22 @@ data:
             "queryValue": "",
             "skipUrlSync": false,
             "type": "custom"
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "filters": [],
+            "hide": 0,
+            "name": "Filters",
+            "skipUrlSync": false,
+            "type": "adhoc"
           }
         ]
       },
       "time": {
-        "from": "now-6h",
+        "from": "now-12h",
         "to": "now"
       },
       "timepicker": {},
