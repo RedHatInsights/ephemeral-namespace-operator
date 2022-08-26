@@ -34,7 +34,8 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1661176177258,
+      "id": 400,
+      "iteration": 1661525758162,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -91,7 +92,7 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(successful_pool_reservations_total{pool=\"$pools\"})",
+              "expr": "sum(successful_pool_reservations_total{pool=~\"$pools\"})",
               "format": "time_series",
               "legendFormat": "{{pool}}",
               "range": true,
@@ -862,7 +863,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=\"$pools\"}[1h]))) by (pool)",
+              "expr": "sum(histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"$pools\"}[1h]))) by (pool)",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -919,8 +920,7 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1007,8 +1007,7 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1061,8 +1060,8 @@ data:
           {
             "current": {
               "selected": true,
-              "text": "crcd01ue1-prometheus",
-              "value": "crcd01ue1-prometheus"
+              "text": "c-rh-c-eph-prometheus",
+              "value": "c-rh-c-eph-prometheus"
             },
             "hide": 0,
             "includeAll": false,
@@ -1078,41 +1077,30 @@ data:
           },
           {
             "current": {
-              "selected": false,
-              "text": "default",
-              "value": "default"
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
             },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "definition": "label_values(pool)",
             "hide": 0,
-            "includeAll": false,
+            "includeAll": true,
             "label": "Pool Type",
             "multi": false,
             "name": "pools",
-            "options": [
-              {
-                "selected": true,
-                "text": "default",
-                "value": "default"
-              },
-              {
-                "selected": false,
-                "text": "minimal",
-                "value": "minimal"
-              },
-              {
-                "selected": false,
-                "text": "managed-kafka",
-                "value": "managed-kafka"
-              },
-              {
-                "selected": false,
-                "text": "real-managed-kafka",
-                "value": "real-managed-kafka"
-              }
-            ],
-            "query": "default,minimal,managed-kafka,real-managed-kafka",
-            "queryValue": "",
+            "options": [],
+            "query": {
+              "query": "label_values(pool)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
             "skipUrlSync": false,
-            "type": "custom"
+            "sort": 0,
+            "type": "query"
           },
           {
             "datasource": {
@@ -1128,13 +1116,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-12h",
+        "from": "now-6h",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 24,
+      "version": 25,
       "weekStart": ""
     }
