@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1661964340912,
+      "iteration": 1661965043032,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -339,7 +339,7 @@ data:
               "dimensions": {},
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\"insights-platform-advisor-backend-smoke-test.*|.*pr-check-.*\"}))",
+              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\"insights-platform-advisor-backend-smoke-test.*|.*pr-check-.*|automation-.*\"}))",
               "expression": "",
               "format": "table",
               "id": "",
@@ -1079,8 +1079,8 @@ data:
           {
             "current": {
               "selected": false,
-              "text": "All",
-              "value": "$__all"
+              "text": "default",
+              "value": "default"
             },
             "datasource": {
               "type": "prometheus",
@@ -1124,6 +1124,6 @@ data:
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 27,
+      "version": 28,
       "weekStart": ""
     }
