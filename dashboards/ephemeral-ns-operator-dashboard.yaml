@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1662047645814,
+      "iteration": 1662047645830,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -156,7 +156,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(active_reservation_total)",
+              "expr": "active_reservation_total",
               "format": "table",
               "instant": true,
               "legendFormat": "{{pool}}",
@@ -245,7 +245,8 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(active_reservation_total)",
+              "expr": "active_reservation_total",
+              "format": "time_series",
               "hide": false,
               "legendFormat": "{{pool}}",
               "range": true,
@@ -1078,9 +1079,9 @@ data:
           },
           {
             "current": {
-              "selected": false,
-              "text": "default",
-              "value": "default"
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
             },
             "datasource": {
               "type": "prometheus",
