@@ -48,10 +48,26 @@ var _ = Describe("Pool controller basic functionality", func() {
 				return ownedCount == pool.Spec.Size
 			}, timeout, interval).Should(BeTrue())
 
+			By("Ensuring ready/creating namespace count equals the pool spec size")
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			pool.Spec.Size--
+
+			err = k8sClient.Update(ctx, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() int {
+				err = k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Ready + pool.Status.Creating
+			}, timeout, interval).Should(Equal(1))
+
 			By("Creating new namespaces as needed")
 			pool.Spec.Size++
 
-			err := k8sClient.Update(ctx, &pool)
+			err = k8sClient.Update(ctx, &pool)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {
@@ -109,11 +125,12 @@ var _ = Describe("Ensure new namespaces are setup properly", func() {
 			for _, ns := range nsList.Items {
 				for _, owner := range ns.GetOwnerReferences() {
 					if owner.Kind == "NamespacePool" {
-						nsLabels := ns.GetLabels()
-
-						Expect(nsLabels["operator-ns"]).To(Equal("true"))
+						Expect(ns.Labels["operator-ns"]).To(Equal("true"))
 
 						_, ok := ns.Labels["pool"]
+						Expect(ok).To(BeTrue())
+
+						_, ok = ns.Annotations["env-status"]
 						Expect(ok).To(BeTrue())
 					}
 				}

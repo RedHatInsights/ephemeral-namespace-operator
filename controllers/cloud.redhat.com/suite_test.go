@@ -220,7 +220,7 @@ var _ = BeforeSuite(func() {
 	ctx, cancel := context.WithCancel(context.Background())
 	stopController = cancel
 
-	default_pool := &crd.NamespacePool{
+	defaultPool := &crd.NamespacePool{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "cloud.redhat.com/",
 			Kind:       "NamespacePool",
@@ -231,7 +231,7 @@ var _ = BeforeSuite(func() {
 		Spec: testConfig,
 	}
 
-	minimal_pool := &crd.NamespacePool{
+	minimalPool := &crd.NamespacePool{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "cloud.redhat.com/",
 			Kind:       "NamespacePool",
@@ -242,8 +242,8 @@ var _ = BeforeSuite(func() {
 		Spec: testConfig,
 	}
 
-	Expect(k8sClient.Create(ctx, default_pool)).Should(Succeed())
-	Expect(k8sClient.Create(ctx, minimal_pool)).Should(Succeed())
+	Expect(k8sClient.Create(ctx, defaultPool)).Should(Succeed())
+	Expect(k8sClient.Create(ctx, minimalPool)).Should(Succeed())
 
 	go poller.Poll()
 
