@@ -32,6 +32,15 @@ import (
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 )
 
+const (
+	POOL_STATUS_READY    = "ready"
+	POOL_STATUS_CREATING = "creating"
+)
+
+var (
+	statusTypeCount = make(map[string]int)
+)
+
 // NamespacePoolReconciler reconciles a NamespacePool object
 type NamespacePoolReconciler struct {
 	client.Client
@@ -50,7 +59,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	status, errNamespaceList, err := r.getPoolStatus(ctx, pool)
+	statusTypeCount, errNamespaceList, err := r.getPoolStatus(ctx, pool)
 	if err != nil {
 		r.Log.Error(err, "Unable to get status of owned namespaces")
 		return ctrl.Result{}, err
@@ -62,41 +71,24 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	r.Log.Info("Pool status", "ready", status["ready"], "creating", status["creating"])
+	r.Log.Info(fmt.Sprintf("'%s' pool status", pool.Name), "ready", statusTypeCount[POOL_STATUS_READY], "creating", statusTypeCount[POOL_STATUS_CREATING])
 
-	pool.Status.Ready = status["ready"]
-	pool.Status.Creating = status["creating"]
+	pool.Status.Ready = statusTypeCount[POOL_STATUS_READY]
+	pool.Status.Creating = statusTypeCount[POOL_STATUS_CREATING]
 
-	for i := r.underManaged(pool); i > 0; i-- {
-		nsName, err := CreateNamespace(ctx, r.Client, &pool)
+	quantityOfNamespaces := r.checkReadyNamespaceQuantity(pool)
+
+	if quantityOfNamespaces > 0 {
+		r.Log.Info(fmt.Sprintf("Filling '%s' pool with %d namespace(s)", pool.Name, quantityOfNamespaces))
+		err := r.increaseReadyNamespacesQueue(ctx, pool, quantityOfNamespaces)
 		if err != nil {
-			r.Log.Error(err, "Error while creating namespace")
-			if nsName != "" {
-				ns, err := GetNamespace(ctx, r.Client, nsName)
-				if err != nil {
-					r.Log.Error(err, "Could not retrieve namespace for deletion", "ns-name", nsName)
-				} else {
-					r.Client.Delete(ctx, &ns)
-				}
-			}
-
-		} else {
-			r.Log.Info("Setting up new namespace", "ns-name", nsName, "pool-type", pool.Name)
-			if err := SetupNamespace(ctx, r.Client, pool, nsName); err != nil {
-				r.Log.Error(err, "Error while setting up namespace", "ns-name", nsName)
-				if err := UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error"}, nsName); err != nil {
-					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", nsName)
-					// Last resort - if annotations can't be updated attempt manual deletion of namespace
-					ns, err := GetNamespace(ctx, r.Client, nsName)
-					if err != nil {
-						r.Log.Error(err, "Could not retrieve namespace for deletion", "ns-name", nsName)
-					} else {
-						r.Client.Delete(ctx, &ns)
-					}
-				}
-				continue
-			}
-			pool.Status.Creating++
+			r.Log.Error(err, fmt.Sprintf("unable to create more namespaces for '%s' pool.", pool.Name))
+		}
+	} else if quantityOfNamespaces < 0 {
+		r.Log.Info(fmt.Sprintf("Excess number of ready namespaces in '%s' pool detected, removing %d namespace(s)", pool.Name, (quantityOfNamespaces * -1)))
+		err := r.decreaseReadyNamespacesQueue(ctx, pool, quantityOfNamespaces)
+		if err != nil {
+			r.Log.Error(err, fmt.Sprintf("unable to delete excess namespaces for '%s' pool.", pool.Name))
 		}
 	}
 
@@ -160,17 +152,63 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 		}
 	}
 
-	status := make(map[string]int)
-	status["ready"] = readyNS
-	status["creating"] = creatingNS
+	statusTypeCount["ready"] = readyNS
+	statusTypeCount["creating"] = creatingNS
 
-	return status, errNamespaceList, nil
+	return statusTypeCount, errNamespaceList, nil
 }
 
-func (r *NamespacePoolReconciler) underManaged(pool crd.NamespacePool) int {
+func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.NamespacePool) int {
 	size := pool.Spec.Size
 	ready := pool.Status.Ready
 	creating := pool.Status.Creating
 
 	return size - (ready + creating)
+}
+
+func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
+	for i := 0; i < r.checkReadyNamespaceQuantity(pool); i++ {
+		nsName, err := CreateNamespace(ctx, r.Client, &pool)
+		if err != nil {
+			r.Log.Error(err, "Error while creating namespace")
+			if nsName != "" {
+				err := UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error"}, nsName)
+				if err != nil {
+					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", nsName)
+					return err
+				}
+			}
+
+			return err
+		}
+
+		r.Log.Info(fmt.Sprintf("successfully created namespace '%s' in '%s' pool", nsName, pool.Name))
+	}
+
+	return nil
+}
+
+func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, decreaseSize int) error {
+	nsList, err := GetReadyNamespaces(ctx, r.Client, pool.Name)
+	if err != nil {
+		r.Log.Error(err, fmt.Sprintf("Unable to retrieve list of namespaces from '%s' pool", pool.Name))
+		return err
+	}
+
+	for i := decreaseSize; i < 0; i++ {
+		for _, ns := range nsList {
+			if ns.Annotations["env-status"] == "ready" && ns.Annotations["reserved"] == "false" {
+				err := UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": "error"}, ns.Name)
+				if err != nil {
+					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", ns.Name)
+					return err
+				}
+
+				r.Log.Info(fmt.Sprintf("successfully deleted excess namespace '%s' from '%s' pool", ns.Name, pool.Name))
+				break
+			}
+		}
+	}
+
+	return nil
 }
