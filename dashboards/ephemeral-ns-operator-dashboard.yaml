@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1662047645830,
+      "iteration": 1662049055924,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -113,7 +113,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
-              "noValue": "No Active Reservations",
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -132,10 +132,10 @@ data:
             "x": 3,
             "y": 0
           },
-          "id": 33,
+          "id": 38,
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
@@ -179,7 +179,7 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
-                "axisLabel": "",
+                "axisLabel": "Number of Active Reservations",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
@@ -206,7 +206,6 @@ data:
                   "mode": "off"
                 }
               },
-              "displayName": "Active Reservations",
               "mappings": [],
               "thresholds": {
                 "mode": "absolute",
@@ -245,7 +244,7 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "active_reservation_total",
+              "expr": "active_reservation_total{pool=~\"$pools\"}",
               "format": "time_series",
               "hide": false,
               "legendFormat": "{{pool}}",
@@ -340,7 +339,7 @@ data:
               "dimensions": {},
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\".*smoke-test.*|.*pr-check-.*|automation-.*|.*-check-bot\"}))",
+              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\".*smoke-test.*|.*pr-check-.*|automation-.*|.*-check-bot|.*ephemeral-base.*\"}))",
               "expression": "",
               "format": "table",
               "id": "",
@@ -1125,6 +1124,6 @@ data:
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 29,
+      "version": 31,
       "weekStart": ""
     }
