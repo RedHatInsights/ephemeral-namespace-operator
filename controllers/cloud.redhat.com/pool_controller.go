@@ -76,19 +76,21 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	pool.Status.Ready = statusTypeCount[POOL_STATUS_READY]
 	pool.Status.Creating = statusTypeCount[POOL_STATUS_CREATING]
 
-	quantityOfNamespaces := r.checkReadyNamespaceQuantity(pool)
+	quantityOfNamespaces := r.checkReadyNamespaceQuantity(pool, statusTypeCount)
 
 	if quantityOfNamespaces > 0 {
 		r.Log.Info(fmt.Sprintf("Filling '%s' pool with %d namespace(s)", pool.Name, quantityOfNamespaces))
 		err := r.increaseReadyNamespacesQueue(ctx, pool, quantityOfNamespaces)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("unable to create more namespaces for '%s' pool.", pool.Name))
+			return ctrl.Result{Requeue: true}, err
 		}
 	} else if quantityOfNamespaces < 0 {
 		r.Log.Info(fmt.Sprintf("Excess number of ready namespaces in '%s' pool detected, removing %d namespace(s)", pool.Name, (quantityOfNamespaces * -1)))
 		err := r.decreaseReadyNamespacesQueue(ctx, pool, quantityOfNamespaces)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("unable to delete excess namespaces for '%s' pool.", pool.Name))
+			return ctrl.Result{Requeue: true}, err
 		}
 	}
 
@@ -158,16 +160,26 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 	return statusTypeCount, errNamespaceList, nil
 }
 
-func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.NamespacePool) int {
+func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.NamespacePool, statusTypeCount map[string]int) int {
 	size := pool.Spec.Size
+	limiter := pool.Spec.SizeLimiter
 	ready := pool.Status.Ready
 	creating := pool.Status.Creating
+
+	r.Log.Info(fmt.Sprintf("Limiter: %d", limiter))
+
+	//if limiter > 0 {
+	if (statusTypeCount["ready"] + statusTypeCount["creating"]) >= limiter {
+		r.Log.Info(fmt.Sprintf("Max number of namespaces for pool [%s] already created or in-use. Max of [%d] allowed.", pool.Name, limiter))
+		return 0
+	}
+	// }
 
 	return size - (ready + creating)
 }
 
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
-	for i := 0; i < r.checkReadyNamespaceQuantity(pool); i++ {
+	for i := 0; i < r.checkReadyNamespaceQuantity(pool, statusTypeCount); i++ {
 		nsName, err := CreateNamespace(ctx, r.Client, &pool)
 		if err != nil {
 			r.Log.Error(err, "Error while creating namespace")

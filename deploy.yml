@@ -1107,6 +1107,9 @@ objects:
                 size:
                   description: Number of namespaces to have ready in the pool
                   type: integer
+                sizelimiter:
+                  description: Optional max namespaces
+                  type: integer
               required:
               - clowdenvironment
               - limitrange
