@@ -1,38 +1,37 @@
-= Ephemeral Namespace Operator
+= Ephemeral Namespace Operator (ENO)
 
-The ephemeral namespace operator (ENO) manages namespace reservations.
-Given a `NamespaceReservation`, the ENO will provide the user a namespace with various resources created in it.
+image:https://img.shields.io/github/workflow/status/RedHatInsights/ephemeral-namespace-operator/Run%20Unit%20Tests[Build Passing]
+image:https://goreportcard.com/badge/github.com/RedHatInsights/ephemeral-namespace-operator[Go Report Card]
 
-== Why
+== What is the Ephemeral Namespace Operator?
+The purpose of the ephemeral namespace operator is to have namespaces queued up and ready to be utilized. These namespaces  
+will have `Clowdenvironments` deployed, and specific resources corresponding to the type of namespace pool a user requests from, ready to go.  
 
-Why not e.g. give each user a static namespace and let them manage the resources themselves?  
+== Benefits For This Approach
+- Cuts user's wait-time down since namespaces will already be ready-to-go.
+- Ensures that namespaces are not forgotten therefore reducing resource utilization.
+- Long-running environments require work to maintain, therefore, having a time limit on them will reduce this issue from happening.
 
-- Users tend to leave resources hanging around after they're done with them.
-  We want to ensure resources are cleaned up with minimal effort from users.
-- Long-running environments require work to maintain.
-  Instead users are encouraged to create new environments from scratch often;
-  ephemeral environments should be treated as disposable.
-  The problem is that creating a new environment from scratch can take several minutes, which is a significant drag on development time (including PR check durations).
-  Thus the operator just needs to keep a few pre-populated namespaces "on deck" ready for the next reservation request.
+== What Are Namespace Pools?
+Given the various needs of our users, we incorporated different pools of ready namespaces that contain specific resources.  
+This is to help ensure that when users request a namespace they aren't getting any unnecessary resources within their namespace.  
+The current list of pools are `default`, `minimal`, and `managed-kafka`.
 
-== How
+== How does it work?
+A user will request a namespace which creates a reservation request. From there a namespace is selected from the pool and checked out by that user.  
+The user will have that pool for the specified duration (Or for 1 hour if duration was not specified).
 
-Each reservation has two optional fields:
+A user can use any of the following optional flags to specify their needs:
 
-. Duration: how long (in hours) before the namespace is deleted
-. Requester: Only used to indicate who reserved the namespace.
-  This field is not used by any automation.
-
-Once a `NamespaceReservation` resource is created, the controller will pull a ready namespace from its pool of "on-deck" namespaces.
-Users can find the checked out namespace in the status section of their `NamespaceReservation` or just run `oc get` on it.
-Once the specified duration has expired, the namespace and corresponding `NamespaceReservation` will be deleted by the controller.
-A user can simply delete a `NamespaceReservation` to end their reservation early.  This will also delete the corresponding namespace.
+- `--name`: Specify a reservation name. Ex. `--name my-namespace-reservation`
+- `-d, --duration`: Specify the length of time a user wants to reserve the namespace for. Ex. `-d 3h`
+- `--pool`: Specify the pool a user wants a namespace from. Ex. `--pool minimal`
 
 When the controller needs to create a new namespace to be added to the "on-deck" pool, it adds the following resources:
 
-- `ClowdEnvironment`:  This will create deployments for Kafka, Kafka Connect, Minio, Prometheus, and feature flags.
-- `FrontendEnvironment`: This sets up environment configurations for the github.com/RedHatInsights/frontend-operator[frontend operator]
-- `RoleBindings`: Access is granted to devs to edit resources in the namespace
-- Secrets are copied from the base namespace.
+- `ClowdEnvironment`:  This will create deployments for Kafka, Kafka Connect, Minio, Prometheus, and feature flags.  
+- `FrontendEnvironment`: This sets up environment configurations for the github.com/RedHatInsights/frontend-operator[frontend operator]  
+- `RoleBindings`: Access is granted to devs to edit resources in the namespace  
+- Secrets are copied from the base namespace.  
 
 image::operator_diagram.png[design]
