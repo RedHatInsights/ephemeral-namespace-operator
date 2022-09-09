@@ -168,7 +168,7 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 
 func (r *NamespacePoolReconciler) checkNamespaceQuantity(pool crd.NamespacePool, statusTypeCount map[string]int) int {
 	size := pool.Spec.Size
-	limiter := pool.Spec.SizeLimiter
+	limiter := pool.Spec.SizeLimit
 	ready := pool.Status.Ready
 	creating := pool.Status.Creating
 
