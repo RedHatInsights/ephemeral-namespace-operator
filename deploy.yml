@@ -1107,12 +1107,16 @@ objects:
                 size:
                   description: Number of namespaces to have ready in the pool
                   type: integer
+                sizelimit:
+                  description: Optional max number of namespaces for a pool
+                  type: integer
               required:
               - clowdenvironment
               - limitrange
               - local
               - resourcequotas
               - size
+              - sizelimit
               type: object
             status:
               description: NamespacePoolStatus defines the observed state of Pool
