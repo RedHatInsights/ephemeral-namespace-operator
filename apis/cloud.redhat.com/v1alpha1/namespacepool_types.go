@@ -27,7 +27,7 @@ type NamespacePoolSpec struct {
 	// Number of namespaces to have ready in the pool
 	Size int `json:"size"`
 	// Optional max number of namespaces for a pool
-	SizeLimit int `json:"sizelimit"`
+	SizeLimit int `json:"sizelimit,omitempty"`
 	// Determine whether the project uses a project or a namespace
 	Local bool `json:"local"`
 	// Clowdenvironment template for the namespace
