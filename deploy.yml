@@ -1116,7 +1116,6 @@ objects:
               - local
               - resourcequotas
               - size
-              - sizelimit
               type: object
             status:
               description: NamespacePoolStatus defines the observed state of Pool
@@ -1125,12 +1124,12 @@ objects:
                   type: integer
                 ready:
                   type: integer
-                reserved:
+                total:
                   type: integer
               required:
               - creating
               - ready
-              - reserved
+              - total
               type: object
           type: object
       served: true
