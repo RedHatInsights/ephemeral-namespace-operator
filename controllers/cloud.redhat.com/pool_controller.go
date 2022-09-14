@@ -58,7 +58,7 @@ type NamespacePoolReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacepools/finalizers,verbs=update
 
 func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	//pool := crd.NamespacePool{}
+	pool := crd.NamespacePool{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &pool); err != nil {
 		r.Log.Error(err, "Error retrieving namespace pool")
 		return ctrl.Result{}, err
@@ -80,6 +80,12 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	pool.Status.Ready = statusTypeCount[POOL_STATUS_READY]
 	pool.Status.Creating = statusTypeCount[POOL_STATUS_CREATING]
+	if err := r.CountPoolNamespaces(ctx, &pool); err != nil {
+		return ctrl.Result{Requeue: true}, err
+	}
+
+	r.Log.Info(fmt.Sprintf("I got here: [%s]", pool.Name))
+	r.Log.Info(fmt.Sprintf("I got here: [%v]", pool.Status))
 
 	quantityOfNamespaces := r.checkReadyNamespaceQuantity()
 
@@ -108,52 +114,54 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 // SetupWithManager sets up the controller with the Manager.
 func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	ctrlr := ctrl.NewControllerManagedBy(mgr).For(&crd.NamespacePool{})
-
-	// ctrlr.Owns(&crd.NamespacePool{})
-	// ctrlr.Watches(
-	// 	&source.Kind{Type: &core.Namespace{}},
-	// 	//&handler.EnqueueRequestForOwner{IsController: true, OwnerType: &crd.NamespacePool{}},
-	// 	handler.EnqueueRequestsFromMapFunc(r.CountPoolNamespaces),
-	// )
-
 	ctrlr.Watches(
-		&source.Kind{Type: &crd.NamespacePool{}},
-		handler.EnqueueRequestsFromMapFunc(r.CountPoolNamespaces),
+		&source.Kind{Type: &core.Namespace{}},
+		handler.EnqueueRequestsFromMapFunc(r.EnqueueNamespace),
 	)
 
 	return ctrlr.Complete(r)
 }
 
-func (r *NamespacePoolReconciler) CountPoolNamespaces(a client.Object) []reconcile.Request {
-	ctx := context.Background()
+func (r *NamespacePoolReconciler) EnqueueNamespace(a client.Object) []reconcile.Request {
+	annos := a.GetLabels()
+
+	if pool, ok := annos["pool"]; ok {
+		return []reconcile.Request{{
+			NamespacedName: types.NamespacedName{
+				Name: pool,
+			},
+		}}
+	}
+	return []reconcile.Request{}
+
+}
+
+func (r *NamespacePoolReconciler) CountPoolNamespaces(ctx context.Context, pool *crd.NamespacePool) error {
 	nsList := core.NamespaceList{}
 
-	poolName := a.GetName()
-	r.Log.Info(fmt.Sprintf("Pool name: [%s]", poolName))
-	nsCount := 0
-	pool.Status.Total = nsCount
+	r.Log.Info(fmt.Sprintf("Pool name: [%s]", pool.Name))
 
-	labelSelector, _ := labels.Parse("operator-ns=true")
+	labelSelector, _ := labels.Parse(fmt.Sprintf("pool=%s", pool.Name))
 	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
 	if err := r.Client.List(ctx, &nsList, nsListOptions); err != nil {
 		r.Log.Error(err, "Unable to retrieve list of existing ready namespaces")
+		return err
 	}
 
+	count := 0
+
+	r.Log.Info(fmt.Sprintf("Pool count: [%v]", len(nsList.Items)))
+
 	for _, ns := range nsList.Items {
-		if ns.Labels["pool"] == poolName {
-			nsCount++
+		for _, owner := range ns.GetOwnerReferences() {
+			if owner.Kind == "NamespacePool" {
+				count += 1
+			}
 		}
 	}
 
-	pool.Status.Total = nsCount
-
-	//r.Log.Info(fmt.Sprintf("Pool [%s] has [%d] namespaces in it", poolName, nsCount))
-
-	return []reconcile.Request{{
-		NamespacedName: types.NamespacedName{
-			Name: poolName,
-		},
-	}}
+	pool.Status.Reserved = count
+	return nil
 }
 
 func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, errNamespaceList []string) error {
@@ -209,11 +217,12 @@ func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity() int {
 	size := pool.Spec.Size
 	ready := pool.Status.Ready
 	creating := pool.Status.Creating
+	reserved := pool.Status.Reserved
 
-	r.Log.Info(fmt.Sprintf("%s pool.Status.Total: %d", pool.Name, pool.Status.Total))
+	r.Log.Info(fmt.Sprintf("%s pool.Status.Total: %d", pool.Name, pool.Status.Reserved))
 	r.Log.Info(fmt.Sprintf("%s pool.Spec.SizeLimit: %d", pool.Name, pool.Spec.SizeLimit))
 
-	if pool.Status.Total == pool.Spec.SizeLimit && pool.Spec.SizeLimit != 0 {
+	if ready+creating+reserved == pool.Spec.SizeLimit && pool.Spec.SizeLimit != 0 {
 		r.Log.Info(fmt.Sprintf("Max number of namespaces already created [%d] for pool [%s]", pool.Spec.SizeLimit, pool.Name))
 		return 0
 	}

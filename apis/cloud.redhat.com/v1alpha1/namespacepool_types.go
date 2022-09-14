@@ -44,7 +44,7 @@ type NamespacePoolSpec struct {
 type NamespacePoolStatus struct {
 	Ready    int `json:"ready"`
 	Creating int `json:"creating"`
-	Total    int `json:"total"`
+	Reserved int `json:"reserved"`
 }
 
 //+kubebuilder:object:root=true
