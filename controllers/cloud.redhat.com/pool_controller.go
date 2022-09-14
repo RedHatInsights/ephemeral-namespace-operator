@@ -24,6 +24,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -108,13 +109,14 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	ctrlr := ctrl.NewControllerManagedBy(mgr).For(&crd.NamespacePool{})
 
-	ctrlr.Owns(&core.Namespace{})
+	// ctrlr.Owns(&crd.NamespacePool{})
+	// ctrlr.Watches(
+	// 	&source.Kind{Type: &core.Namespace{}},
+	// 	//&handler.EnqueueRequestForOwner{IsController: true, OwnerType: &crd.NamespacePool{}},
+	// 	handler.EnqueueRequestsFromMapFunc(r.CountPoolNamespaces),
+	// )
+
 	ctrlr.Watches(
-		&source.Kind{Type: &core.Namespace{}},
-		&handler.EnqueueRequestForOwner{IsController: true, OwnerType: &crd.NamespacePool{}},
-	)
-	ctrlr.Watches(
-		//&source.Kind{Type: &crd.NamespacePool{}},
 		&source.Kind{Type: &crd.NamespacePool{}},
 		handler.EnqueueRequestsFromMapFunc(r.CountPoolNamespaces),
 	)
@@ -127,7 +129,9 @@ func (r *NamespacePoolReconciler) CountPoolNamespaces(a client.Object) []reconci
 	nsList := core.NamespaceList{}
 
 	poolName := a.GetName()
-	var nsCount int
+	r.Log.Info(fmt.Sprintf("Pool name: [%s]", poolName))
+	nsCount := 0
+	pool.Status.Total = nsCount
 
 	labelSelector, _ := labels.Parse("operator-ns=true")
 	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
@@ -143,9 +147,13 @@ func (r *NamespacePoolReconciler) CountPoolNamespaces(a client.Object) []reconci
 
 	pool.Status.Total = nsCount
 
-	r.Log.Info(fmt.Sprintf("Pool [%s] has [%d] namespaces in it", poolName, nsCount))
+	//r.Log.Info(fmt.Sprintf("Pool [%s] has [%d] namespaces in it", poolName, nsCount))
 
-	return []reconcile.Request{}
+	return []reconcile.Request{{
+		NamespacedName: types.NamespacedName{
+			Name: poolName,
+		},
+	}}
 }
 
 func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, errNamespaceList []string) error {
@@ -205,7 +213,7 @@ func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity() int {
 	r.Log.Info(fmt.Sprintf("%s pool.Status.Total: %d", pool.Name, pool.Status.Total))
 	r.Log.Info(fmt.Sprintf("%s pool.Spec.SizeLimit: %d", pool.Name, pool.Spec.SizeLimit))
 
-	if pool.Status.Total >= pool.Spec.SizeLimit {
+	if pool.Status.Total == pool.Spec.SizeLimit && pool.Spec.SizeLimit != 0 {
 		r.Log.Info(fmt.Sprintf("Max number of namespaces already created [%d] for pool [%s]", pool.Spec.SizeLimit, pool.Name))
 		return 0
 	}
