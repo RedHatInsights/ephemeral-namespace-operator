@@ -1124,12 +1124,12 @@ objects:
                   type: integer
                 ready:
                   type: integer
-                total:
+                reserved:
                   type: integer
               required:
               - creating
               - ready
-              - total
+              - reserved
               type: object
           type: object
       served: true
