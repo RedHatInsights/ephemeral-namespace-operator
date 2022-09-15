@@ -31,8 +31,6 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/prometheus/client_golang/prometheus"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -223,8 +221,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 func (r *NamespaceReservationReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&crd.NamespaceReservation{}).
-		Watches(&source.Kind{Type: &core.Namespace{}},
-			&handler.EnqueueRequestForOwner{IsController: true, OwnerType: &crd.NamespacePool{}}).
 		WithOptions(controller.Options{
 			RateLimiter: workqueue.NewItemExponentialFailureRateLimiter(time.Duration(500*time.Millisecond), time.Duration(60*time.Second)),
 		}).

@@ -39,8 +39,6 @@ const (
 	POOL_STATUS_CREATING = "creating"
 )
 
-var statusTypeCount = make(map[string]int)
-
 // NamespacePoolReconciler reconciles a NamespacePool object
 type NamespacePoolReconciler struct {
 	client.Client
@@ -59,10 +57,10 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, err
 	}
 
-	statusTypeCount, errNamespaceList, err := r.getPoolStatus(ctx, pool)
+	errNamespaceList, err := r.getPoolStatus(ctx, &pool)
 	if err != nil {
 		r.Log.Error(err, "Unable to get status of owned namespaces")
-		return ctrl.Result{}, err
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	err = r.handleErrorNamespaces(ctx, errNamespaceList)
@@ -72,15 +70,9 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	r.Log.Info(fmt.Sprintf("'%s' pool status", pool.Name),
-		"ready", statusTypeCount[POOL_STATUS_READY],
-		"creating", statusTypeCount[POOL_STATUS_CREATING],
+		"ready", pool.Status.Ready,
+		"creating", pool.Status.Creating,
 		"reserved", pool.Status.Reserved)
-
-	pool.Status.Ready = statusTypeCount[POOL_STATUS_READY]
-	pool.Status.Creating = statusTypeCount[POOL_STATUS_CREATING]
-	if err := r.CountPoolNamespaces(ctx, &pool); err != nil {
-		return ctrl.Result{Requeue: true}, err
-	}
 
 	quantityOfNamespaces := r.checkReadyNamespaceQuantity(pool)
 
@@ -131,30 +123,6 @@ func (r *NamespacePoolReconciler) EnqueueNamespace(a client.Object) []reconcile.
 
 }
 
-func (r *NamespacePoolReconciler) CountPoolNamespaces(ctx context.Context, pool *crd.NamespacePool) error {
-	nsList := core.NamespaceList{}
-	count := 0
-
-	labelSelector, _ := labels.Parse(fmt.Sprintf("pool=%s", pool.Name))
-	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
-	if err := r.Client.List(ctx, &nsList, nsListOptions); err != nil {
-		r.Log.Error(err, "Unable to retrieve list of existing ready namespaces")
-		return err
-	}
-
-	for _, ns := range nsList.Items {
-		for _, owner := range ns.GetOwnerReferences() {
-			if owner.Kind == "NamespaceReservation" {
-				count += 1
-			}
-		}
-	}
-
-	pool.Status.Reserved = count
-
-	return nil
-}
-
 func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, errNamespaceList []string) error {
 	for _, nsName := range errNamespaceList {
 		r.Log.Info("Deleting namespace", "ns-name", nsName)
@@ -168,40 +136,46 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 	return nil
 }
 
-func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.NamespacePool) (map[string]int, []string, error) {
+func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.NamespacePool) ([]string, error) {
+	var readyNamespaceCount int
+	var creatingNamespaceCount int
+	var reservedNamespaceCount int
+
 	nsList := core.NamespaceList{}
 	errNamespaceList := []string{}
 
-	labelSelector, _ := labels.Parse("operator-ns=true")
+	labelSelector, _ := labels.Parse(fmt.Sprintf("pool=%s", pool.Name))
 	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
 	if err := r.Client.List(ctx, &nsList, nsListOptions); err != nil {
 		r.Log.Error(err, "Unable to retrieve list of existing ready namespaces")
-		return nil, nil, err
+		return nil, err
 	}
-
-	var readyNS int
-	var creatingNS int
 
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.UID == pool.GetUID() {
 				switch ns.Annotations["env-status"] {
 				case "ready":
-					readyNS++
+					readyNamespaceCount++
 				case "creating":
-					creatingNS++
+					creatingNamespaceCount++
 				case "error":
 					r.Log.Info("Error status for namespace. Prepping for deletion.", "ns-name", ns.Name)
 					errNamespaceList = append(errNamespaceList, ns.Name)
 				}
 			}
+
+			if owner.Kind == "NamespaceReservation" {
+				reservedNamespaceCount++
+			}
 		}
 	}
 
-	statusTypeCount["ready"] = readyNS
-	statusTypeCount["creating"] = creatingNS
+	pool.Status.Ready = readyNamespaceCount
+	pool.Status.Creating = creatingNamespaceCount
+	pool.Status.Reserved = reservedNamespaceCount
 
-	return statusTypeCount, errNamespaceList, nil
+	return errNamespaceList, nil
 }
 
 func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.NamespacePool) int {
@@ -209,9 +183,15 @@ func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.Namespace
 	ready := pool.Status.Ready
 	creating := pool.Status.Creating
 	reserved := pool.Status.Reserved
+	sizeLimit := pool.Spec.SizeLimit
+	poolTotal := ready + creating + reserved
 
-	if ready+creating+reserved == pool.Spec.SizeLimit && pool.Spec.SizeLimit != 0 {
-		r.Log.Info(fmt.Sprintf("Max number of namespaces already created [%d] for pool [%s]", pool.Spec.SizeLimit, pool.Name))
+	if pool.Spec.SizeLimit == nil {
+		return size - (ready + creating)
+	}
+
+	if poolTotal >= *sizeLimit {
+		r.Log.Info(fmt.Sprintf("Max number of namespaces already created [%d] for pool [%s]", *pool.Spec.SizeLimit, pool.Name))
 		return 0
 	}
 
