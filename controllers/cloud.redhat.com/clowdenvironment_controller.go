@@ -43,9 +43,7 @@ type ClowdenvironmentReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/status,verbs=get
 
 const (
-	ENV_STATUS_READY = "ready"
-	ENV_STATUS_ERROR = "error"
-	COMPLETION_TIME  = "completion-time"
+	COMPLETION_TIME = "completion-time"
 )
 
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
