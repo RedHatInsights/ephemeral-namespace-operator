@@ -19,13 +19,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	LABEL_POOL          = "pool"
+	LABEL_OPERATOR_NS   = "operator-ns"
+	ENV_STATUS_DELETING = "deleting"
+)
+
 var initialAnnotations = map[string]string{
 	"env-status": "creating",
 	"reserved":   "false",
 }
 
 var initialLabels = map[string]string{
-	"operator-ns": "true",
+	LABEL_OPERATOR_NS: "true",
 }
 
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
@@ -37,7 +43,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 		labels[k] = v
 	}
 
-	labels["pool"] = pool.Name
+	labels[LABEL_POOL] = pool.Name
 
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
 
@@ -135,7 +141,7 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 	nsList := core.NamespaceList{}
 
 	validatedSelector, _ := labels.ValidatedSelectorFromSet(
-		map[string]string{"operator-ns": "true", "pool": pool})
+		map[string]string{LABEL_OPERATOR_NS: "true", LABEL_POOL: pool})
 
 	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
@@ -158,7 +164,7 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 
 func CheckReadyStatus(pool string, ns core.Namespace, ready []core.Namespace) []core.Namespace {
 	if val := ns.ObjectMeta.Labels["pool"]; val == pool {
-		if val, ok := ns.ObjectMeta.Annotations["env-status"]; ok && val == "ready" {
+		if val, ok := ns.ObjectMeta.Annotations[ANNOTATION_ENV_STATUS]; ok && val == "ready" {
 			ready = append(ready, ns)
 		}
 	}
@@ -234,7 +240,7 @@ func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 }
 
 func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error {
-	UpdateAnnotations(ctx, cl, map[string]string{"env-status": "deleting"}, nsName)
+	UpdateAnnotations(ctx, cl, map[string]string{ANNOTATION_ENV_STATUS: ENV_STATUS_DELETING}, nsName)
 
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {

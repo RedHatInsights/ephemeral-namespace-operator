@@ -35,9 +35,9 @@ import (
 const (
 	ANNOTATION_ENV_STATUS = "env-status"
 	ANNOTATION_RESERVED   = "reserved"
-	ENV_STATUS_READY      = "ready"
 	ENV_STATUS_CREATING   = "creating"
 	ENV_STATUS_ERROR      = "error"
+	ENV_STATUS_READY      = "ready"
 )
 
 var (
@@ -58,23 +58,34 @@ type NamespacePoolReconciler struct {
 func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	pool, err := r.getPoolResource(ctx, req)
 	if err != nil {
-		r.Log.Error(err, fmt.Sprintf("Cannot retrieve pool resource [%s]", pool.Name))
+		r.Log.Error(err, fmt.Sprintf("Cannot retrieve [%s] pool resource", pool.Name))
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	statusTypeCount, errNamespaceList, err := r.getPoolStatus(ctx, pool)
+	r.Log.Info(fmt.Sprintf("Retrieving list of namespaces in [%s] pool", pool.Name))
+	nsList, err := r.getPoolNamespaceList(ctx, pool.Name)
+	if err != nil {
+		r.Log.Error(err, fmt.Sprintf("Could not retrieve namespaces from [%s] pool", pool.Name))
+		return ctrl.Result{Requeue: true}, err
+	}
+
+	r.Log.Info(fmt.Sprintf("Checking status of namespaces in pool [%s]", pool.Name))
+	statusTypeCount, errNamespaceList, err := r.getPoolStatus(ctx, pool, nsList)
 	if err != nil {
 		r.Log.Error(err, "Unable to get status of owned namespaces")
-		return ctrl.Result{}, err
-	}
-
-	err = r.handleErrorNamespaces(ctx, errNamespaceList)
-	if err != nil {
-		r.Log.Error(err, "Unable to delete object.")
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	r.Log.Info(fmt.Sprintf("'%s' pool status", pool.Name), "ready", statusTypeCount[ENV_STATUS_READY], "creating", statusTypeCount[ENV_STATUS_CREATING])
+	if len(errNamespaceList) > 0 {
+		r.Log.Info(fmt.Sprintf("[%d] namespaces in error state are queued fo deletion", len(errNamespaceList)))
+		err = r.handleErrorNamespaces(ctx, errNamespaceList)
+		if err != nil {
+			r.Log.Error(err, "Unable to delete object.")
+			return ctrl.Result{Requeue: true}, err
+		}
+	}
+
+	r.Log.Info(fmt.Sprintf("[%s] pool status", pool.Name), "ready", statusTypeCount[ENV_STATUS_READY], "creating", statusTypeCount[ENV_STATUS_CREATING])
 
 	pool.Status.Ready = statusTypeCount[ENV_STATUS_READY]
 	pool.Status.Creating = statusTypeCount[ENV_STATUS_CREATING]
@@ -89,14 +100,14 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	} else if quantityOfNamespaces < 0 {
 		r.Log.Info(fmt.Sprintf("Excess number of ready namespaces in [%s] pool detected, removing [%d] namespace(s)", pool.Name, (quantityOfNamespaces * -1)))
-		err := r.decreaseReadyNamespacesQueue(ctx, pool, quantityOfNamespaces)
+		err := r.decreaseReadyNamespacesQueue(ctx, pool, nsList, quantityOfNamespaces)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("unable to delete excess namespaces for [%s] pool.", pool.Name))
 		}
 	}
 
-	if err := r.Status().Update(ctx, &pool); err != nil {
-		r.Log.Error(err, "Cannot update pool status")
+	if err := r.Client.Update(ctx, &pool); err != nil {
+		r.Log.Error(err, fmt.Sprintf("Cannot update [%s] pool status", pool.Name))
 		return ctrl.Result{}, err
 	}
 
@@ -125,16 +136,21 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 	return nil
 }
 
-func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.NamespacePool) (map[string]int, []string, error) {
+func (r *NamespacePoolReconciler) getPoolNamespaceList(ctx context.Context, poolName string) (core.NamespaceList, error) {
 	nsList := core.NamespaceList{}
-	errNamespaceList := []string{}
 
-	labelSelector, _ := labels.Parse("operator-ns=true")
+	labelSelector, _ := labels.Parse(fmt.Sprintf("pool=%s", poolName))
 	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
 	if err := r.Client.List(ctx, &nsList, nsListOptions); err != nil {
 		r.Log.Error(err, "Unable to retrieve list of existing ready namespaces")
-		return nil, nil, err
+		return nsList, err
 	}
+
+	return nsList, nil
+}
+
+func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.NamespacePool, nsList core.NamespaceList) (map[string]int, []string, error) {
+	errNamespaceList := []string{}
 
 	var readyNS int
 	var creatingNS int
@@ -201,15 +217,9 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 	return nil
 }
 
-func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, decreaseSize int) error {
-	nsList, err := GetReadyNamespaces(ctx, r.Client, pool.Name)
-	if err != nil {
-		r.Log.Error(err, fmt.Sprintf("Unable to retrieve list of namespaces from [%s] pool", pool.Name))
-		return err
-	}
-
+func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, nsList core.NamespaceList, decreaseSize int) error {
 	for i := decreaseSize; i < 0; i++ {
-		for _, ns := range nsList {
+		for _, ns := range nsList.Items {
 			if ns.Annotations[ANNOTATION_ENV_STATUS] == ENV_STATUS_READY && ns.Annotations[ANNOTATION_RESERVED] == "false" {
 				err := UpdateAnnotations(ctx, r.Client, map[string]string{ANNOTATION_ENV_STATUS: ENV_STATUS_ERROR}, ns.Name)
 				if err != nil {
