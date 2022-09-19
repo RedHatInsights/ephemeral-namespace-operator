@@ -53,10 +53,10 @@ type NamespacePoolReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacepools/finalizers,verbs=update
 
 func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	pool := crd.NamespacePool{}
-	if err := r.Client.Get(ctx, req.NamespacedName, &pool); err != nil {
-		r.Log.Error(err, "Error retrieving namespace pool")
-		return ctrl.Result{}, err
+	pool, err := r.getPoolResource(ctx, req)
+	if err != nil {
+		r.Log.Error(err, fmt.Sprintf("Cannot retrieve pool resource [%s]", pool.Name))
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	statusTypeCount, errNamespaceList, err := r.getPoolStatus(ctx, pool)
@@ -156,6 +156,16 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 	statusTypeCount["creating"] = creatingNS
 
 	return statusTypeCount, errNamespaceList, nil
+}
+
+func (r *NamespacePoolReconciler) getPoolResource(ctx context.Context, req ctrl.Request) (crd.NamespacePool, error) {
+	pool := crd.NamespacePool{}
+
+	if err := r.Client.Get(ctx, req.NamespacedName, &pool); err != nil {
+		return pool, err
+	}
+
+	return pool, nil
 }
 
 func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.NamespacePool) int {
