@@ -30,14 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
-)
-
-const (
-	ANNOTATION_ENV_STATUS = "env-status"
-	ANNOTATION_RESERVED   = "reserved"
-	ENV_STATUS_CREATING   = "creating"
-	ENV_STATUS_ERROR      = "error"
-	ENV_STATUS_READY      = "ready"
+	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 )
 
 var (
@@ -85,10 +78,10 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	r.Log.Info(fmt.Sprintf("[%s] pool status", pool.Name), "ready", statusTypeCount[ENV_STATUS_READY], "creating", statusTypeCount[ENV_STATUS_CREATING])
+	r.Log.Info(fmt.Sprintf("[%s] pool status", pool.Name), "ready", statusTypeCount[helpers.ENV_STATUS_READY], "creating", statusTypeCount[helpers.ENV_STATUS_CREATING])
 
-	pool.Status.Ready = statusTypeCount[ENV_STATUS_READY]
-	pool.Status.Creating = statusTypeCount[ENV_STATUS_CREATING]
+	pool.Status.Ready = statusTypeCount[helpers.ENV_STATUS_READY]
+	pool.Status.Creating = statusTypeCount[helpers.ENV_STATUS_CREATING]
 
 	quantityOfNamespaces := r.checkReadyNamespaceQuantity(pool)
 
@@ -158,12 +151,12 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.UID == pool.GetUID() {
-				switch ns.Annotations[ANNOTATION_ENV_STATUS] {
-				case ENV_STATUS_READY:
+				switch ns.Annotations[helpers.ANNOTATION_ENV_STATUS] {
+				case helpers.ENV_STATUS_READY:
 					readyNS++
-				case ENV_STATUS_CREATING:
+				case helpers.ENV_STATUS_CREATING:
 					creatingNS++
-				case ENV_STATUS_ERROR:
+				case helpers.ENV_STATUS_ERROR:
 					r.Log.Info("Error status for namespace. Prepping for deletion.", "ns-name", ns.Name)
 					errNamespaceList = append(errNamespaceList, ns.Name)
 				}
@@ -201,7 +194,7 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 		if err != nil {
 			r.Log.Error(err, "Error while creating namespace")
 			if nsName != "" {
-				err := UpdateAnnotations(ctx, r.Client, map[string]string{ANNOTATION_ENV_STATUS: ENV_STATUS_ERROR}, nsName)
+				err := UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, nsName)
 				if err != nil {
 					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", nsName)
 					return err
@@ -220,8 +213,8 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, nsList core.NamespaceList, decreaseSize int) error {
 	for i := decreaseSize; i < 0; i++ {
 		for _, ns := range nsList.Items {
-			if ns.Annotations[ANNOTATION_ENV_STATUS] == ENV_STATUS_READY && ns.Annotations[ANNOTATION_RESERVED] == "false" {
-				err := UpdateAnnotations(ctx, r.Client, map[string]string{ANNOTATION_ENV_STATUS: ENV_STATUS_ERROR}, ns.Name)
+			if ns.Annotations[helpers.ANNOTATION_ENV_STATUS] == helpers.ENV_STATUS_READY && ns.Annotations[helpers.ANNOTATION_RESERVED] == "false" {
+				err := UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, ns.Name)
 				if err != nil {
 					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", ns.Name)
 					return err

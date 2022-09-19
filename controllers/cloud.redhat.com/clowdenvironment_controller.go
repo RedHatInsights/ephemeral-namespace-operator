@@ -22,6 +22,7 @@ import (
 	"time"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
+	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -42,10 +43,6 @@ type ClowdenvironmentReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/status,verbs=get
 
-const (
-	COMPLETION_TIME = "completion-time"
-)
-
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	env := clowder.ClowdEnvironment{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &env); err != nil {
@@ -65,19 +62,19 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 		if err := CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
 			r.Log.Error(err, "Error encountered with frontend environment", "ns-name", nsName)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": ENV_STATUS_ERROR, "status": "error"}, nsName)
+			UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, nsName)
 		} else {
 			r.Log.Info("Namespace ready", "ns-name", nsName)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": ENV_STATUS_READY, "status": "ready"}, nsName)
+			UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_READY}, nsName)
 
 			ns, err := GetNamespace(ctx, r.Client, nsName)
 			if err != nil {
 				r.Log.Error(err, "Could not retrieve newly created namespace", "ns-name", nsName)
 			}
 
-			if _, ok := ns.Annotations["completion-time"]; !ok {
+			if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; !ok {
 				nsCompletionTime := time.Now()
-				ns.Annotations["completion-time"] = nsCompletionTime.String()
+				ns.Annotations[helpers.COMPLETION_TIME] = nsCompletionTime.String()
 
 				if err := r.Client.Update(ctx, &ns); err != nil {
 					return ctrl.Result{}, err
