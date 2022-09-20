@@ -21,8 +21,8 @@ import (
 )
 
 var initialAnnotations = map[string]string{
-	"env-status": "creating",
-	"reserved":   "false",
+	helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_CREATING,
+	helpers.ANNOTATION_RESERVED:   "false",
 }
 
 var initialLabels = map[string]string{
@@ -30,7 +30,6 @@ var initialLabels = map[string]string{
 }
 
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
-	// Create project or namespace depending on environment
 	ns := core.Namespace{}
 
 	labels := map[string]string{}
@@ -39,6 +38,22 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	}
 
 	labels[helpers.LABEL_POOL] = pool.Name
+
+	if len(ns.Annotations) == 0 {
+		ns.SetAnnotations(initialAnnotations)
+	} else {
+		for k, v := range initialAnnotations {
+			ns.Annotations[k] = v
+		}
+	}
+
+	if len(ns.Labels) == 0 {
+		ns.SetLabels(labels)
+	} else {
+		for k, v := range labels {
+			ns.Labels[k] = v
+		}
+	}
 
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
 
@@ -59,22 +74,6 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	ns, err := GetNamespace(ctx, cl, ns.Name)
 	if err != nil {
 		return ns.Name, err
-	}
-
-	if len(ns.Annotations) == 0 {
-		ns.SetAnnotations(initialAnnotations)
-	} else {
-		for k, v := range initialAnnotations {
-			ns.Annotations[k] = v
-		}
-	}
-
-	if len(ns.Labels) == 0 {
-		ns.SetLabels(labels)
-	} else {
-		for k, v := range labels {
-			ns.Labels[k] = v
-		}
 	}
 
 	ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
