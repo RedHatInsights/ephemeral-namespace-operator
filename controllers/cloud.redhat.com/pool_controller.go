@@ -99,7 +99,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	if err := r.Client.Update(ctx, &pool); err != nil {
+	if err := r.Status().Update(ctx, &pool); err != nil {
 		r.Log.Error(err, fmt.Sprintf("Cannot update [%s] pool status", pool.Name))
 		return ctrl.Result{}, err
 	}
