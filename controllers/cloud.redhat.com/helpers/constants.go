@@ -11,6 +11,14 @@ const (
 	ENV_STATUS_ERROR    = "error"
 	ENV_STATUS_READY    = "ready"
 
+	KIND_NAMESPACEPOOL = "NamespacePool"
+
 	LABEL_POOL        = "pool"
 	LABEL_OPERATOR_NS = "operator-ns"
+
+	NAMESPACE_EPHEMERAL_BASE = "ephemeral-base"
+
+	SECRET_BONFIRE_IGNORE          = "bonfire.ignore"
+	SECRET_OPENSHIFT_VAULT_SECRETS = "openshift-vault-secrets"
+	SECRET_QONTRACT_INTEGRATION    = "qontract.integration"
 )

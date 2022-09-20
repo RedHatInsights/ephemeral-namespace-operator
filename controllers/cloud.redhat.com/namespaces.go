@@ -147,7 +147,7 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
-			if owner.Kind == "NamespacePool" {
+			if owner.Kind == helpers.KIND_NAMESPACEPOOL {
 				ready = CheckReadyStatus(pool, ns, ready)
 			}
 		}
@@ -157,8 +157,8 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 }
 
 func CheckReadyStatus(pool string, ns core.Namespace, ready []core.Namespace) []core.Namespace {
-	if val := ns.ObjectMeta.Labels["pool"]; val == pool {
-		if val, ok := ns.ObjectMeta.Annotations[helpers.ANNOTATION_ENV_STATUS]; ok && val == "ready" {
+	if val := ns.ObjectMeta.Labels[helpers.LABEL_POOL]; val == pool {
+		if val, ok := ns.ObjectMeta.Annotations[helpers.ANNOTATION_ENV_STATUS]; ok && val == helpers.ENV_STATUS_READY {
 			ready = append(ready, ns)
 		}
 	}
@@ -189,22 +189,22 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, annotations map[st
 
 func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 	secrets := core.SecretList{}
-	if err := cl.List(ctx, &secrets, client.InNamespace("ephemeral-base")); err != nil {
+	if err := cl.List(ctx, &secrets, client.InNamespace(helpers.NAMESPACE_EPHEMERAL_BASE)); err != nil {
 		return err
 	}
 
 	for _, secret := range secrets.Items {
 		// Filter which secrets should be copied
 		// All secrets with the "qontract" annotations are defined in app-interface
-		if val, ok := secret.Annotations["qontract.integration"]; !ok {
+		if val, ok := secret.Annotations[helpers.SECRET_QONTRACT_INTEGRATION]; !ok {
 			continue
 		} else {
-			if val != "openshift-vault-secrets" {
+			if val != helpers.SECRET_OPENSHIFT_VAULT_SECRETS {
 				continue
 			}
 		}
 
-		if val, ok := secret.Annotations["bonfire.ignore"]; ok {
+		if val, ok := secret.Annotations[helpers.SECRET_BONFIRE_IGNORE]; ok {
 			if val == "true" {
 				continue
 			}
