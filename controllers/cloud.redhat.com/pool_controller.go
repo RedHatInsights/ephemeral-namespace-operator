@@ -74,7 +74,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		"creating", pool.Status.Creating,
 		"reserved", pool.Status.Reserved)
 
-	quantityOfNamespaces := r.checkReadyNamespaceQuantity(pool)
+	quantityOfNamespaces := r.getNamespaceQuantityDelta(pool)
 
 	if quantityOfNamespaces > 0 {
 		r.Log.Info(fmt.Sprintf("Filling '%s' pool with %d namespace(s)", pool.Name, quantityOfNamespaces))
@@ -163,9 +163,7 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.N
 					r.Log.Info("Error status for namespace. Prepping for deletion.", "ns-name", ns.Name)
 					errNamespaceList = append(errNamespaceList, ns.Name)
 				}
-			}
-
-			if owner.Kind == "NamespaceReservation" {
+			} else if owner.Kind == "NamespaceReservation" {
 				reservedNamespaceCount++
 			}
 		}
@@ -178,7 +176,7 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.N
 	return errNamespaceList, nil
 }
 
-func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.NamespacePool) int {
+func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePool) int {
 	size := pool.Spec.Size
 	ready := pool.Status.Ready
 	creating := pool.Status.Creating
@@ -199,7 +197,7 @@ func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.Namespace
 }
 
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
-	for i := 0; i < r.checkReadyNamespaceQuantity(pool); i++ {
+	for i := 0; i < r.getNamespaceQuantityDelta(pool); i++ {
 		nsName, err := CreateNamespace(ctx, r.Client, &pool)
 		if err != nil {
 			r.Log.Error(err, "Error while creating namespace")
