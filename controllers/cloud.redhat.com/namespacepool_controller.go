@@ -119,7 +119,7 @@ func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, errNamespaceList []string) error {
 	for _, nsName := range errNamespaceList {
 		r.Log.Info("Deleting namespace", "ns-name", nsName)
-		err := DeleteNamespace(ctx, r.Client, nsName)
+		err := helpers.DeleteNamespace(ctx, r.Client, nsName)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("Error deleting namespace: [%s]", nsName))
 			return fmt.Errorf("handleErrorNamespace error: Couldn't delete namespace: [%v]", err)
@@ -190,11 +190,11 @@ func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.Namespace
 
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
 	for i := 0; i < r.checkReadyNamespaceQuantity(pool); i++ {
-		nsName, err := CreateNamespace(ctx, r.Client, &pool)
+		nsName, err := helpers.CreateNamespace(ctx, r.Client, &pool)
 		if err != nil {
 			r.Log.Error(err, "Error while creating namespace")
 			if nsName != "" {
-				err := UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, nsName)
+				err := helpers.UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, nsName)
 				if err != nil {
 					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", nsName)
 					return err
@@ -214,7 +214,7 @@ func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Conte
 	for i := decreaseSize; i < 0; i++ {
 		for _, ns := range nsList.Items {
 			if ns.Annotations[helpers.ANNOTATION_ENV_STATUS] == helpers.ENV_STATUS_READY && ns.Annotations[helpers.ANNOTATION_RESERVED] == "false" {
-				err := UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, ns.Name)
+				err := helpers.UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, ns.Name)
 				if err != nil {
 					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", ns.Name)
 					return err

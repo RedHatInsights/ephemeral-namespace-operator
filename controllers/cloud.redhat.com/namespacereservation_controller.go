@@ -20,10 +20,10 @@ import (
 	"context"
 
 	"fmt"
-	"math/rand"
 	"time"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
+	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
@@ -128,7 +128,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
-		nsList, err := GetReadyNamespaces(ctx, r.Client, res.Status.Pool)
+		nsList, err := helpers.GetReadyNamespaces(ctx, r.Client, res.Status.Pool)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("Unable to retrieve list of namespaces from '%s' pool", res.Status.Pool), "res-name", res.Name)
 			return ctrl.Result{}, err
@@ -158,7 +158,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			errorAnnotation := map[string]string{
 				"env-status": "error",
 			}
-			if err := UpdateAnnotations(ctx, r.Client, errorAnnotation, readyNsName); err != nil {
+			if err := helpers.UpdateAnnotations(ctx, r.Client, errorAnnotation, readyNsName); err != nil {
 				r.Log.Error(err, fmt.Sprintf("Unable to update annotations for unready namespace in '%s' pool", res.Status.Pool), "ns-name", readyNsName)
 			}
 			return ctrl.Result{Requeue: true}, err
@@ -275,7 +275,7 @@ func getExpirationTime(res *crd.NamespaceReservation) (metav1.Time, error) {
 }
 
 func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Context, readyNsName string) error {
-	ready, _, _ := GetClowdEnv(ctx, r.Client, readyNsName)
+	ready, _, _ := helpers.GetClowdEnv(ctx, r.Client, readyNsName)
 	if !ready {
 		return fmt.Errorf("ClowdEnvironment is not ready for namespace: %s", readyNsName) // No need to wrap the string when fmt does errors for us
 	}
@@ -320,18 +320,6 @@ func (r *NamespaceReservationReconciler) addRoleBindings(ctx context.Context, ns
 		}
 	}
 	return nil
-}
-
-const rCharSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-
-func randString(n int) string {
-	b := make([]byte, n)
-
-	for i := range b {
-		b[i] = rCharSet[rand.Intn(len(rCharSet))]
-	}
-
-	return string(b)
 }
 
 func hardCodedUserList() map[string]string {

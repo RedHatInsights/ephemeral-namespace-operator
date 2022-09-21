@@ -56,18 +56,18 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		"deployments", fmt.Sprintf("%d / %d", env.Status.Deployments.ReadyDeployments, env.Status.Deployments.ManagedDeployments),
 	)
 
-	if ready, _ := VerifyClowdEnvReady(env); ready {
+	if ready, _ := helpers.VerifyClowdEnvReady(env); ready {
 		nsName := env.Spec.TargetNamespace
 		r.Log.Info("Clowdenvironment ready", "ns-name", nsName)
 
-		if err := CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
+		if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
 			r.Log.Error(err, "Error encountered with frontend environment", "ns-name", nsName)
-			UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, nsName)
+			helpers.UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, nsName)
 		} else {
 			r.Log.Info("Namespace ready", "ns-name", nsName)
-			UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_READY}, nsName)
+			helpers.UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_READY}, nsName)
 
-			ns, err := GetNamespace(ctx, r.Client, nsName)
+			ns, err := helpers.GetNamespace(ctx, r.Client, nsName)
 			if err != nil {
 				r.Log.Error(err, "Could not retrieve newly created namespace", "ns-name", nsName)
 			}
@@ -117,7 +117,7 @@ func poolFilter(ctx context.Context, cl client.Client) predicate.Predicate {
 }
 
 func isOwnedByPool(ctx context.Context, cl client.Client, nsName string) bool {
-	ns, err := GetNamespace(ctx, cl, nsName)
+	ns, err := helpers.GetNamespace(ctx, cl, nsName)
 	if err != nil {
 		return false
 	}
@@ -131,7 +131,7 @@ func isOwnedByPool(ctx context.Context, cl client.Client, nsName string) bool {
 }
 
 func isOwnedBySpecificPool(ctx context.Context, cl client.Client, nsName string, uid types.UID) bool {
-	ns, err := GetNamespace(ctx, cl, nsName)
+	ns, err := helpers.GetNamespace(ctx, cl, nsName)
 	if err != nil {
 		return false
 	}

@@ -1,4 +1,4 @@
-package controllers
+package helpers
 
 import (
 	"context"
@@ -14,19 +14,18 @@ import (
 	"k8s.io/client-go/util/retry"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
-	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/RedHatInsights/rhc-osdk-utils/utils"
 	projectv1 "github.com/openshift/api/project/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var initialAnnotations = map[string]string{
-	helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_CREATING,
-	helpers.ANNOTATION_RESERVED:   "false",
+	ANNOTATION_ENV_STATUS: ENV_STATUS_CREATING,
+	ANNOTATION_RESERVED:   "false",
 }
 
 var initialLabels = map[string]string{
-	helpers.LABEL_OPERATOR_NS: "true",
+	LABEL_OPERATOR_NS: "true",
 }
 
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
@@ -37,7 +36,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 		labels[k] = v
 	}
 
-	labels[helpers.LABEL_POOL] = pool.Name
+	labels[LABEL_POOL] = pool.Name
 
 	if len(ns.Annotations) == 0 {
 		ns.SetAnnotations(initialAnnotations)
@@ -135,7 +134,7 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 	nsList := core.NamespaceList{}
 
 	validatedSelector, _ := labels.ValidatedSelectorFromSet(
-		map[string]string{helpers.LABEL_OPERATOR_NS: "true", helpers.LABEL_POOL: pool})
+		map[string]string{LABEL_OPERATOR_NS: "true", LABEL_POOL: pool})
 
 	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
@@ -147,7 +146,7 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
-			if owner.Kind == helpers.KIND_NAMESPACEPOOL {
+			if owner.Kind == KIND_NAMESPACEPOOL {
 				ready = CheckReadyStatus(pool, ns, ready)
 			}
 		}
@@ -157,8 +156,8 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 }
 
 func CheckReadyStatus(pool string, ns core.Namespace, ready []core.Namespace) []core.Namespace {
-	if val := ns.ObjectMeta.Labels[helpers.LABEL_POOL]; val == pool {
-		if val, ok := ns.ObjectMeta.Annotations[helpers.ANNOTATION_ENV_STATUS]; ok && val == helpers.ENV_STATUS_READY {
+	if val := ns.ObjectMeta.Labels[LABEL_POOL]; val == pool {
+		if val, ok := ns.ObjectMeta.Annotations[ANNOTATION_ENV_STATUS]; ok && val == ENV_STATUS_READY {
 			ready = append(ready, ns)
 		}
 	}
@@ -189,22 +188,22 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, annotations map[st
 
 func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 	secrets := core.SecretList{}
-	if err := cl.List(ctx, &secrets, client.InNamespace(helpers.NAMESPACE_EPHEMERAL_BASE)); err != nil {
+	if err := cl.List(ctx, &secrets, client.InNamespace(NAMESPACE_EPHEMERAL_BASE)); err != nil {
 		return err
 	}
 
 	for _, secret := range secrets.Items {
 		// Filter which secrets should be copied
 		// All secrets with the "qontract" annotations are defined in app-interface
-		if val, ok := secret.Annotations[helpers.SECRET_QONTRACT_INTEGRATION]; !ok {
+		if val, ok := secret.Annotations[SECRET_QONTRACT_INTEGRATION]; !ok {
 			continue
 		} else {
-			if val != helpers.SECRET_OPENSHIFT_VAULT_SECRETS {
+			if val != SECRET_OPENSHIFT_VAULT_SECRETS {
 				continue
 			}
 		}
 
-		if val, ok := secret.Annotations[helpers.SECRET_BONFIRE_IGNORE]; ok {
+		if val, ok := secret.Annotations[SECRET_BONFIRE_IGNORE]; ok {
 			if val == "true" {
 				continue
 			}
@@ -234,7 +233,7 @@ func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 }
 
 func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error {
-	UpdateAnnotations(ctx, cl, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_DELETING}, nsName)
+	UpdateAnnotations(ctx, cl, map[string]string{ANNOTATION_ENV_STATUS: ENV_STATUS_DELETING}, nsName)
 
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {
