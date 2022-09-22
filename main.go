@@ -19,9 +19,6 @@ package main
 import (
 	"flag"
 
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
-
 	controllers "github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
