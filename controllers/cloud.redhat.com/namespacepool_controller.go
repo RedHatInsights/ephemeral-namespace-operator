@@ -39,7 +39,7 @@ var (
 
 // NamespacePoolReconciler reconciles a NamespacePool object
 type NamespacePoolReconciler struct {
-	client.Client
+	Client client.Client
 	Scheme *runtime.Scheme
 	Log    logr.Logger
 }
@@ -49,8 +49,9 @@ type NamespacePoolReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacepools/finalizers,verbs=update
 
 func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	pool, err := r.getPoolResource(ctx, req)
-	if err != nil {
+	pool := crd.NamespacePool{}
+
+	if err := r.Client.Get(ctx, req.NamespacedName, &pool); err != nil {
 		r.Log.Error(err, fmt.Sprintf("Cannot retrieve [%s] pool resource", pool.Name))
 		return ctrl.Result{Requeue: true}, err
 	}
@@ -99,7 +100,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	if err := r.Status().Update(ctx, &pool); err != nil {
+	if err := r.Client.Status().Update(ctx, &pool); err != nil {
 		r.Log.Error(err, fmt.Sprintf("Cannot update [%s] pool status", pool.Name))
 		return ctrl.Result{}, err
 	}
@@ -168,16 +169,6 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 	statusTypeCount["creating"] = creatingNS
 
 	return statusTypeCount, errNamespaceList, nil
-}
-
-func (r *NamespacePoolReconciler) getPoolResource(ctx context.Context, req ctrl.Request) (crd.NamespacePool, error) {
-	pool := crd.NamespacePool{}
-
-	if err := r.Client.Get(ctx, req.NamespacedName, &pool); err != nil {
-		return pool, err
-	}
-
-	return pool, nil
 }
 
 func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.NamespacePool) int {
