@@ -18,7 +18,7 @@ const (
 
 	NAMESPACE_EPHEMERAL_BASE = "ephemeral-base"
 
-	SECRET_BONFIRE_IGNORE          = "bonfire.ignore"
-	SECRET_OPENSHIFT_VAULT_SECRETS = "openshift-vault-secrets"
-	SECRET_QONTRACT_INTEGRATION    = "qontract.integration"
+	BONFIRE_IGNORE_SECRET          = "bonfire.ignore"
+	OPENSHIFT_VAULT_SECRETS_SECRET = "openshift-vault-secrets"
+	QONTRACT_INTEGRATION_SECRET    = "qontract.integration"
 )

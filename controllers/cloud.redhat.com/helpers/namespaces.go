@@ -195,15 +195,15 @@ func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 	for _, secret := range secrets.Items {
 		// Filter which secrets should be copied
 		// All secrets with the "qontract" annotations are defined in app-interface
-		if val, ok := secret.Annotations[SECRET_QONTRACT_INTEGRATION]; !ok {
+		if val, ok := secret.Annotations[QONTRACT_INTEGRATION_SECRET]; !ok {
 			continue
 		} else {
-			if val != SECRET_OPENSHIFT_VAULT_SECRETS {
+			if val != OPENSHIFT_VAULT_SECRETS_SECRET {
 				continue
 			}
 		}
 
-		if val, ok := secret.Annotations[SECRET_BONFIRE_IGNORE]; ok {
+		if val, ok := secret.Annotations[BONFIRE_IGNORE_SECRET]; ok {
 			if val == "true" {
 				continue
 			}
