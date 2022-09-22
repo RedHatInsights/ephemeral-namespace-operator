@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1663605386400,
+      "iteration": 1663870600985,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -244,7 +244,7 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "active_reservation_total{pool=~\"$pools\"}",
+              "expr": "sum(active_reservation_total{pool=~\"$pools\"}) by (pool)",
               "format": "time_series",
               "hide": false,
               "legendFormat": "{{pool}}",
@@ -1078,7 +1078,7 @@ data:
           },
           {
             "current": {
-              "selected": false,
+              "selected": true,
               "text": "All",
               "value": "$__all"
             },
@@ -1117,13 +1117,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-24h",
+        "from": "now-6h",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 32,
+      "version": 34,
       "weekStart": ""
     }
