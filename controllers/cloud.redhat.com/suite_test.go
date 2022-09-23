@@ -130,7 +130,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	testConfig := crd.NamespacePoolSpec{
+	testPoolSpec := crd.NamespacePoolSpec{
 		Size:  2,
 		Local: true,
 		ClowdEnvironment: clowder.ClowdEnvironmentSpec{
@@ -228,7 +228,7 @@ var _ = BeforeSuite(func() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "default",
 		},
-		Spec: testConfig,
+		Spec: testPoolSpec,
 	}
 
 	minimalPool := &crd.NamespacePool{
@@ -239,7 +239,7 @@ var _ = BeforeSuite(func() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "minimal",
 		},
-		Spec: testConfig,
+		Spec: testPoolSpec,
 	}
 
 	limitPool := &crd.NamespacePool{
@@ -250,7 +250,7 @@ var _ = BeforeSuite(func() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "limit",
 		},
-		Spec: testConfig,
+		Spec: testPoolSpec,
 	}
 
 	limitPool.Spec.SizeLimit = 3
