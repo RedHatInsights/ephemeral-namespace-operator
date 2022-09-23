@@ -231,3 +231,77 @@ var _ = Describe("Handle waiting reservations", func() {
 		})
 	})
 })
+
+var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit for namespace creation should occur", func() {
+	Context("Ensure that a namespace creation limit occurs when a pool has the 'SizeLimit' attribute", func() {
+		It("Should stop creating namespaces once the number of namespaces created equals the 'SizeLimit'", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Limiting created namespaces when the value of 'SizeLimit' has been reached")
+
+			resName6 := "limit-res-1"
+			resName7 := "limit-res-2"
+
+			res6 := newReservation(resName6, "30m", "test-user-12", "limit")
+			res7 := newReservation(resName7, "30m", "test-user-13", "limit")
+
+			Expect(k8sClient.Create(ctx, res6)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, res7)).Should(Succeed())
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Creating + pool.Status.Ready + pool.Status.Reserved
+			}, timeout, interval).Should(Equal(3))
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Creating + pool.Status.Ready
+			}, timeout, interval).Should(Equal(1))
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Reserved
+			}, timeout, interval).Should(Equal(2))
+
+			By("Increasing the 'SizeLimit' for a pool resource when needed")
+			pool.Spec.SizeLimit = 4
+
+			err = k8sClient.Update(ctx, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(pool.Spec.SizeLimit).To(Equal(4))
+
+			By("Creating more namespaces when necessary if the value of 'SizeLimit' had been increased")
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Creating + pool.Status.Ready + pool.Status.Reserved
+			}, timeout, interval).Should(Equal(4))
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Creating + pool.Status.Ready
+			}, timeout, interval).Should(Equal(2))
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Reserved
+			}, timeout, interval).Should(Equal(2))
+		})
+	})
+})
