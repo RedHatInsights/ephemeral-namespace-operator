@@ -242,8 +242,22 @@ var _ = BeforeSuite(func() {
 		Spec: testConfig,
 	}
 
+	limitPool := &crd.NamespacePool{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "cloud.redhat.com/",
+			Kind:       "NamespacePool",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "limit",
+		},
+		Spec: testConfig,
+	}
+
+	limitPool.Spec.SizeLimit = 3
+
 	Expect(k8sClient.Create(ctx, defaultPool)).Should(Succeed())
 	Expect(k8sClient.Create(ctx, minimalPool)).Should(Succeed())
+	Expect(k8sClient.Create(ctx, limitPool)).Should(Succeed())
 
 	go poller.Poll()
 
