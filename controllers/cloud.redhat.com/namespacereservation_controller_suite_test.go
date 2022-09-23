@@ -302,6 +302,36 @@ var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit fo
 
 				return pool.Status.Reserved
 			}, timeout, interval).Should(Equal(2))
+
+			By("Decreasing the 'SizeLimit' for a pool resource when needed")
+			pool.Spec.SizeLimit = 3
+
+			err = k8sClient.Update(ctx, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(pool.Spec.SizeLimit).To(Equal(3))
+
+			By("Deleting namespaces when necessary if the value of 'SizeLimit' has decreased")
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Creating + pool.Status.Ready + pool.Status.Reserved
+			}, timeout, interval).Should(Equal(3))
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Creating + pool.Status.Ready
+			}, timeout, interval).Should(Equal(1))
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Reserved
+			}, timeout, interval).Should(Equal(2))
 		})
 	})
 })
