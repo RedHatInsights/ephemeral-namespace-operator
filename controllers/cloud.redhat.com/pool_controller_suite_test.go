@@ -138,3 +138,30 @@ var _ = Describe("Ensure new namespaces are setup properly", func() {
 		})
 	})
 })
+
+var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit for namespace creation should occur", func() {
+	Context("Ensure that a namespace creation limit occurs when a pool has the 'SizeLimit' attribute", func() {
+		It("Should ensure the 'SizeLimit' is properly set for the intended pool resource", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(pool.Spec.SizeLimit).ToNot(BeZero())
+		})
+
+		// It("Should stop creating namespaces once the number of namespaces created equals the 'SizeLimit'", func() {
+		// 	ctx := context.Background()
+
+		// })
+
+		// It("Should create more namespaces if the value of 'SizeLimit' was increased", func() {
+
+		// })
+
+		// It("Should remove the number of namespaces if the value of 'SizeLimit was decreased", func() {
+
+		// })
+	})
+})
