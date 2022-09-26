@@ -38,6 +38,7 @@ import (
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
+	utils "github.com/RedHatInsights/rhc-osdk-utils/utils"
 	core "k8s.io/api/core/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	//+kubebuilder:scaffold:imports
@@ -253,7 +254,7 @@ var _ = BeforeSuite(func() {
 		Spec: testPoolSpec,
 	}
 
-	limitPool.Spec.SizeLimit = 3
+	limitPool.Spec.SizeLimit = utils.IntPtr(3)
 
 	Expect(k8sClient.Create(ctx, defaultPool)).Should(Succeed())
 	Expect(k8sClient.Create(ctx, minimalPool)).Should(Succeed())

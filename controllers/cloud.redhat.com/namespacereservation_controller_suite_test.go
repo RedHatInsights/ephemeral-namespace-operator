@@ -265,12 +265,12 @@ var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit fo
 			}, timeout, interval).Should(Equal(expected))
 
 			By("Increasing the 'SizeLimit' for a pool resource when needed")
-			pool.Spec.SizeLimit = 4
+			pool.Spec.SizeLimit = utils.IntPtr(4)
 
 			err = k8sClient.Update(ctx, &pool)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(pool.Spec.SizeLimit).To(Equal(4))
+			Expect(pool.Spec.SizeLimit).To(Equal(utils.IntPtr(4)))
 
 			By("Creating more namespaces when necessary if the value of 'SizeLimit' had been increased")
 			expected = fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", 2, 0, 2)
@@ -287,12 +287,12 @@ var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit fo
 			}, timeout, interval).Should(Equal(expected))
 
 			By("Decreasing the 'SizeLimit' for a pool resource when needed")
-			pool.Spec.SizeLimit = 3
+			pool.Spec.SizeLimit = utils.IntPtr(3)
 
 			err = k8sClient.Update(ctx, &pool)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(pool.Spec.SizeLimit).To(Equal(3))
+			Expect(pool.Spec.SizeLimit).To(Equal(utils.IntPtr(3)))
 
 			By("Deleting namespaces when necessary if the value of 'SizeLimit' has decreased")
 			expected = fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", 1, 0, 2)
