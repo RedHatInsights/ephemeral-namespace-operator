@@ -184,17 +184,17 @@ func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePo
 	sizeLimit := pool.Spec.SizeLimit
 	poolTotal := ready + creating + reserved
 
-	if pool.Spec.SizeLimit == 0 {
+	if pool.Spec.SizeLimit == nil {
 		return size - (ready + creating)
 	}
 
-	if poolTotal == sizeLimit {
+	if poolTotal == *sizeLimit {
 		r.Log.Info(fmt.Sprintf("Max number of namespaces for pool [%s] already created [%d]", pool.Name, pool.Spec.SizeLimit))
 		return 0
 	}
 
-	if poolTotal > sizeLimit {
-		return sizeLimit - poolTotal
+	if poolTotal > *sizeLimit {
+		return *sizeLimit - poolTotal
 	}
 
 	return size - (ready + creating)
