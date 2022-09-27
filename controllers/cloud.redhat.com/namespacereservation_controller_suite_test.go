@@ -63,6 +63,20 @@ var _ = Describe("Reservation controller basic reservation", func() {
 			}, timeout, interval).Should(BeTrue())
 		})
 
+		It("Should update the owner reference to be 'NamespaceReservation'", func() {
+			ctx := context.Background()
+			resName := "res-jksa43"
+
+			reservation := newReservation(resName, "10h", "test-user-jksa43", "default")
+
+			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
+
+			reservedNamespace := core.Namespace{}
+			for _, owner := range reservedNamespace.GetOwnerReferences() {
+				Expect(owner.Kind == "NamespaceReservation").To(BeTrue())
+			}
+		})
+
 		It("Should handle expired reservations", func() {
 			By("Deleting the reservation")
 			ctx := context.Background()

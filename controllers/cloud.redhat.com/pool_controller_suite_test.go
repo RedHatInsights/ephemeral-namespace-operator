@@ -48,7 +48,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 				return ownedCount == pool.Spec.Size
 			}, timeout, interval).Should(BeTrue())
 
-			By("Ensuring ready/creating namespace count equals the pool spec size")
+			By("Ensuring ready/creating namespace total equals the pool spec size")
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
 			Expect(err).NotTo(HaveOccurred())
 
