@@ -75,7 +75,6 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		"reserved", pool.Status.Reserved)
 
 	quantityOfNamespaces := r.getNamespaceQuantityDelta(pool)
-
 	if quantityOfNamespaces > 0 {
 		r.Log.Info(fmt.Sprintf("Filling '%s' pool with %d namespace(s)", pool.Name, quantityOfNamespaces))
 		err := r.increaseReadyNamespacesQueue(ctx, pool, quantityOfNamespaces)
