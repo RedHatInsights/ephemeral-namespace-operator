@@ -34,8 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 400,
-      "iteration": 1661525758206,
+      "iteration": 1663870600985,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -114,7 +113,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
-              "noValue": "No Active Reservations",
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -133,10 +132,10 @@ data:
             "x": 3,
             "y": 0
           },
-          "id": 33,
+          "id": 38,
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
@@ -157,7 +156,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(active_reservation_total)",
+              "expr": "active_reservation_total",
               "format": "table",
               "instant": true,
               "legendFormat": "{{pool}}",
@@ -180,7 +179,7 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
-                "axisLabel": "",
+                "axisLabel": "Number of Active Reservations",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
@@ -207,7 +206,6 @@ data:
                   "mode": "off"
                 }
               },
-              "displayName": "Active Reservations",
               "mappings": [],
               "thresholds": {
                 "mode": "absolute",
@@ -246,7 +244,8 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(active_reservation_total)",
+              "expr": "sum(active_reservation_total{pool=~\"$pools\"}) by (pool)",
+              "format": "time_series",
               "hide": false,
               "legendFormat": "{{pool}}",
               "range": true,
@@ -340,7 +339,7 @@ data:
               "dimensions": {},
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\"insights-platform-advisor-backend-smoke-test.*\"}))",
+              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\".*smoke-test.*|.*pr-check-.*|automation-.*|.*-check-bot|.*ephemeral-base.*|edge-api.*|notifications.*\"}))",
               "expression": "",
               "format": "table",
               "id": "",
@@ -1061,7 +1060,7 @@ data:
         "list": [
           {
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "c-rh-c-eph-prometheus",
               "value": "c-rh-c-eph-prometheus"
             },
@@ -1079,7 +1078,7 @@ data:
           },
           {
             "current": {
-              "selected": false,
+              "selected": true,
               "text": "All",
               "value": "$__all"
             },
@@ -1125,6 +1124,6 @@ data:
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 25,
+      "version": 34,
       "weekStart": ""
     }
