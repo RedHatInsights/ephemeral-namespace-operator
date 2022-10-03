@@ -54,8 +54,10 @@ var _ = Describe("Pool controller basic functionality", func() {
 
 			pool.Spec.Size--
 
-			err = k8sClient.Update(ctx, &pool)
-			Expect(err).NotTo(HaveOccurred())
+			Eventually(func() {
+				err = k8sClient.Update(ctx, &pool)
+				Expect(err).NotTo(HaveOccurred())
+			}, timeout, interval)
 
 			Eventually(func() int {
 				err = k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
@@ -67,8 +69,10 @@ var _ = Describe("Pool controller basic functionality", func() {
 			By("Creating new namespaces as needed")
 			pool.Spec.Size++
 
-			err = k8sClient.Update(ctx, &pool)
-			Expect(err).NotTo(HaveOccurred())
+			Eventually(func() {
+				err = k8sClient.Update(ctx, &pool)
+				Expect(err).NotTo(HaveOccurred())
+			}, timeout, interval)
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
@@ -79,8 +83,10 @@ var _ = Describe("Pool controller basic functionality", func() {
 
 			pool.Spec.Size--
 
-			err = k8sClient.Update(ctx, &pool)
-			Expect(err).NotTo(HaveOccurred())
+			Eventually(func() {
+				err = k8sClient.Update(ctx, &pool)
+				Expect(err).NotTo(HaveOccurred())
+			}, timeout, interval)
 		})
 
 		It("Should delete namespaces in an error state", func() {
