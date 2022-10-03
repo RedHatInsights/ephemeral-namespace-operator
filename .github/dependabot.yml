@@ -7,3 +7,4 @@ updates:
     labels:
       - "dependabot"
       - "maintenance"
+    open-pull-requests-limit: 10
