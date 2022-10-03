@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1661176177258,
+      "iteration": 1663870600985,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -91,7 +91,7 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(successful_pool_reservations_total{pool=\"$pools\"})",
+              "expr": "sum(successful_pool_reservations_total{pool=~\"$pools\"})",
               "format": "time_series",
               "legendFormat": "{{pool}}",
               "range": true,
@@ -113,7 +113,7 @@ data:
                 "mode": "thresholds"
               },
               "mappings": [],
-              "noValue": "No Active Reservations",
+              "noValue": "0",
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
@@ -132,10 +132,10 @@ data:
             "x": 3,
             "y": 0
           },
-          "id": 33,
+          "id": 38,
           "options": {
             "colorMode": "value",
-            "graphMode": "area",
+            "graphMode": "none",
             "justifyMode": "auto",
             "orientation": "auto",
             "reduceOptions": {
@@ -156,7 +156,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(active_reservation_total)",
+              "expr": "active_reservation_total",
               "format": "table",
               "instant": true,
               "legendFormat": "{{pool}}",
@@ -179,7 +179,7 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
-                "axisLabel": "",
+                "axisLabel": "Number of Active Reservations",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "drawStyle": "line",
@@ -206,7 +206,6 @@ data:
                   "mode": "off"
                 }
               },
-              "displayName": "Active Reservations",
               "mappings": [],
               "thresholds": {
                 "mode": "absolute",
@@ -245,7 +244,8 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(active_reservation_total)",
+              "expr": "sum(active_reservation_total{pool=~\"$pools\"}) by (pool)",
+              "format": "time_series",
               "hide": false,
               "legendFormat": "{{pool}}",
               "range": true,
@@ -339,7 +339,7 @@ data:
               "dimensions": {},
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\"insights-platform-advisor-backend-smoke-test.*\"}))",
+              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\".*smoke-test.*|.*pr-check-.*|automation-.*|.*-check-bot|.*ephemeral-base.*|edge-api.*|notifications.*\"}))",
               "expression": "",
               "format": "table",
               "id": "",
@@ -743,6 +743,94 @@ data:
                   "viz": false
                 },
                 "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "displayName": "CPU Usage",
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 8,
+            "x": 16,
+            "y": 15
+          },
+          "id": 21,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "asc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "expr": "avg(rate(container_cpu_usage_seconds_total{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"}[5m]))",
+              "refId": "A"
+            }
+          ],
+          "title": "CPU Usage",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 30,
+                "gradientMode": "hue",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
                 "lineStyle": {
                   "fill": "solid"
                 },
@@ -838,8 +926,8 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 9,
-            "x": 7,
+            "w": 7,
+            "x": 0,
             "y": 16
           },
           "id": 23,
@@ -862,7 +950,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sum(histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=\"$pools\"}[1h]))) by (pool)",
+              "expr": "sum(histogram_quantile(0.9, rate(namespace_creation_average_seconds_bucket{pool=~\"$pools\"}[1h]))) by (pool)",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -933,9 +1021,9 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 24
+            "w": 9,
+            "x": 7,
+            "y": 16
           },
           "id": 20,
           "options": {
@@ -962,94 +1050,6 @@ data:
           "title": "Memory Usage",
           "transparent": true,
           "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 30,
-                "gradientMode": "hue",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "displayName": "CPU Usage",
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 24
-          },
-          "id": 21,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom"
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "asc"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "expr": "avg(rate(container_cpu_usage_seconds_total{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"}[5m]))",
-              "refId": "A"
-            }
-          ],
-          "title": "CPU Usage",
-          "transparent": true,
-          "type": "timeseries"
         }
       ],
       "refresh": "5s",
@@ -1060,9 +1060,9 @@ data:
         "list": [
           {
             "current": {
-              "selected": true,
-              "text": "crcd01ue1-prometheus",
-              "value": "crcd01ue1-prometheus"
+              "selected": false,
+              "text": "c-rh-c-eph-prometheus",
+              "value": "c-rh-c-eph-prometheus"
             },
             "hide": 0,
             "includeAll": false,
@@ -1078,41 +1078,30 @@ data:
           },
           {
             "current": {
-              "selected": false,
-              "text": "default",
-              "value": "default"
+              "selected": true,
+              "text": "All",
+              "value": "$__all"
             },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${datasource}"
+            },
+            "definition": "label_values(pool)",
             "hide": 0,
-            "includeAll": false,
+            "includeAll": true,
             "label": "Pool Type",
             "multi": false,
             "name": "pools",
-            "options": [
-              {
-                "selected": true,
-                "text": "default",
-                "value": "default"
-              },
-              {
-                "selected": false,
-                "text": "minimal",
-                "value": "minimal"
-              },
-              {
-                "selected": false,
-                "text": "managed-kafka",
-                "value": "managed-kafka"
-              },
-              {
-                "selected": false,
-                "text": "real-managed-kafka",
-                "value": "real-managed-kafka"
-              }
-            ],
-            "query": "default,minimal,managed-kafka,real-managed-kafka",
-            "queryValue": "",
+            "options": [],
+            "query": {
+              "query": "label_values(pool)",
+              "refId": "StandardVariableQuery"
+            },
+            "refresh": 1,
+            "regex": "",
             "skipUrlSync": false,
-            "type": "custom"
+            "sort": 0,
+            "type": "query"
           },
           {
             "datasource": {
@@ -1128,13 +1117,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-12h",
+        "from": "now-6h",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 24,
+      "version": 34,
       "weekStart": ""
     }
