@@ -267,10 +267,9 @@ var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit fo
 			By("Increasing the 'SizeLimit' for a pool resource when needed")
 			pool.Spec.SizeLimit = utils.IntPtr(4)
 
-			Eventually(func() {
-				err = k8sClient.Update(ctx, &pool)
-				Expect(err).NotTo(HaveOccurred())
-			}, timeout, interval)
+			Eventually(func() error {
+				return k8sClient.Update(ctx, &pool)
+			}, timeout, interval).Should(BeNil())
 
 			Expect(pool.Spec.SizeLimit).To(Equal(utils.IntPtr(4)))
 
@@ -291,10 +290,9 @@ var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit fo
 			By("Decreasing the 'SizeLimit' for a pool resource when needed")
 			pool.Spec.SizeLimit = utils.IntPtr(3)
 
-			Eventually(func() {
-				err = k8sClient.Update(ctx, &pool)
-				Expect(err).NotTo(HaveOccurred())
-			}, timeout, interval)
+			Eventually(func() error {
+				return k8sClient.Update(ctx, &pool)
+			}, timeout, interval).Should(BeNil())
 
 			Expect(pool.Spec.SizeLimit).To(Equal(utils.IntPtr(3)))
 
