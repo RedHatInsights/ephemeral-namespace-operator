@@ -107,9 +107,9 @@ func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *NamespacePoolReconciler) EnqueueNamespace(a client.Object) []reconcile.Request {
-	annos := a.GetLabels()
+	labels := a.GetLabels()
 
-	if pool, ok := annos["pool"]; ok {
+	if pool, ok := labels["pool"]; ok {
 		return []reconcile.Request{{
 			NamespacedName: types.NamespacedName{
 				Name: pool,
