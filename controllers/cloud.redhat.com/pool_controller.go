@@ -99,13 +99,12 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	ctrlr := ctrl.NewControllerManagedBy(mgr).For(&crd.NamespacePool{})
-	ctrlr.Watches(
-		&source.Kind{Type: &core.Namespace{}},
-		handler.EnqueueRequestsFromMapFunc(r.EnqueueNamespace),
-	)
-
-	return ctrlr.Complete(r)
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&crd.NamespacePool{}).
+		Watches(&source.Kind{Type: &core.Namespace{}},
+			handler.EnqueueRequestsFromMapFunc(r.EnqueueNamespace),
+		).
+		Complete(r)
 }
 
 func (r *NamespacePoolReconciler) EnqueueNamespace(a client.Object) []reconcile.Request {
