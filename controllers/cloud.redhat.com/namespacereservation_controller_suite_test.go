@@ -231,3 +231,84 @@ var _ = Describe("Handle waiting reservations", func() {
 		})
 	})
 })
+
+var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit for namespace creation should occur", func() {
+	Context("Ensure that a namespace creation limit occurs when a pool has the 'SizeLimit' attribute", func() {
+		It("Should stop creating namespaces once the number of namespaces created equals the 'SizeLimit'", func() {
+			By("Limiting created namespaces when the value of 'SizeLimit' has been reached")
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+			Expect(err).ToNot(HaveOccurred())
+
+			resName6 := "limit-res-1"
+			resName7 := "limit-res-2"
+
+			res6 := newReservation(resName6, "30m", "test-user-12", "limit")
+			res7 := newReservation(resName7, "30m", "test-user-13", "limit")
+
+			Expect(k8sClient.Create(ctx, res6)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, res7)).Should(Succeed())
+
+			expected := fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", 1, 0, 2)
+
+			Eventually(func() string {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				ready := pool.Status.Ready
+				creating := pool.Status.Creating
+				reserved := pool.Status.Reserved
+
+				return fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", ready, creating, reserved)
+			}, timeout, interval).Should(Equal(expected))
+
+			By("Increasing the 'SizeLimit' for a pool resource when needed")
+			pool.Spec.SizeLimit = utils.IntPtr(4)
+
+			Eventually(func() error {
+				return k8sClient.Update(ctx, &pool)
+			}, timeout, interval).Should(BeNil())
+
+			Expect(pool.Spec.SizeLimit).To(Equal(utils.IntPtr(4)))
+
+			By("Creating more namespaces when necessary if the value of 'SizeLimit' had been increased")
+			expected = fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", 2, 0, 2)
+
+			Eventually(func() string {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				ready := pool.Status.Ready
+				creating := pool.Status.Creating
+				reserved := pool.Status.Reserved
+
+				return fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", ready, creating, reserved)
+			}, timeout, interval).Should(Equal(expected))
+
+			By("Decreasing the 'SizeLimit' for a pool resource when needed")
+			pool.Spec.SizeLimit = utils.IntPtr(3)
+
+			Eventually(func() error {
+				return k8sClient.Update(ctx, &pool)
+			}, timeout, interval).Should(BeNil())
+
+			Expect(pool.Spec.SizeLimit).To(Equal(utils.IntPtr(3)))
+
+			By("Deleting namespaces when necessary if the value of 'SizeLimit' has decreased")
+			expected = fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", 1, 0, 2)
+
+			Eventually(func() string {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				ready := pool.Status.Ready
+				creating := pool.Status.Creating
+				reserved := pool.Status.Reserved
+
+				return fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", ready, creating, reserved)
+			}, timeout, interval).Should(Equal(expected))
+		})
+	})
+})
