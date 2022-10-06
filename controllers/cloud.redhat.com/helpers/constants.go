@@ -13,8 +13,7 @@ const (
 
 	KIND_NAMESPACEPOOL = "NamespacePool"
 
-	LABEL_POOL        = "pool"
-	LABEL_OPERATOR_NS = "operator-ns"
+	LABEL_POOL = "pool"
 
 	NAMESPACE_EPHEMERAL_BASE = "ephemeral-base"
 

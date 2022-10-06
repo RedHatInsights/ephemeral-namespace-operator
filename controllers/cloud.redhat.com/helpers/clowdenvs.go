@@ -58,7 +58,7 @@ func WaitForClowdEnv(ctx context.Context, cl client.Client, log logr.Logger, nsN
 		if err != nil {
 			msg = msg + fmt.Sprintf(" (%s)", err)
 		}
-		log.Info(msg, "ns-name", nsName)
+		log.Info(msg, "Namespace", nsName)
 	}
 
 	return clowdEnv

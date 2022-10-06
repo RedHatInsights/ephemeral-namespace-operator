@@ -119,7 +119,7 @@ func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, errNamespaceList []string) error {
 	for _, nsName := range errNamespaceList {
-		r.Log.Info("Deleting namespace", "ns-name", nsName)
+		r.Log.Info("Deleting namespace", "Namespace", nsName)
 		err := helpers.DeleteNamespace(ctx, r.Client, nsName)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("Error deleting namespace: [%s]", nsName))
@@ -158,7 +158,7 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.Na
 				case helpers.ENV_STATUS_CREATING:
 					creatingNS++
 				case helpers.ENV_STATUS_ERROR:
-					r.Log.Info("Error status for namespace. Prepping for deletion.", "ns-name", ns.Name)
+					r.Log.Info("Error status for namespace. Prepping for deletion.", "Namespace", ns.Name)
 					errNamespaceList = append(errNamespaceList, ns.Name)
 				}
 			}
@@ -187,7 +187,7 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 			if nsName != "" {
 				err := helpers.UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, nsName)
 				if err != nil {
-					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", nsName)
+					r.Log.Error(err, "Error while updating annotations on namespace", "Namespace", nsName)
 					return err
 				}
 			}
@@ -207,7 +207,7 @@ func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Conte
 			if ns.Annotations[helpers.ANNOTATION_ENV_STATUS] == helpers.ENV_STATUS_READY && ns.Annotations[helpers.ANNOTATION_RESERVED] == "false" {
 				err := helpers.UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, ns.Name)
 				if err != nil {
-					r.Log.Error(err, "Error while updating annotations on namespace", "ns-name", ns.Name)
+					r.Log.Error(err, "Error while updating annotations on namespace", "Namespace", ns.Name)
 					return err
 				}
 

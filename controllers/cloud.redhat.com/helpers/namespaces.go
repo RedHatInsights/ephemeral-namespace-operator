@@ -25,7 +25,7 @@ var initialAnnotations = map[string]string{
 }
 
 var initialLabels = map[string]string{
-	LABEL_OPERATOR_NS: "true",
+	LABEL_POOL: "",
 }
 
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
@@ -134,7 +134,7 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 	nsList := core.NamespaceList{}
 
 	validatedSelector, _ := labels.ValidatedSelectorFromSet(
-		map[string]string{LABEL_OPERATOR_NS: "true", LABEL_POOL: pool})
+		map[string]string{LABEL_POOL: pool})
 
 	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
