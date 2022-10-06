@@ -1107,7 +1107,7 @@ objects:
                 size:
                   description: Number of namespaces to have ready in the pool
                   type: integer
-                sizelimit:
+                sizeLimit:
                   description: Optional max number of namespaces for a pool
                   type: integer
               required:
@@ -1667,3 +1667,4 @@ parameters:
   value: latest
 - name: IMAGE
   value: quay.io/cloudservices/ephemeral-namespace-operator
+

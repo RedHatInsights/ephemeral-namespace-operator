@@ -61,14 +61,11 @@ spec:
                         description: Defines the autoscaler configuration
                         properties:
                           mode:
-                            description: 'The mode of operation of the Clowder InMemory
-                              Provider. Valid options are: (*_redis_*) where a local
-                              Minio instance will be created, and (*_elasticache_*)
-                              which will search the namespace of the ClowdApp for
-                              a secret called ''elasticache'''
+                            description: Enable the autoscaler feature
                             enum:
-                            - keda
                             - none
+                            - enabled
+                            - keda
                             type: string
                         type: object
                       db:
@@ -311,6 +308,25 @@ spec:
                           enableLegacyStrimzi:
                             description: EnableLegacyStrimzi disables TLS + user auth
                             type: boolean
+                          ephemManagedDeletePrefix:
+                            description: Defines a prefix whitelist value
+                            type: string
+                          ephemManagedSecretRef:
+                            description: Defines the secret reference for the Ephemeral
+                              Managed Kafka mode. Only used in (*_managed-ephem_*)
+                              mode.
+                            properties:
+                              name:
+                                description: Name defines the Name of a resource.
+                                type: string
+                              namespace:
+                                description: Namespace defines the Namespace of a
+                                  resource.
+                                type: string
+                            required:
+                            - name
+                            - namespace
+                            type: object
                           managedPrefix:
                             description: Managed topic prefix for the managed cluster.
                               Only used in (*_managed_*) mode.
@@ -342,6 +358,7 @@ spec:
                               is created in the desired cluster namespace and configured
                               to auto-create topics.'
                             enum:
+                            - managed-ephem
                             - managed
                             - operator
                             - app-interface
@@ -639,9 +656,38 @@ spec:
                             description: The URL of BOP - only used in (*_none_*/*_operator_*)
                               mode.
                             type: string
+                          images:
+                            description: Optional images to use for web provider components
+                              -- only applies when running in (*_local_*) mode.
+                            properties:
+                              caddy:
+                                description: Caddy image -- if not defined, value
+                                  from operator config is used if set, otherwise a
+                                  hard-coded default is used.
+                                type: string
+                              keycloak:
+                                description: Keycloak image -- default is 'quay.io/keycloak/keycloak:{KeycloakVersion}'
+                                  unless overridden here
+                                type: string
+                              mockBop:
+                                description: Mock BOP image -- if not defined, value
+                                  from operator config is used if set, otherwise a
+                                  hard-coded default is used.
+                                type: string
+                              mocktitlements:
+                                description: Mock entitlements image -- if not defined,
+                                  value from operator config is used if set, otherwise
+                                  a hard-coded default is used.
+                                type: string
+                            type: object
                           ingressClass:
                             description: Ingress Class Name used only in (*_local_*)
                               mode.
+                            type: string
+                          keycloakVersion:
+                            description: Optional keycloak version override -- used
+                              only in (*_local_*) mode -- if not set, a hard-coded
+                              default is used.
                             type: string
                           mode:
                             description: The mode of operation of the Web provider.
@@ -1037,6 +1083,9 @@ spec:
               size:
                 description: Number of namespaces to have ready in the pool
                 type: integer
+              sizeLimit:
+                description: Optional max number of namespaces for a pool
+                type: integer
             required:
             - clowdenvironment
             - limitrange
@@ -1051,9 +1100,12 @@ spec:
                 type: integer
               ready:
                 type: integer
+              reserved:
+                type: integer
             required:
             - creating
             - ready
+            - reserved
             type: object
         type: object
     served: true
