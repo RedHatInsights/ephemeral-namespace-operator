@@ -1,6 +1,5 @@
 /*
 Copyright 2021.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -24,22 +23,25 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 )
 
-var (
-	statusTypeCount = make(map[string]int)
+const (
+	POOL_STATUS_READY    = "ready"
+	POOL_STATUS_CREATING = "creating"
 )
 
 // NamespacePoolReconciler reconciles a NamespacePool object
 type NamespacePoolReconciler struct {
-	Client client.Client
+	client.Client
 	Scheme *runtime.Scheme
 	Log    logr.Logger
 }
@@ -56,15 +58,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	r.Log.Info(fmt.Sprintf("Retrieving list of namespaces in [%s] pool", pool.Name))
-	nsList, err := r.getPoolNamespaceList(ctx, pool.Name)
-	if err != nil {
-		r.Log.Error(err, fmt.Sprintf("Could not retrieve namespaces from [%s] pool", pool.Name))
-		return ctrl.Result{Requeue: true}, err
-	}
-
-	r.Log.Info(fmt.Sprintf("Checking status of namespaces in pool [%s]", pool.Name))
-	statusTypeCount, errNamespaceList, err := r.getPoolStatus(ctx, pool, nsList)
+	errNamespaceList, err := r.getPoolStatus(ctx, &pool)
 	if err != nil {
 		r.Log.Error(err, "Unable to get status of owned namespaces")
 		return ctrl.Result{Requeue: true}, err
@@ -79,12 +73,12 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	r.Log.Info(fmt.Sprintf("[%s] pool status", pool.Name), "ready", statusTypeCount[helpers.ENV_STATUS_READY], "creating", statusTypeCount[helpers.ENV_STATUS_CREATING])
+	r.Log.Info(fmt.Sprintf("'%s' pool status", pool.Name),
+		"ready", pool.Status.Ready,
+		"creating", pool.Status.Creating,
+		"reserved", pool.Status.Reserved)
 
-	pool.Status.Ready = statusTypeCount[helpers.ENV_STATUS_READY]
-	pool.Status.Creating = statusTypeCount[helpers.ENV_STATUS_CREATING]
-
-	quantityOfNamespaces := r.checkReadyNamespaceQuantity(pool)
+	quantityOfNamespaces := r.getNamespaceQuantityDelta(pool)
 
 	if quantityOfNamespaces > 0 {
 		r.Log.Info(fmt.Sprintf("Filling [%s] pool with [%d] namespace(s)", pool.Name, quantityOfNamespaces))
@@ -94,7 +88,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	} else if quantityOfNamespaces < 0 {
 		r.Log.Info(fmt.Sprintf("Excess number of ready namespaces in [%s] pool detected, removing [%d] namespace(s)", pool.Name, (quantityOfNamespaces * -1)))
-		err := r.decreaseReadyNamespacesQueue(ctx, pool, nsList, quantityOfNamespaces)
+		err := r.decreaseReadyNamespacesQueue(ctx, pool, quantityOfNamespaces)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("unable to delete excess namespaces for [%s] pool.", pool.Name))
 		}
@@ -113,8 +107,23 @@ func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&crd.NamespacePool{}).
 		Watches(&source.Kind{Type: &core.Namespace{}},
-			&handler.EnqueueRequestForOwner{IsController: true, OwnerType: &crd.NamespacePool{}}).
+			handler.EnqueueRequestsFromMapFunc(r.EnqueueNamespace),
+		).
 		Complete(r)
+}
+
+func (r *NamespacePoolReconciler) EnqueueNamespace(a client.Object) []reconcile.Request {
+	labels := a.GetLabels()
+
+	if pool, ok := labels["pool"]; ok {
+		return []reconcile.Request{{
+			NamespacedName: types.NamespacedName{
+				Name: pool,
+			},
+		}}
+	}
+	return []reconcile.Request{}
+
 }
 
 func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, errNamespaceList []string) error {
@@ -130,57 +139,72 @@ func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, err
 	return nil
 }
 
-func (r *NamespacePoolReconciler) getPoolNamespaceList(ctx context.Context, poolName string) (core.NamespaceList, error) {
-	nsList := core.NamespaceList{}
+func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.NamespacePool) ([]string, error) {
+	var readyNamespaceCount int
+	var creatingNamespaceCount int
+	var reservedNamespaceCount int
 
-	labelSelector, _ := labels.Parse(fmt.Sprintf("pool=%s", poolName))
+	nsList := core.NamespaceList{}
+	errNamespaceList := []string{}
+
+	labelSelector, _ := labels.Parse(fmt.Sprintf("pool=%s", pool.Name))
 	nsListOptions := &client.ListOptions{LabelSelector: labelSelector}
 	if err := r.Client.List(ctx, &nsList, nsListOptions); err != nil {
 		r.Log.Error(err, "Unable to retrieve list of existing ready namespaces")
-		return nsList, err
+		return nil, err
 	}
-
-	return nsList, nil
-}
-
-func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool crd.NamespacePool, nsList core.NamespaceList) (map[string]int, []string, error) {
-	errNamespaceList := []string{}
-
-	var readyNS int
-	var creatingNS int
 
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.UID == pool.GetUID() {
 				switch ns.Annotations[helpers.ANNOTATION_ENV_STATUS] {
 				case helpers.ENV_STATUS_READY:
-					readyNS++
+					readyNamespaceCount++
 				case helpers.ENV_STATUS_CREATING:
-					creatingNS++
+					creatingNamespaceCount++
 				case helpers.ENV_STATUS_ERROR:
 					r.Log.Info("Error status for namespace. Prepping for deletion.", "Namespace", ns.Name)
 					errNamespaceList = append(errNamespaceList, ns.Name)
 				}
+			} else if owner.Kind == "NamespaceReservation" {
+				reservedNamespaceCount++
 			}
 		}
 	}
 
-	statusTypeCount["ready"] = readyNS
-	statusTypeCount["creating"] = creatingNS
+	pool.Status.Ready = readyNamespaceCount
+	pool.Status.Creating = creatingNamespaceCount
+	pool.Status.Reserved = reservedNamespaceCount
 
-	return statusTypeCount, errNamespaceList, nil
+	return errNamespaceList, nil
 }
 
-func (r *NamespacePoolReconciler) checkReadyNamespaceQuantity(pool crd.NamespacePool) int {
+func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePool) int {
 	size := pool.Spec.Size
 	ready := pool.Status.Ready
 	creating := pool.Status.Creating
+	reserved := pool.Status.Reserved
+	sizeLimit := pool.Spec.SizeLimit
+	poolTotal := ready + creating + reserved
+
+	if pool.Spec.SizeLimit == nil {
+		return size - (ready + creating)
+	}
+
+	if poolTotal == *sizeLimit {
+		r.Log.Info(fmt.Sprintf("Max number of namespaces for pool [%s] already created [%d]", pool.Name, pool.Spec.SizeLimit))
+		return 0
+	}
+
+	if poolTotal > *sizeLimit {
+		return *sizeLimit - poolTotal
+	}
 
 	return size - (ready + creating)
 }
 
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
-	for i := 0; i < r.checkReadyNamespaceQuantity(pool); i++ {
+	for i := 0; i < r.getNamespaceQuantityDelta(pool); i++ {
 		nsName, err := helpers.CreateNamespace(ctx, r.Client, &pool)
 		if err != nil {
 			r.Log.Error(err, "Error while creating namespace")
@@ -201,9 +225,15 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 	return nil
 }
 
-func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, nsList core.NamespaceList, decreaseSize int) error {
+func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, decreaseSize int) error {
+	nsList, err := helpers.GetReadyNamespaces(ctx, r.Client, pool.Name)
+	if err != nil {
+		r.Log.Error(err, fmt.Sprintf("Unable to retrieve list of namespaces from '%s' pool", pool.Name))
+		return err
+	}
+
 	for i := decreaseSize; i < 0; i++ {
-		for _, ns := range nsList.Items {
+		for _, ns := range nsList {
 			if ns.Annotations[helpers.ANNOTATION_ENV_STATUS] == helpers.ENV_STATUS_READY && ns.Annotations[helpers.ANNOTATION_RESERVED] == "false" {
 				err := helpers.UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, ns.Name)
 				if err != nil {

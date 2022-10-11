@@ -1,6 +1,5 @@
 /*
 Copyright 2021.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -38,6 +37,7 @@ import (
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
+	utils "github.com/RedHatInsights/rhc-osdk-utils/utils"
 	core "k8s.io/api/core/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	//+kubebuilder:scaffold:imports
@@ -130,7 +130,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	testConfig := crd.NamespacePoolSpec{
+	testPoolSpec := crd.NamespacePoolSpec{
 		Size:  2,
 		Local: true,
 		ClowdEnvironment: clowder.ClowdEnvironmentSpec{
@@ -228,7 +228,7 @@ var _ = BeforeSuite(func() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "default",
 		},
-		Spec: testConfig,
+		Spec: testPoolSpec,
 	}
 
 	minimalPool := &crd.NamespacePool{
@@ -239,11 +239,25 @@ var _ = BeforeSuite(func() {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "minimal",
 		},
-		Spec: testConfig,
+		Spec: testPoolSpec,
 	}
+
+	limitPool := &crd.NamespacePool{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "cloud.redhat.com/",
+			Kind:       "NamespacePool",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "limit",
+		},
+		Spec: testPoolSpec,
+	}
+
+	limitPool.Spec.SizeLimit = utils.IntPtr(3)
 
 	Expect(k8sClient.Create(ctx, defaultPool)).Should(Succeed())
 	Expect(k8sClient.Create(ctx, minimalPool)).Should(Succeed())
+	Expect(k8sClient.Create(ctx, limitPool)).Should(Succeed())
 
 	go poller.Poll()
 

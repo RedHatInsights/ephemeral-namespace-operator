@@ -26,6 +26,8 @@ import (
 type NamespacePoolSpec struct {
 	// Number of namespaces to have ready in the pool
 	Size int `json:"size"`
+	// Optional max number of namespaces for a pool
+	SizeLimit *int `json:"sizeLimit,omitempty"`
 	// Determine whether the project uses a project or a namespace
 	Local bool `json:"local"`
 	// Clowdenvironment template for the namespace
@@ -42,6 +44,7 @@ type NamespacePoolSpec struct {
 type NamespacePoolStatus struct {
 	Ready    int `json:"ready"`
 	Creating int `json:"creating"`
+	Reserved int `json:"reserved"`
 }
 
 //+kubebuilder:object:root=true
