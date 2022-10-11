@@ -20,4 +20,7 @@ const (
 	BONFIRE_IGNORE_SECRET          = "bonfire.ignore"
 	OPENSHIFT_VAULT_SECRETS_SECRET = "openshift-vault-secrets"
 	QONTRACT_INTEGRATION_SECRET    = "qontract.integration"
+
+	TRUE_VALUE  = "true"
+	FALSE_VALUE = "false"
 )
