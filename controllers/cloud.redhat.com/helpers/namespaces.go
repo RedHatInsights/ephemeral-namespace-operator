@@ -25,7 +25,8 @@ var initialAnnotations = map[string]string{
 }
 
 var initialLabels = map[string]string{
-	LABEL_POOL: "",
+	OPERATOR_NS: TRUE_VALUE,
+	LABEL_POOL:  "",
 }
 
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
