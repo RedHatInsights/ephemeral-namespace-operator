@@ -104,7 +104,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 				}
 			}
 
-			err = helpers.UpdateAnnotations(ctx, k8sClient, map[string]string{"env-status": "error"}, ownedNs.Name)
+			err = helpers.UpdateAnnotations(ctx, k8sClient, helpers.AnnotationEnvError.ToMap(), ownedNs.Name)
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {

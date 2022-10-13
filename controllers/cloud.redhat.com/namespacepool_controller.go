@@ -209,7 +209,7 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 		if err != nil {
 			r.Log.Error(err, "Error while creating namespace")
 			if nsName != "" {
-				err := helpers.UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, nsName)
+				err := helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvError.ToMap(), nsName)
 				if err != nil {
 					r.Log.Error(err, "Error while updating annotations on namespace", "Namespace", nsName)
 					return err
@@ -235,7 +235,7 @@ func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Conte
 	for i := decreaseSize; i < 0; i++ {
 		for _, ns := range nsList {
 			if ns.Annotations[helpers.ANNOTATION_ENV_STATUS] == helpers.ENV_STATUS_READY && ns.Annotations[helpers.ANNOTATION_RESERVED] == "false" {
-				err := helpers.UpdateAnnotations(ctx, r.Client, map[string]string{helpers.ANNOTATION_ENV_STATUS: helpers.ENV_STATUS_ERROR}, ns.Name)
+				err := helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvError.ToMap(), ns.Name)
 				if err != nil {
 					r.Log.Error(err, "Error while updating annotations on namespace", "Namespace", ns.Name)
 					return err

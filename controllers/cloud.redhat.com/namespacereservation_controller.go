@@ -155,10 +155,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		// Verify that the ClowdEnv has been set up for the requested namespace
 		if err := r.verifyClowdEnvForReadyNs(ctx, readyNsName); err != nil {
 			r.Log.Error(err, err.Error(), "Namespace", readyNsName)
-			errorAnnotation := map[string]string{
-				"env-status": "error",
-			}
-			if err := helpers.UpdateAnnotations(ctx, r.Client, errorAnnotation, readyNsName); err != nil {
+			if err := helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvError.ToMap(), readyNsName); err != nil {
 				r.Log.Error(err, fmt.Sprintf("Unable to update annotations for unready namespace in '%s' pool", res.Status.Pool), "Namespace", readyNsName)
 			}
 			return ctrl.Result{Requeue: true}, err
