@@ -14,16 +14,6 @@ type CustomLabel struct {
 	Value string
 }
 
-// var initialAnnotations = map[string]string{
-// 	ANNOTATION_ENV_STATUS: ENV_STATUS_CREATING,
-// 	ANNOTATION_RESERVED:   "false",
-// }
-
-// var initialLabels = map[string]string{
-// 	OPERATOR_NS: TRUE_VALUE,
-// 	LABEL_POOL:  "",
-// }
-
 func (a *CustomAnnotation) CreateInitialAnnotations() map[string]string {
 	initialAnnotations := make(map[string]string)
 
@@ -36,7 +26,7 @@ func (a *CustomAnnotation) CreateInitialAnnotations() map[string]string {
 func (l *CustomLabel) CreateInitialLabels(poolName string) map[string]string {
 	initialLabels := make(map[string]string)
 
-	initialLabels[LABEL_OPERATOR_NS] = LABEL_POOL
+	initialLabels[LABEL_OPERATOR_NS] = TRUE_VALUE
 	initialLabels[LABEL_POOL] = poolName
 
 	return initialLabels
