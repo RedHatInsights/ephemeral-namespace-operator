@@ -19,43 +19,48 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var initialAnnotations = map[string]string{
-	ANNOTATION_ENV_STATUS: ENV_STATUS_CREATING,
-	ANNOTATION_RESERVED:   "false",
-}
+// var initialAnnotations = map[string]string{
+// 	ANNOTATION_ENV_STATUS: ENV_STATUS_CREATING,
+// 	ANNOTATION_RESERVED:   "false",
+// }
 
-var initialLabels = map[string]string{
-	OPERATOR_NS: TRUE_VALUE,
-	LABEL_POOL:  "",
-}
+// var initialLabels = map[string]string{
+// 	OPERATOR_NS: TRUE_VALUE,
+// 	LABEL_POOL:  "",
+// }
 
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
 	ns := core.Namespace{}
 
-	labels := map[string]string{}
-	for k, v := range initialLabels {
-		labels[k] = v
-	}
-
-	labels[LABEL_POOL] = pool.Name
-
-	if len(ns.Annotations) == 0 {
-		ns.SetAnnotations(initialAnnotations)
-	} else {
-		for k, v := range initialAnnotations {
-			ns.Annotations[k] = v
-		}
-	}
-
-	if len(ns.Labels) == 0 {
-		ns.SetLabels(labels)
-	} else {
-		for k, v := range labels {
-			ns.Labels[k] = v
-		}
-	}
-
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
+
+	annotations := CustomAnnotation{}
+	annotations.SetInitialAnnotations(&ns)
+
+	labels := CustomLabel{}
+	labels.SetInitialLabels(&ns, pool.Name)
+	// labels := map[string]string{}
+	// for k, v := range initialLabels {
+	// 	labels[k] = v
+	// }
+
+	// labels[LABEL_POOL] = pool.Name
+
+	// if len(ns.Labels) == 0 {
+	// 	ns.SetLabels(labels)
+	// } else {
+	// 	for k, v := range labels {
+	// 		ns.Labels[k] = v
+	// 	}
+	// }
+
+	// if len(ns.Annotations) == 0 {
+	// 	ns.SetAnnotations(initialAnnotations)
+	// } else {
+	// 	for k, v := range initialAnnotations {
+	// 		ns.Annotations[k] = v
+	// 	}
+	// }
 
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &ns); err != nil {
