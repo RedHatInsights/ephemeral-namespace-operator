@@ -19,12 +19,10 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"time"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/go-logr/logr"
-	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -67,23 +65,23 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			r.Log.Info("Namespace ready", "Namespace", nsName)
 			helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvReady.ToMap(), nsName)
 
-			ns, err := helpers.GetNamespace(ctx, r.Client, nsName)
-			if err != nil {
-				r.Log.Error(err, "Could not retrieve newly created namespace", "Namespace", nsName)
-			}
+			// ns, err := helpers.GetNamespace(ctx, r.Client, nsName)
+			// if err != nil {
+			// 	r.Log.Error(err, "Could not retrieve newly created namespace", "Namespace", nsName)
+			// }
 
-			if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; !ok {
-				nsCompletionTime := time.Now()
-				ns.Annotations[helpers.COMPLETION_TIME] = nsCompletionTime.String()
+			// if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; !ok {
+			// 	nsCompletionTime := time.Now()
+			// 	ns.Annotations[helpers.COMPLETION_TIME] = nsCompletionTime.String()
 
-				if err := r.Client.Update(ctx, &ns); err != nil {
-					return ctrl.Result{}, err
-				}
+			// 	if err := r.Client.Update(ctx, &ns); err != nil {
+			// 		return ctrl.Result{}, err
+			// 	}
 
-				elapsed := nsCompletionTime.Sub(ns.CreationTimestamp.Time)
+			// 	elapsed := nsCompletionTime.Sub(ns.CreationTimestamp.Time)
 
-				averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
-			}
+			// 	averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
+			// }
 
 		}
 	}

@@ -1,5 +1,9 @@
 package helpers
 
+import (
+	core "k8s.io/api/core/v1"
+)
+
 type CustomAnnotation struct {
 	Annotation string
 	Value      string
@@ -10,12 +14,64 @@ type CustomLabel struct {
 	Value string
 }
 
-func (c *CustomAnnotation) ToMap() map[string]string {
-	return map[string]string{c.Annotation: c.Value}
+// var initialAnnotations = map[string]string{
+// 	ANNOTATION_ENV_STATUS: ENV_STATUS_CREATING,
+// 	ANNOTATION_RESERVED:   "false",
+// }
+
+// var initialLabels = map[string]string{
+// 	OPERATOR_NS: TRUE_VALUE,
+// 	LABEL_POOL:  "",
+// }
+
+func (a *CustomAnnotation) CreateInitialAnnotations() map[string]string {
+	initialAnnotations := make(map[string]string)
+
+	initialAnnotations[ANNOTATION_ENV_STATUS] = ENV_STATUS_CREATING
+	initialAnnotations[ANNOTATION_RESERVED] = FALSE_VALUE
+
+	return initialAnnotations
 }
 
-func (c *CustomLabel) ToMap() map[string]string {
-	return map[string]string{c.Label: c.Value}
+func (l *CustomLabel) CreateInitialLabels(poolName string) map[string]string {
+	initialLabels := make(map[string]string)
+
+	initialLabels[LABEL_OPERATOR_NS] = LABEL_POOL
+	initialLabels[LABEL_POOL] = poolName
+
+	return initialLabels
+}
+
+func (a *CustomAnnotation) ToMap() map[string]string {
+	return map[string]string{a.Annotation: a.Value}
+}
+
+func (l *CustomLabel) ToMap() map[string]string {
+	return map[string]string{l.Label: l.Value}
+}
+
+func (a *CustomAnnotation) SetInitialAnnotations(ns *core.Namespace) {
+	initialAnnotations := a.CreateInitialAnnotations()
+
+	if len(ns.Annotations) == 0 {
+		ns.SetAnnotations(initialAnnotations)
+	} else {
+		for k, v := range initialAnnotations {
+			ns.Annotations[k] = v
+		}
+	}
+}
+
+func (l *CustomLabel) SetInitialLabels(ns *core.Namespace, poolName string) {
+	initialLabels := l.CreateInitialLabels(poolName)
+
+	if len(ns.Labels) == 0 {
+		ns.SetLabels(initialLabels)
+	} else {
+		for k, v := range initialLabels {
+			ns.Labels[k] = v
+		}
+	}
 }
 
 var AnnotationEnvReady = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_READY}
@@ -26,3 +82,4 @@ var AnnotationReservedTrue = CustomAnnotation{Annotation: ANNOTATION_RESERVED, V
 var AnnotationReservedFalse = CustomAnnotation{Annotation: ANNOTATION_RESERVED, Value: FALSE_VALUE}
 
 var LabelPoolType = CustomLabel{Label: LABEL_POOL, Value: ""}
+var LabelOperatorNamespaceTrue = CustomLabel{Label: LABEL_OPERATOR_NS, Value: TRUE_VALUE}
