@@ -57,7 +57,7 @@ var (
 			Name: "active_reservation_total",
 			Help: "Total active reservations",
 		},
-		[]string{"pool"},
+		[]string{"controller"},
 	)
 
 	resQuantityByUserMetrics = prometheus.NewGaugeVec(

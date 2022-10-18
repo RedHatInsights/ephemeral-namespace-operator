@@ -97,7 +97,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
-		activeReservationTotalMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Set(float64(len(r.Poller.ActiveReservations)))
+		activeReservationTotalMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Set(float64(len(r.Poller.ActiveReservations)))
 
 		return ctrl.Result{}, nil
 

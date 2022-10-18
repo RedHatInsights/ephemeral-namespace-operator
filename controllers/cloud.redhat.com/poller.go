@@ -51,7 +51,7 @@ func (p *Poller) Poll() error {
 					p.Log.Info("Reservation for namespace has expired. Deleting.", "ns-name", res.Status.Namespace)
 				}
 
-				activeReservationTotalMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Set(float64(len(p.ActiveReservations)))
+				activeReservationTotalMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Set(float64(len(p.ActiveReservations)))
 			}
 		}
 
