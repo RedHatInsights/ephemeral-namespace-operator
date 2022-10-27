@@ -14,7 +14,7 @@ type CustomLabel struct {
 	Value string
 }
 
-func (a *CustomAnnotation) CreateInitialAnnotations() map[string]string {
+func CreateInitialAnnotations() map[string]string {
 	initialAnnotations := make(map[string]string)
 
 	initialAnnotations[ANNOTATION_ENV_STATUS] = ENV_STATUS_CREATING
@@ -23,7 +23,7 @@ func (a *CustomAnnotation) CreateInitialAnnotations() map[string]string {
 	return initialAnnotations
 }
 
-func (l *CustomLabel) CreateInitialLabels(poolName string) map[string]string {
+func CreateInitialLabels(poolName string) map[string]string {
 	initialLabels := make(map[string]string)
 
 	initialLabels[LABEL_OPERATOR_NS] = TRUE_VALUE
@@ -41,7 +41,7 @@ func (l *CustomLabel) ToMap() map[string]string {
 }
 
 func (a *CustomAnnotation) SetInitialAnnotations(ns *core.Namespace) {
-	initialAnnotations := a.CreateInitialAnnotations()
+	initialAnnotations := CreateInitialAnnotations()
 
 	if len(ns.Annotations) == 0 {
 		ns.SetAnnotations(initialAnnotations)
@@ -53,7 +53,7 @@ func (a *CustomAnnotation) SetInitialAnnotations(ns *core.Namespace) {
 }
 
 func (l *CustomLabel) SetInitialLabels(ns *core.Namespace, poolName string) {
-	initialLabels := l.CreateInitialLabels(poolName)
+	initialLabels := CreateInitialLabels(poolName)
 
 	if len(ns.Labels) == 0 {
 		ns.SetLabels(initialLabels)
