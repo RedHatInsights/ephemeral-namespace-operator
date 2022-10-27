@@ -58,18 +58,18 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	if ready, _ := helpers.VerifyClowdEnvReady(env); ready {
 		nsName := env.Spec.TargetNamespace
-		r.Log.Info("Clowdenvironment ready", "Namespace", nsName)
+		r.Log.Info("Clowdenvironment ready", "namespace", nsName)
 
 		if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
-			r.Log.Error(err, "Error encountered with frontend environment", "Namespace", nsName)
+			r.Log.Error(err, "Error encountered with frontend environment", "namespace", nsName)
 			helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvError.ToMap(), nsName)
 		} else {
-			r.Log.Info("Namespace ready", "Namespace", nsName)
+			r.Log.Info("Namespace ready", "namespace", nsName)
 			helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvReady.ToMap(), nsName)
 
 			ns, err := helpers.GetNamespace(ctx, r.Client, nsName)
 			if err != nil {
-				r.Log.Error(err, "Could not retrieve newly created namespace", "Namespace", nsName)
+				r.Log.Error(err, "Could not retrieve newly created namespace", "namespace", nsName)
 			}
 
 			if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; !ok {

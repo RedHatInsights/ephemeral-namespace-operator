@@ -128,7 +128,7 @@ func (r *NamespacePoolReconciler) EnqueueNamespace(a client.Object) []reconcile.
 
 func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, errNamespaceList []string) error {
 	for _, nsName := range errNamespaceList {
-		r.Log.Info("Deleting namespace", "Namespace", nsName)
+		r.Log.Info("Deleting namespace", "namespace", nsName)
 		err := helpers.DeleteNamespace(ctx, r.Client, nsName)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("Error deleting namespace: [%s]", nsName))
@@ -163,7 +163,7 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.N
 				case helpers.ENV_STATUS_CREATING:
 					creatingNamespaceCount++
 				case helpers.ENV_STATUS_ERROR:
-					r.Log.Info("Error status for namespace. Prepping for deletion.", "Namespace", ns.Name)
+					r.Log.Info("Error status for namespace. Prepping for deletion.", "namespace", ns.Name)
 					errNamespaceList = append(errNamespaceList, ns.Name)
 				}
 			} else if owner.Kind == "NamespaceReservation" {
@@ -211,7 +211,7 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 			if nsName != "" {
 				err := helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvError.ToMap(), nsName)
 				if err != nil {
-					r.Log.Error(err, "Error while updating annotations on namespace", "Namespace", nsName)
+					r.Log.Error(err, "Error while updating annotations on namespace", "namespace", nsName)
 					return err
 				}
 			}
@@ -237,7 +237,7 @@ func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Conte
 			if ns.Annotations[helpers.ANNOTATION_ENV_STATUS] == helpers.ENV_STATUS_READY && ns.Annotations[helpers.ANNOTATION_RESERVED] == "false" {
 				err := helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvError.ToMap(), ns.Name)
 				if err != nil {
-					r.Log.Error(err, "Error while updating annotations on namespace", "Namespace", ns.Name)
+					r.Log.Error(err, "Error while updating annotations on namespace", "namespace", ns.Name)
 					return err
 				}
 

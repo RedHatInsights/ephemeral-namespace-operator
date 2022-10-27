@@ -154,16 +154,16 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		// Verify that the ClowdEnv has been set up for the requested namespace
 		if err := r.verifyClowdEnvForReadyNs(ctx, readyNsName); err != nil {
-			r.Log.Error(err, err.Error(), "Namespace", readyNsName)
+			r.Log.Error(err, err.Error(), "namespace", readyNsName)
 			if err := helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvError.ToMap(), readyNsName); err != nil {
-				r.Log.Error(err, fmt.Sprintf("Unable to update annotations for unready namespace in '%s' pool", res.Status.Pool), "Namespace", readyNsName)
+				r.Log.Error(err, fmt.Sprintf("Unable to update annotations for unready namespace in '%s' pool", res.Status.Pool), "namespace", readyNsName)
 			}
 			return ctrl.Result{Requeue: true}, err
 		}
 
 		// Resolve the requested namespace and remove it from the pool
 		if err := r.reserveNamespace(ctx, readyNsName, &res); err != nil {
-			r.Log.Error(err, fmt.Sprintf("Could not reserve namespace from '%s' pool", res.Status.Pool), "Namespace", readyNsName)
+			r.Log.Error(err, fmt.Sprintf("Could not reserve namespace from '%s' pool", res.Status.Pool), "namespace", readyNsName)
 
 			totalFailedPoolReservationsCountMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Inc()
 
@@ -242,14 +242,14 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 
 	err = r.Client.Update(ctx, &nsObject)
 	if err != nil {
-		r.Log.Error(err, "Could not update namespace", "Namespace", readyNsName)
+		r.Log.Error(err, "Could not update namespace", "namespace", readyNsName)
 		return err
 	}
 
 	// Add rolebinding to the namespace only after it has been owned by the CRD.
 	// We need to skip this on minikube
 	if err := r.addRoleBindings(ctx, &nsObject, r.Client); err != nil {
-		r.Log.Error(err, "Could not apply rolebindings for namespace", "Namespace", readyNsName)
+		r.Log.Error(err, "Could not apply rolebindings for namespace", "namespace", readyNsName)
 		return err
 	}
 
@@ -274,7 +274,7 @@ func getExpirationTime(res *crd.NamespaceReservation) (metav1.Time, error) {
 func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Context, readyNsName string) error {
 	ready, _, err := helpers.GetClowdEnv(ctx, r.Client, readyNsName)
 	if err != nil {
-		r.Log.Error(err, "Could not retrieve Clowdenvironment", "Namespace", readyNsName)
+		r.Log.Error(err, "Could not retrieve Clowdenvironment", "namespace", readyNsName)
 	}
 	if !ready {
 		return fmt.Errorf("ClowdEnvironment is not ready for namespace: %s", readyNsName) // No need to wrap the string when fmt does errors for us
@@ -298,7 +298,7 @@ func (r *NamespaceReservationReconciler) addRoleBindings(ctx context.Context, ns
 		}
 
 		for name, kind := range hardCodedUserList() {
-			r.Log.Info(fmt.Sprintf("Creating rolebinding %s for %s: %s", roleName, kind, name), "Namespace", ns.Name)
+			r.Log.Info(fmt.Sprintf("Creating rolebinding %s for %s: %s", roleName, kind, name), "namespace", ns.Name)
 			binding.Subjects = append(binding.Subjects, rbac.Subject{
 				APIGroup: "rbac.authorization.k8s.io",
 				Kind:     kind,
