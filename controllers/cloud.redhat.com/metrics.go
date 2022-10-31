@@ -86,5 +86,6 @@ func init() {
 		averageReservationToDeploymentMetrics,
 		activeReservationTotalMetrics,
 		resQuantityByUserMetrics,
+		enoVersion,
 	)
 }
