@@ -24,16 +24,8 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
 
-	err := UpdateAnnotations(ctx, cl, ns.Name, CreateInitialAnnotations())
-	if err != nil {
-		return "", errors.New("error updating annotations on newly created namespace: " + err.Error())
-	}
-	// annotations := CustomAnnotation{}
-	// annotations.SetInitialAnnotations(&ns)
-
+	utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
 	utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
-	// labels := CustomLabel{}
-	// labels.SetInitialLabels(&ns, pool.Name)
 
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &ns); err != nil {
@@ -49,7 +41,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	// WORKAROUND: Can't set annotations and ownerref on project request during create
 	// Performing annotation and ownerref change in one transaction
-	ns, err = GetNamespace(ctx, cl, ns.Name)
+	ns, err := GetNamespace(ctx, cl, ns.Name)
 	if err != nil {
 		return ns.Name, err
 	}
@@ -114,7 +106,6 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) 
 
 	LabelPoolType.Value = poolName
 	validatedSelector, _ := labels.ValidatedSelectorFromSet(LabelPoolType.ToMap())
-	// map[string]string{LABEL_POOL: pool})
 
 	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
