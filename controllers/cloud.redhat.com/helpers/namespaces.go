@@ -139,19 +139,13 @@ func CheckReadyStatus(pool string, ns core.Namespace, ready []core.Namespace) []
 	return ready
 }
 
-func UpdateAnnotations(ctx context.Context, cl client.Client, annotations map[string]string, nsName string) error {
+func UpdateAnnotations(ctx context.Context, cl client.Client, nsName string, annotations map[string]string) error {
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {
 		return err
 	}
 
-	if len(ns.Annotations) == 0 {
-		ns.SetAnnotations(annotations)
-	} else {
-		for k, v := range annotations {
-			ns.Annotations[k] = v
-		}
-	}
+	utils.UpdateAnnotations(&ns, annotations)
 
 	if err := cl.Update(ctx, &ns); err != nil {
 		return err
@@ -207,7 +201,7 @@ func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 }
 
 func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error {
-	UpdateAnnotations(ctx, cl, map[string]string{ANNOTATION_ENV_STATUS: ENV_STATUS_DELETING}, nsName)
+	UpdateAnnotations(ctx, cl, nsName, AnnotationEnvDeleting.ToMap())
 
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {

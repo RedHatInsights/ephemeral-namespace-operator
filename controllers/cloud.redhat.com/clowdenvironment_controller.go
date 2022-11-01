@@ -62,10 +62,10 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 		if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
 			r.Log.Error(err, "Error encountered with frontend environment", "namespace", nsName)
-			helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvError.ToMap(), nsName)
+			helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap())
 		} else {
 			r.Log.Info("Namespace ready", "namespace", nsName)
-			helpers.UpdateAnnotations(ctx, r.Client, helpers.AnnotationEnvReady.ToMap(), nsName)
+			helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvReady.ToMap())
 
 			ns, err := helpers.GetNamespace(ctx, r.Client, nsName)
 			if err != nil {
