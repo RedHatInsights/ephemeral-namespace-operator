@@ -36,6 +36,10 @@ func (a *CustomAnnotation) ToMap() map[string]string {
 	return map[string]string{a.Annotation: a.Value}
 }
 
+func (l *CustomLabel) ToMap() map[string]string {
+	return map[string]string{l.Label: l.Value}
+}
+
 func (a *CustomAnnotation) SetInitialAnnotations(ns *core.Namespace) {
 	initialAnnotations := CreateInitialAnnotations()
 
@@ -64,6 +68,8 @@ var AnnotationEnvReady = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Val
 var AnnotationEnvCreating = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_CREATING}
 var AnnotationEnvError = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_ERROR}
 var AnnotationEnvDeleting = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_DELETING}
+
+var AnnotationCompletionTime = CustomAnnotation{Annotation: COMPLETION_TIME, Value: ""}
 
 var AnnotationReservedTrue = CustomAnnotation{Annotation: ANNOTATION_RESERVED, Value: TRUE_VALUE}
 var AnnotationReservedFalse = CustomAnnotation{Annotation: ANNOTATION_RESERVED, Value: FALSE_VALUE}

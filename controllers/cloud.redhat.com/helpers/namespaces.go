@@ -24,11 +24,16 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
 
-	annotations := CustomAnnotation{}
-	annotations.SetInitialAnnotations(&ns)
+	err := UpdateAnnotations(ctx, cl, ns.Name, CreateInitialAnnotations())
+	if err != nil {
+		return "", errors.New("error updating annotations on newly created namespace: " + err.Error())
+	}
+	// annotations := CustomAnnotation{}
+	// annotations.SetInitialAnnotations(&ns)
 
-	labels := CustomLabel{}
-	labels.SetInitialLabels(&ns, pool.Name)
+	utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
+	// labels := CustomLabel{}
+	// labels.SetInitialLabels(&ns, pool.Name)
 
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &ns); err != nil {
@@ -44,7 +49,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	// WORKAROUND: Can't set annotations and ownerref on project request during create
 	// Performing annotation and ownerref change in one transaction
-	ns, err := GetNamespace(ctx, cl, ns.Name)
+	ns, err = GetNamespace(ctx, cl, ns.Name)
 	if err != nil {
 		return ns.Name, err
 	}
@@ -57,7 +62,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	// Create ClowdEnvironment
 	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, ns.Name); err != nil {
-		return "", errors.New("Error creating ClowdEnvironment: " + err.Error())
+		return "", errors.New("error creating ClowdEnvironment: " + err.Error())
 	}
 
 	// Create LimitRange
@@ -104,11 +109,12 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 	return ns, nil
 }
 
-func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]core.Namespace, error) {
+func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) ([]core.Namespace, error) {
 	nsList := core.NamespaceList{}
 
-	validatedSelector, _ := labels.ValidatedSelectorFromSet(
-		map[string]string{LABEL_POOL: pool})
+	LabelPoolType.Value = poolName
+	validatedSelector, _ := labels.ValidatedSelectorFromSet(LabelPoolType.ToMap())
+	// map[string]string{LABEL_POOL: pool})
 
 	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
@@ -121,7 +127,7 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.Kind == KIND_NAMESPACEPOOL {
-				ready = CheckReadyStatus(pool, ns, ready)
+				ready = CheckReadyStatus(poolName, ns, ready)
 			}
 		}
 	}

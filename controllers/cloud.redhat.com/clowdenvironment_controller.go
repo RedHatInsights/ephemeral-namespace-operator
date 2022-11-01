@@ -74,7 +74,12 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 			if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; !ok {
 				nsCompletionTime := time.Now()
-				ns.Annotations[helpers.COMPLETION_TIME] = nsCompletionTime.String()
+				helpers.AnnotationCompletionTime.Value = nsCompletionTime.String()
+				err := helpers.UpdateAnnotations(ctx, r.Client, ns.Name, helpers.AnnotationCompletionTime.ToMap())
+				if err != nil {
+					r.Log.Error(err, "could not update annotation with completion time", "namespace", nsName)
+				}
+				//ns.Annotations[helpers.COMPLETION_TIME] = nsCompletionTime.String()
 
 				if err := r.Client.Update(ctx, &ns); err != nil {
 					return ctrl.Result{}, err
