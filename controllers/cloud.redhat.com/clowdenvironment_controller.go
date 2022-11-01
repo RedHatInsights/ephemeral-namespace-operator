@@ -79,7 +79,6 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 				if err != nil {
 					r.Log.Error(err, "could not update annotation with completion time", "namespace", nsName)
 				}
-				//ns.Annotations[helpers.COMPLETION_TIME] = nsCompletionTime.String()
 
 				if err := r.Client.Update(ctx, &ns); err != nil {
 					return ctrl.Result{}, err
