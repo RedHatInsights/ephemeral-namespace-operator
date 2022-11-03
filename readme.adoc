@@ -35,3 +35,5 @@ When the controller needs to create a new namespace to be added to the "on-deck"
 - Secrets are copied from the base namespace.  
 
 image::operator_diagram.png[design]
+
+<sub>Made with ❤️ @ Red Hat</sub>
