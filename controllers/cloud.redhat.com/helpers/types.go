@@ -4,6 +4,9 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
+// type CustomAnnotation map[string]string
+// type CustomLabel map[string]string
+
 type CustomAnnotation struct {
 	Annotation string
 	Value      string
@@ -15,21 +18,29 @@ type CustomLabel struct {
 }
 
 func CreateInitialAnnotations() map[string]string {
-	initialAnnotations := make(map[string]string)
+	return map[string]string{
+		ANNOTATION_ENV_STATUS: ENV_STATUS_CREATING,
+		ANNOTATION_RESERVED:   FALSE_VALUE,
+	}
+	// initialAnnotations := make(map[string]string)
 
-	initialAnnotations[ANNOTATION_ENV_STATUS] = ENV_STATUS_CREATING
-	initialAnnotations[ANNOTATION_RESERVED] = FALSE_VALUE
+	// initialAnnotations[ANNOTATION_ENV_STATUS] = ENV_STATUS_CREATING
+	// initialAnnotations[ANNOTATION_RESERVED] = FALSE_VALUE
 
-	return initialAnnotations
+	// return initialAnnotations
 }
 
 func CreateInitialLabels(poolName string) map[string]string {
-	initialLabels := make(map[string]string)
+	return map[string]string{
+		LABEL_OPERATOR_NS: TRUE_VALUE,
+		LABEL_POOL:        poolName,
+	}
+	// initialLabels := make(map[string]string)
 
-	initialLabels[LABEL_OPERATOR_NS] = TRUE_VALUE
-	initialLabels[LABEL_POOL] = poolName
+	// initialLabels[LABEL_OPERATOR_NS] = TRUE_VALUE
+	// initialLabels[LABEL_POOL] = poolName
 
-	return initialLabels
+	// return initialLabels
 }
 
 func (a *CustomAnnotation) ToMap() map[string]string {
@@ -69,10 +80,7 @@ var AnnotationEnvCreating = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, 
 var AnnotationEnvError = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_ERROR}
 var AnnotationEnvDeleting = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_DELETING}
 
-var AnnotationCompletionTime = CustomAnnotation{Annotation: COMPLETION_TIME, Value: ""}
-
 var AnnotationReservedTrue = CustomAnnotation{Annotation: ANNOTATION_RESERVED, Value: TRUE_VALUE}
 var AnnotationReservedFalse = CustomAnnotation{Annotation: ANNOTATION_RESERVED, Value: FALSE_VALUE}
 
-var LabelPoolType = CustomLabel{Label: LABEL_POOL, Value: ""}
 var LabelOperatorNamespaceTrue = CustomLabel{Label: LABEL_OPERATOR_NS, Value: TRUE_VALUE}

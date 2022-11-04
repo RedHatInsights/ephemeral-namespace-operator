@@ -48,7 +48,7 @@ func (p *Poller) Poll() error {
 				if err := p.Client.Delete(ctx, &res); err != nil {
 					p.Log.Error(err, "Unable to delete reservation", "namespace", res.Status.Namespace)
 				} else {
-					p.Log.Info("Reservation for namespace has expired. Deleting.", "namespace", res.Status.Namespace)
+					p.Log.Info("deleting expired reservation", "namespace", res.Status.Namespace)
 				}
 
 				activeReservationTotalMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Set(float64(len(p.ActiveReservations)))

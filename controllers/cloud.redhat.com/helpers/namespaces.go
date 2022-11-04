@@ -104,7 +104,7 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) ([]core.Namespace, error) {
 	nsList := core.NamespaceList{}
 
-	LabelPoolType.Value = poolName
+	var LabelPoolType = CustomLabel{Label: LABEL_POOL, Value: poolName}
 	validatedSelector, _ := labels.ValidatedSelectorFromSet(LabelPoolType.ToMap())
 
 	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}

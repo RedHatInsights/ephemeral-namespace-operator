@@ -94,7 +94,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	if err := r.Client.Status().Update(ctx, &pool); err != nil {
+	if err := r.Status().Update(ctx, &pool); err != nil {
 		r.Log.Error(err, fmt.Sprintf("cannot update [%s] pool status", pool.Name))
 		return ctrl.Result{}, err
 	}
@@ -163,7 +163,7 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.N
 				case helpers.ENV_STATUS_CREATING:
 					creatingNamespaceCount++
 				case helpers.ENV_STATUS_ERROR:
-					r.Log.Info("prepping for deletion due to error status for namespace.", "namespace", ns.Name)
+					r.Log.Info("prepping for deletion due to error status", "namespace", ns.Name)
 					errNamespaceList = append(errNamespaceList, ns.Name)
 				}
 			} else if owner.Kind == "NamespaceReservation" {
