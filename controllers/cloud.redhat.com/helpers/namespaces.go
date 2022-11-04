@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -54,7 +53,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	// Create ClowdEnvironment
 	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, ns.Name); err != nil {
-		return "", errors.New("error creating ClowdEnvironment: " + err.Error())
+		return "", fmt.Errorf("error creating ClowdEnvironment: %s", err.Error())
 	}
 
 	// Create LimitRange
@@ -62,7 +61,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	limitRange.SetNamespace(ns.Name)
 
 	if err := cl.Create(ctx, &limitRange); err != nil {
-		return "", errors.New("Error creating LimitRange: " + err.Error())
+		return "", fmt.Errorf("error creating LimitRange: %s", err.Error())
 	}
 
 	// Create ResourceQuotas
@@ -70,13 +69,13 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	for _, quota := range resourceQuotas.Items {
 		quota.SetNamespace(ns.Name)
 		if err := cl.Create(ctx, &quota); err != nil {
-			return "", errors.New("Error creating ResourceQuota: " + err.Error())
+			return "", fmt.Errorf("error creating ResourceQuota: %s", err.Error())
 		}
 	}
 
 	// Copy secrets
 	if err := CopySecrets(ctx, cl, ns.Name); err != nil {
-		return "", errors.New("Error copying secrets: " + err.Error())
+		return "", fmt.Errorf("error copying secrets from ephemeral-base namespace: %s", err.Error())
 	}
 
 	return ns.Name, nil

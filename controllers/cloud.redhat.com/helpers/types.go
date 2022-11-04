@@ -1,12 +1,5 @@
 package helpers
 
-import (
-	core "k8s.io/api/core/v1"
-)
-
-// type CustomAnnotation map[string]string
-// type CustomLabel map[string]string
-
 type CustomAnnotation struct {
 	Annotation string
 	Value      string
@@ -22,12 +15,6 @@ func CreateInitialAnnotations() map[string]string {
 		ANNOTATION_ENV_STATUS: ENV_STATUS_CREATING,
 		ANNOTATION_RESERVED:   FALSE_VALUE,
 	}
-	// initialAnnotations := make(map[string]string)
-
-	// initialAnnotations[ANNOTATION_ENV_STATUS] = ENV_STATUS_CREATING
-	// initialAnnotations[ANNOTATION_RESERVED] = FALSE_VALUE
-
-	// return initialAnnotations
 }
 
 func CreateInitialLabels(poolName string) map[string]string {
@@ -35,12 +22,6 @@ func CreateInitialLabels(poolName string) map[string]string {
 		LABEL_OPERATOR_NS: TRUE_VALUE,
 		LABEL_POOL:        poolName,
 	}
-	// initialLabels := make(map[string]string)
-
-	// initialLabels[LABEL_OPERATOR_NS] = TRUE_VALUE
-	// initialLabels[LABEL_POOL] = poolName
-
-	// return initialLabels
 }
 
 func (a *CustomAnnotation) ToMap() map[string]string {
@@ -49,30 +30,6 @@ func (a *CustomAnnotation) ToMap() map[string]string {
 
 func (l *CustomLabel) ToMap() map[string]string {
 	return map[string]string{l.Label: l.Value}
-}
-
-func (a *CustomAnnotation) SetInitialAnnotations(ns *core.Namespace) {
-	initialAnnotations := CreateInitialAnnotations()
-
-	if len(ns.Annotations) == 0 {
-		ns.SetAnnotations(initialAnnotations)
-	} else {
-		for k, v := range initialAnnotations {
-			ns.Annotations[k] = v
-		}
-	}
-}
-
-func (l *CustomLabel) SetInitialLabels(ns *core.Namespace, poolName string) {
-	initialLabels := CreateInitialLabels(poolName)
-
-	if len(ns.Labels) == 0 {
-		ns.SetLabels(initialLabels)
-	} else {
-		for k, v := range initialLabels {
-			ns.Labels[k] = v
-		}
-	}
 }
 
 var AnnotationEnvReady = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_READY}

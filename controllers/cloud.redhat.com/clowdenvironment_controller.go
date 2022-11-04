@@ -56,42 +56,45 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		"deployments", fmt.Sprintf("%d / %d", env.Status.Deployments.ReadyDeployments, env.Status.Deployments.ManagedDeployments),
 	)
 
-	if ready, _ := helpers.VerifyClowdEnvReady(env); ready {
-		nsName := env.Spec.TargetNamespace
-		r.Log.Info("clowdenvironment ready", "namespace", nsName)
-
-		if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
-			r.Log.Error(err, "error encountered with frontend environment", "namespace", nsName)
-			helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap())
-		} else {
-			r.Log.Info("namespace ready", "namespace", nsName)
-			helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvReady.ToMap())
-
-			ns, err := helpers.GetNamespace(ctx, r.Client, nsName)
-			if err != nil {
-				r.Log.Error(err, "could not retrieve newly created namespace", "namespace", nsName)
-			}
-
-			if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; !ok {
-				nsCompletionTime := time.Now()
-				var AnnotationCompletionTime = helpers.CustomAnnotation{Annotation: helpers.COMPLETION_TIME, Value: nsCompletionTime.String()}
-
-				err := helpers.UpdateAnnotations(ctx, r.Client, ns.Name, AnnotationCompletionTime.ToMap())
-				if err != nil {
-					r.Log.Error(err, "could not update annotation with completion time", "namespace", nsName)
-				}
-
-				if err := r.Client.Update(ctx, &ns); err != nil {
-					return ctrl.Result{}, err
-				}
-
-				elapsed := nsCompletionTime.Sub(ns.CreationTimestamp.Time)
-
-				averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
-			}
-
-		}
+	if ready, err := helpers.VerifyClowdEnvReady(env); !ready {
+		return ctrl.Result{Requeue: true}, err
 	}
+
+	nsName := env.Spec.TargetNamespace
+	r.Log.Info("clowdenvironment ready", "namespace", nsName)
+
+	if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
+		r.Log.Error(err, "error encountered with frontend environment", "namespace", nsName)
+		helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap())
+	}
+
+	r.Log.Info("namespace ready", "namespace", nsName)
+	helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvReady.ToMap())
+
+	ns, err := helpers.GetNamespace(ctx, r.Client, nsName)
+	if err != nil {
+		r.Log.Error(err, "could not retrieve newly created namespace", "namespace", nsName)
+	}
+
+	if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; ok {
+		return ctrl.Result{}, nil
+	}
+
+	nsCompletionTime := time.Now()
+	var AnnotationCompletionTime = helpers.CustomAnnotation{Annotation: helpers.COMPLETION_TIME, Value: nsCompletionTime.String()}
+
+	err = helpers.UpdateAnnotations(ctx, r.Client, ns.Name, AnnotationCompletionTime.ToMap())
+	if err != nil {
+		r.Log.Error(err, "could not update annotation with completion time", "namespace", nsName)
+	}
+
+	if err := r.Client.Update(ctx, &ns); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	elapsed := nsCompletionTime.Sub(ns.CreationTimestamp.Time)
+
+	averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
 
 	return ctrl.Result{}, nil
 }
