@@ -68,7 +68,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		r.Log.Info(fmt.Sprintf("[%d] namespaces in error state are queued for deletion", len(errNamespaceList)))
 		err = r.handleErrorNamespaces(ctx, errNamespaceList)
 		if err != nil {
-			r.Log.Error(err, "Unable to delete object.")
+			r.Log.Error(err, "Unable to delete namespaces in error state")
 			return ctrl.Result{Requeue: true}, err
 		}
 	}
