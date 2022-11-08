@@ -22,6 +22,7 @@ import (
 	"time"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
+	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -42,12 +43,6 @@ type ClowdenvironmentReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/status,verbs=get
 
-const (
-	ENV_STATUS_READY = "ready"
-	ENV_STATUS_ERROR = "error"
-	COMPLETION_TIME  = "completion-time"
-)
-
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	env := clowder.ClowdEnvironment{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &env); err != nil {
@@ -61,37 +56,45 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		"deployments", fmt.Sprintf("%d / %d", env.Status.Deployments.ReadyDeployments, env.Status.Deployments.ManagedDeployments),
 	)
 
-	if ready, _ := VerifyClowdEnvReady(env); ready {
-		nsName := env.Spec.TargetNamespace
-		r.Log.Info("Clowdenvironment ready", "ns-name", nsName)
-
-		if err := CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
-			r.Log.Error(err, "Error encountered with frontend environment", "ns-name", nsName)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": ENV_STATUS_ERROR, "status": "error"}, nsName)
-		} else {
-			r.Log.Info("Namespace ready", "ns-name", nsName)
-			UpdateAnnotations(ctx, r.Client, map[string]string{"env-status": ENV_STATUS_READY, "status": "ready"}, nsName)
-
-			ns, err := GetNamespace(ctx, r.Client, nsName)
-			if err != nil {
-				r.Log.Error(err, "Could not retrieve newly created namespace", "ns-name", nsName)
-			}
-
-			if _, ok := ns.Annotations["completion-time"]; !ok {
-				nsCompletionTime := time.Now()
-				ns.Annotations["completion-time"] = nsCompletionTime.String()
-
-				if err := r.Client.Update(ctx, &ns); err != nil {
-					return ctrl.Result{}, err
-				}
-
-				elapsed := nsCompletionTime.Sub(ns.CreationTimestamp.Time)
-
-				averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
-			}
-
-		}
+	if ready, err := helpers.VerifyClowdEnvReady(env); !ready {
+		return ctrl.Result{Requeue: true}, err
 	}
+
+	nsName := env.Spec.TargetNamespace
+	r.Log.Info("clowdenvironment ready", "namespace", nsName)
+
+	if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
+		r.Log.Error(err, "error encountered with frontend environment", "namespace", nsName)
+		helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap())
+	}
+
+	r.Log.Info("namespace ready", "namespace", nsName)
+	helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvReady.ToMap())
+
+	ns, err := helpers.GetNamespace(ctx, r.Client, nsName)
+	if err != nil {
+		r.Log.Error(err, "could not retrieve newly created namespace", "namespace", nsName)
+	}
+
+	if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; ok {
+		return ctrl.Result{}, nil
+	}
+
+	nsCompletionTime := time.Now()
+	var AnnotationCompletionTime = helpers.CustomAnnotation{Annotation: helpers.COMPLETION_TIME, Value: nsCompletionTime.String()}
+
+	err = helpers.UpdateAnnotations(ctx, r.Client, ns.Name, AnnotationCompletionTime.ToMap())
+	if err != nil {
+		r.Log.Error(err, "could not update annotation with completion time", "namespace", nsName)
+	}
+
+	if err := r.Client.Update(ctx, &ns); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	elapsed := nsCompletionTime.Sub(ns.CreationTimestamp.Time)
+
+	averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
 
 	return ctrl.Result{}, nil
 }
@@ -122,7 +125,7 @@ func poolFilter(ctx context.Context, cl client.Client) predicate.Predicate {
 }
 
 func isOwnedByPool(ctx context.Context, cl client.Client, nsName string) bool {
-	ns, err := GetNamespace(ctx, cl, nsName)
+	ns, err := helpers.GetNamespace(ctx, cl, nsName)
 	if err != nil {
 		return false
 	}
@@ -136,7 +139,7 @@ func isOwnedByPool(ctx context.Context, cl client.Client, nsName string) bool {
 }
 
 func isOwnedBySpecificPool(ctx context.Context, cl client.Client, nsName string, uid types.UID) bool {
-	ns, err := GetNamespace(ctx, cl, nsName)
+	ns, err := helpers.GetNamespace(ctx, cl, nsName)
 	if err != nil {
 		return false
 	}

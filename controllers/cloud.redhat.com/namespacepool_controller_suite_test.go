@@ -5,6 +5,7 @@ import (
 	"time"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
+	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	core "k8s.io/api/core/v1"
@@ -103,7 +104,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 				}
 			}
 
-			err = UpdateAnnotations(ctx, k8sClient, map[string]string{"env-status": "error"}, ownedNs.Name)
+			err = helpers.UpdateAnnotations(ctx, k8sClient, ownedNs.Name, helpers.AnnotationEnvError.ToMap())
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {

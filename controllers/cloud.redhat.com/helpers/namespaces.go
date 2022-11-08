@@ -1,8 +1,7 @@
-package controllers
+package helpers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -19,27 +18,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var initialAnnotations = map[string]string{
-	"env-status": "creating",
-	"reserved":   "false",
-}
-
-var initialLabels = map[string]string{
-	"operator-ns": "true",
-}
-
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
-	// Create project or namespace depending on environment
 	ns := core.Namespace{}
 
-	labels := map[string]string{}
-	for k, v := range initialLabels {
-		labels[k] = v
-	}
+	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
 
-	labels["pool"] = pool.Name
-
-	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(randString(6)))
+	utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
+	utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
 
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &ns); err != nil {
@@ -60,22 +45,6 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 		return ns.Name, err
 	}
 
-	if len(ns.Annotations) == 0 {
-		ns.SetAnnotations(initialAnnotations)
-	} else {
-		for k, v := range initialAnnotations {
-			ns.Annotations[k] = v
-		}
-	}
-
-	if len(ns.Labels) == 0 {
-		ns.SetLabels(labels)
-	} else {
-		for k, v := range labels {
-			ns.Labels[k] = v
-		}
-	}
-
 	ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
 
 	if err := cl.Update(ctx, &ns); err != nil {
@@ -84,7 +53,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	// Create ClowdEnvironment
 	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, ns.Name); err != nil {
-		return "", errors.New("Error creating ClowdEnvironment: " + err.Error())
+		return "", fmt.Errorf("error creating ClowdEnvironment: %s", err.Error())
 	}
 
 	// Create LimitRange
@@ -92,7 +61,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	limitRange.SetNamespace(ns.Name)
 
 	if err := cl.Create(ctx, &limitRange); err != nil {
-		return "", errors.New("Error creating LimitRange: " + err.Error())
+		return "", fmt.Errorf("error creating LimitRange: %s", err.Error())
 	}
 
 	// Create ResourceQuotas
@@ -100,13 +69,13 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	for _, quota := range resourceQuotas.Items {
 		quota.SetNamespace(ns.Name)
 		if err := cl.Create(ctx, &quota); err != nil {
-			return "", errors.New("Error creating ResourceQuota: " + err.Error())
+			return "", fmt.Errorf("error creating ResourceQuota: %s", err.Error())
 		}
 	}
 
 	// Copy secrets
 	if err := CopySecrets(ctx, cl, ns.Name); err != nil {
-		return "", errors.New("Error copying secrets: " + err.Error())
+		return "", fmt.Errorf("error copying secrets from ephemeral-base namespace: %s", err.Error())
 	}
 
 	return ns.Name, nil
@@ -131,11 +100,11 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 	return ns, nil
 }
 
-func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]core.Namespace, error) {
+func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) ([]core.Namespace, error) {
 	nsList := core.NamespaceList{}
 
-	validatedSelector, _ := labels.ValidatedSelectorFromSet(
-		map[string]string{"operator-ns": "true", "pool": pool})
+	var LabelPoolType = CustomLabel{Label: LABEL_POOL, Value: poolName}
+	validatedSelector, _ := labels.ValidatedSelectorFromSet(LabelPoolType.ToMap())
 
 	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
@@ -147,8 +116,8 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
-			if owner.Kind == "NamespacePool" {
-				ready = CheckReadyStatus(pool, ns, ready)
+			if owner.Kind == KIND_NAMESPACEPOOL {
+				ready = CheckReadyStatus(poolName, ns, ready)
 			}
 		}
 	}
@@ -157,8 +126,8 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, pool string) ([]c
 }
 
 func CheckReadyStatus(pool string, ns core.Namespace, ready []core.Namespace) []core.Namespace {
-	if val := ns.ObjectMeta.Labels["pool"]; val == pool {
-		if val, ok := ns.ObjectMeta.Annotations["env-status"]; ok && val == "ready" {
+	if val := ns.ObjectMeta.Labels[LABEL_POOL]; val == pool {
+		if val, ok := ns.ObjectMeta.Annotations[ANNOTATION_ENV_STATUS]; ok && val == ENV_STATUS_READY {
 			ready = append(ready, ns)
 		}
 	}
@@ -166,19 +135,13 @@ func CheckReadyStatus(pool string, ns core.Namespace, ready []core.Namespace) []
 	return ready
 }
 
-func UpdateAnnotations(ctx context.Context, cl client.Client, annotations map[string]string, nsName string) error {
+func UpdateAnnotations(ctx context.Context, cl client.Client, nsName string, annotations map[string]string) error {
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {
 		return err
 	}
 
-	if len(ns.Annotations) == 0 {
-		ns.SetAnnotations(annotations)
-	} else {
-		for k, v := range annotations {
-			ns.Annotations[k] = v
-		}
-	}
+	utils.UpdateAnnotations(&ns, annotations)
 
 	if err := cl.Update(ctx, &ns); err != nil {
 		return err
@@ -189,22 +152,22 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, annotations map[st
 
 func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 	secrets := core.SecretList{}
-	if err := cl.List(ctx, &secrets, client.InNamespace("ephemeral-base")); err != nil {
+	if err := cl.List(ctx, &secrets, client.InNamespace(NAMESPACE_EPHEMERAL_BASE)); err != nil {
 		return err
 	}
 
 	for _, secret := range secrets.Items {
 		// Filter which secrets should be copied
 		// All secrets with the "qontract" annotations are defined in app-interface
-		if val, ok := secret.Annotations["qontract.integration"]; !ok {
+		if val, ok := secret.Annotations[QONTRACT_INTEGRATION_SECRET]; !ok {
 			continue
 		} else {
-			if val != "openshift-vault-secrets" {
+			if val != OPENSHIFT_VAULT_SECRETS_SECRET {
 				continue
 			}
 		}
 
-		if val, ok := secret.Annotations["bonfire.ignore"]; ok {
+		if val, ok := secret.Annotations[BONFIRE_IGNORE_SECRET]; ok {
 			if val == "true" {
 				continue
 			}
@@ -234,7 +197,7 @@ func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 }
 
 func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error {
-	UpdateAnnotations(ctx, cl, map[string]string{"env-status": "deleting"}, nsName)
+	UpdateAnnotations(ctx, cl, nsName, AnnotationEnvDeleting.ToMap())
 
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {
