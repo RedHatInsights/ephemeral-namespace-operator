@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	_ "embed"
 	"flag"
 
 	controllers "github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com"
