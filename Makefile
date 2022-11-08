@@ -24,6 +24,8 @@ BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
+ENO_VERSION ?= $(shell git describe --tags)
+
 # IMAGE_TAG_BASE defines the docker.io namespace and part of the image name for remote images.
 # This variable is used to construct full image tags for bundle and catalog images.
 #
@@ -111,7 +113,7 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 # Build the docker image
-docker-build-no-test-quick:
+docker-build-no-test-quick: update-version
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o bin/manager-cgo main.go
 	$(RUNTIME) build -f Dockerfile-local . -t ${IMG}
 
@@ -123,20 +125,20 @@ docker-push-minikube:
 deploy-minikube-quick: docker-build-no-test-quick bundle docker-push-minikube deploy
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test: manifests generate fmt vet ## Run tests.
+test: update-version manifests generate fmt vet ## Run tests.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -v -coverprofile cover.out
 
 ##@ Build
 
-build: generate fmt vet ## Build manager binary.
+build: update-version generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
 
-run: manifests generate install fmt vet ## Run a controller from your host.
+run: update-version manifests generate install fmt vet ## Run a controller from your host.
 	go run ./main.go
 
-docker-build: test ## Build docker image with the manager.
+docker-build: update-version test ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
 docker-push: ## Push docker image with the manager.
@@ -157,6 +159,9 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
+update-version: ## Updates the version in the image
+	$(shell echo -n $(ENO_VERSION) > controllers/cloud.redhat.com/version.txt)
+	echo "Building version: $(ENO_VERSION)"
 
 CONTROLLER_GEN = ${ENVTEST_ASSETS_DIR}/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.

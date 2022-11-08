@@ -23,3 +23,5 @@ kubeconfig
 *.swp
 *.swo
 *~
+
+controllers/cloud.redhat.com/version.txt

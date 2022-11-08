@@ -15,9 +15,16 @@ if [[ -z "$RH_REGISTRY_USER" || -z "$RH_REGISTRY_TOKEN" ]]; then
     exit 1
 fi
 
+BASE_TAG=`cat go.mod go.sum Dockerfile | sha256sum  | head -c 8`
+BASE_IMG=$IMAGE:$BASE_TAG
+
 DOCKER_CONF="$PWD/.docker"
 mkdir -p "$DOCKER_CONF"
 docker --config="$DOCKER_CONF" login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
 docker --config="$DOCKER_CONF" login -u="$RH_REGISTRY_USER" -p="$RH_REGISTRY_TOKEN" registry.redhat.io
 docker --config="$DOCKER_CONF" build -t "${IMAGE}:${IMAGE_TAG}" .
+docker --config="$DOCKER_CONF" push "${IMAGE}:${IMAGE_TAG}"
+
+make update-version
+docker --config="$DOCKER_CONF" build  --build-arg BASE_IMAGE="$BASE_IMG" -t "${IMAGE}:${IMAGE_TAG}" .
 docker --config="$DOCKER_CONF" push "${IMAGE}:${IMAGE_TAG}"

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	_ "embed"
 	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -14,6 +15,7 @@ import (
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	configv1 "github.com/openshift/api/config/v1"
 	projectv1 "github.com/openshift/api/project/v1"
+	"github.com/prometheus/client_golang/prometheus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
@@ -34,7 +36,12 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
+//go:embed version.txt
+var Version string
+
 func Run(metricsAddr string, probeAddr string, enableLeaderElection bool) {
+	enoVersion.With(prometheus.Labels{"version": Version}).Inc()
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
