@@ -1,11 +1,11 @@
 = Ephemeral Namespace Operator (ENO)
 
-[#image-eno-docs,link=https://pkg.go.dev/github.com/RedHatInsights/ephemeral-namespace-operator]
-image::https://img.shields.io/badge/godoc-reference-blue.svg[eno-docs]
 image:https://img.shields.io/github/v/release/redhatinsights/ephemeral-namespace-operator[Release]
 image:https://github.com/RedHatInsights/ephemeral-namespace-operator/actions/workflows/package.yml/badge.svg[Tests]
 image:https://img.shields.io/github/workflow/status/RedHatInsights/ephemeral-namespace-operator/Run%20Unit%20Tests[Build Passing]
 image:https://goreportcard.com/badge/github.com/RedHatInsights/ephemeral-namespace-operator[Go Report Card]
+[#image-eno-docs,link=https://pkg.go.dev/github.com/RedHatInsights/ephemeral-namespace-operator]
+image:https://img.shields.io/badge/godoc-reference-blue.svg[eno-docs]
 image:https://img.shields.io/github/go-mod/go-version/redhatinsights/ephemeral-namespace-operator[Go Version]
 
 ++++
