@@ -5,7 +5,7 @@ image:https://goreportcard.com/badge/github.com/RedHatInsights/ephemeral-namespa
 
 ++++
 <p align="center">
-  <img width="460" height="300" src="operator_diagram.png">
+  <img width="560" height="400" src="operator_diagram.png">
 </p>
 ++++
 
