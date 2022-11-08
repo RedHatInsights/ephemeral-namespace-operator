@@ -6,15 +6,15 @@ image:https://img.shields.io/github/workflow/status/RedHatInsights/ephemeral-nam
 image:https://goreportcard.com/badge/github.com/RedHatInsights/ephemeral-namespace-operator[Go Report Card]
 image:https://img.shields.io/github/go-mod/go-version/redhatinsights/ephemeral-namespace-operator[Go Version]
 
+== What is the Ephemeral Namespace Operator?
+The purpose of the ephemeral namespace operator is to have namespaces queued up and ready to be utilized. These namespaces  
+will have `Clowdenvironments` deployed, and specific resources corresponding to the type of namespace pool a user requests from, ready to go.  
+
 ++++
 <p align="center">
   <img width="600" height="400" src="operator_diagram.png">
 </p>
 ++++
-
-== What is the Ephemeral Namespace Operator?
-The purpose of the ephemeral namespace operator is to have namespaces queued up and ready to be utilized. These namespaces  
-will have `Clowdenvironments` deployed, and specific resources corresponding to the type of namespace pool a user requests from, ready to go.  
 
 == Benefits For This Approach
 - Cuts user's wait-time down since namespaces will already be ready-to-go.
