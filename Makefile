@@ -86,9 +86,16 @@ all: build
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
+# we can't git ignore these files, but we want to avoid overwriting them
+no-update:
+	git fetch origin
+	git checkout origin/master -- config/manager/kustomization.yaml \
+								  controllers/cloud.redhat.com/version.txt \
+								  config/manifests/bases/clowder.clusterserviceversion.yaml
+								  
 ##@ Development
 
-pre-push: manifests generate build-template
+pre-push: manifests generate build-template no-update
 
 build-template: manifests kustomize controller-gen
 	$(KUSTOMIZE) build config/deployment-template | ./manifest2template.py > deploy.yml
