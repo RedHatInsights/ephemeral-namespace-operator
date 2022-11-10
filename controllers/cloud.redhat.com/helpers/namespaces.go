@@ -23,9 +23,6 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
 
-	utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
-	utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
-
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &ns); err != nil {
 			return "", err
@@ -45,6 +42,8 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 		return ns.Name, err
 	}
 
+	utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
+	utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
 	ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
 
 	if err := cl.Update(ctx, &ns); err != nil {
