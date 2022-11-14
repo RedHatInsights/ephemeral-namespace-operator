@@ -89,9 +89,8 @@ help: ## Display this help.
 # we can't git ignore these files, but we want to avoid overwriting them
 no-update:
 	git fetch origin
-	git checkout origin/master -- config/manager/kustomization.yaml \
+	git checkout origin/main -- config/manager/kustomization.yaml \
 								  controllers/cloud.redhat.com/version.txt \
-								  config/manifests/bases/clowder.clusterserviceversion.yaml
 								  
 ##@ Development
 
