@@ -17,7 +17,7 @@ func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnv
 	env := clowder.ClowdEnvironment{
 		Spec: spec,
 	}
-	env.SetName(fmt.Sprintf("env-%s", nsName))
+	env.SetName(nsName)
 	env.Spec.TargetNamespace = nsName
 
 	ns, err := GetNamespace(ctx, cl, nsName)
@@ -67,7 +67,7 @@ func WaitForClowdEnv(ctx context.Context, cl client.Client, log logr.Logger, nsN
 func GetClowdEnv(ctx context.Context, cl client.Client, nsName string) (bool, *clowder.ClowdEnvironment, error) {
 	env := clowder.ClowdEnvironment{}
 	nn := types.NamespacedName{
-		Name:      fmt.Sprintf("env-%s", nsName),
+		Name:      nsName,
 		Namespace: nsName,
 	}
 
