@@ -71,7 +71,7 @@ var (
 	enoVersion = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "eno_version",
-			Help: "ENO release version and git hash of latest deployment",
+			Help: "ENOVersion 1 if present, 0 if not",
 		},
 		[]string{"version"},
 	)
