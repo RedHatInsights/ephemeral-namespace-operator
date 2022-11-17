@@ -200,7 +200,7 @@ func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePo
 		return *sizeLimit - poolTotal
 	}
 
-	return size - (ready + creating)
+	return *sizeLimit - (ready + creating + reserved)
 }
 
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
