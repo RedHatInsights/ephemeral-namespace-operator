@@ -255,10 +255,6 @@ var _ = Describe("Edge cases for creating namespaces with pool limit set", func(
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: "test"}, &pool)
 				Expect(err).NotTo(HaveOccurred())
 
-				// pool.Spec.SizeLimit = utils.IntPtr(8)
-
-				// Expect(k8sClient.Update(ctx, &pool)).To(BeNil())
-
 				ready := pool.Status.Ready
 				creating := pool.Status.Creating
 				reserved := pool.Status.Reserved
@@ -277,9 +273,25 @@ var _ = Describe("Edge cases for creating namespaces with pool limit set", func(
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: "test"}, &pool)
 				Expect(err).NotTo(HaveOccurred())
 
-				// pool.Spec.SizeLimit = utils.IntPtr(3)
+				ready := pool.Status.Ready
+				creating := pool.Status.Creating
+				reserved := pool.Status.Reserved
 
-				// Expect(k8sClient.Update(ctx, &pool)).To(BeNil())
+				return fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", ready, creating, reserved)
+			}, timeout, interval).Should(Equal(expected))
+
+			By("Testing edge case => SizeLimit: 3, Size: 2, Ready: 0, Creating: 0, Reserved: 3")
+			resName3 := "test-res-14"
+
+			res3 := helpers.NewReservation(resName3, "30m", "test-user-09", "test")
+
+			Expect(k8sClient.Create(ctx, res3)).Should(Succeed())
+
+			expected = fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", 0, 0, 3)
+
+			Eventually(func() string {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "test"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
 
 				ready := pool.Status.Ready
 				creating := pool.Status.Creating

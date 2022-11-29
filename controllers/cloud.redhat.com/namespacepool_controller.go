@@ -92,9 +92,6 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("unable to delete excess namespaces for [%s] pool.", pool.Name))
 		}
-	} else {
-		limit := *pool.Spec.SizeLimit
-		r.Log.Info(fmt.Sprintf("max number of namespaces for pool [%s] already created [%d]", pool.Name, limit))
 	}
 
 	if err := r.Status().Update(ctx, &pool); err != nil {
@@ -194,16 +191,22 @@ func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePo
 	poolSizeLimit := pool.Spec.SizeLimit
 	size := pool.Spec.Size
 	namespaceReady := pool.Status.Ready
-	namespacesCreating := pool.Status.Creating
+	namespaceCreating := pool.Status.Creating
 	namespaceReserved := pool.Status.Reserved
 
 	if poolSizeLimit == nil {
-		return size - (namespaceReady + namespacesCreating)
+		return size - (namespaceReady + namespaceCreating)
 	}
 
 	sizeLimit := *poolSizeLimit
 
-	return calculatePoolNamespaceChanges(sizeLimit, size, namespaceReady, namespacesCreating, namespaceReserved)
+	namespaceDelta := calculatePoolNamespaceChanges(sizeLimit, size, namespaceReady, namespaceCreating, namespaceReserved)
+	if (namespaceReady + namespaceCreating + namespaceReserved) == sizeLimit {
+		limit := *pool.Spec.SizeLimit
+		r.Log.Info(fmt.Sprintf("max number of namespaces for pool [%s] already created [%d]", pool.Name, limit))
+	}
+
+	return namespaceDelta
 
 }
 
