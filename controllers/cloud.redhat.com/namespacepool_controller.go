@@ -92,6 +92,9 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("unable to delete excess namespaces for [%s] pool.", pool.Name))
 		}
+	} else {
+		limit := *pool.Spec.SizeLimit
+		r.Log.Info(fmt.Sprintf("max number of namespaces for pool [%s] already created [%d]", pool.Name, limit))
 	}
 
 	if err := r.Status().Update(ctx, &pool); err != nil {
@@ -179,28 +182,29 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.N
 	return errNamespaceList, nil
 }
 
+func calculatePoolNamespaceChanges(sizeLimit int, size int, namespaceReady int, namespacesCreating int, namespaceReserved int) int {
+	if sizeLimit-(namespaceReserved+namespaceReady+namespacesCreating) < size-(namespaceReady+namespacesCreating) {
+		return sizeLimit - (namespaceReserved + namespaceReady + namespacesCreating)
+	}
+
+	return size - (namespaceReady + namespacesCreating)
+}
+
 func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePool) int {
+	poolSizeLimit := pool.Spec.SizeLimit
 	size := pool.Spec.Size
-	ready := pool.Status.Ready
-	creating := pool.Status.Creating
-	reserved := pool.Status.Reserved
-	sizeLimit := pool.Spec.SizeLimit
-	poolTotal := ready + creating + reserved
+	namespaceReady := pool.Status.Ready
+	namespacesCreating := pool.Status.Creating
+	namespaceReserved := pool.Status.Reserved
 
-	if pool.Spec.SizeLimit == nil {
-		return size - (ready + creating)
+	if poolSizeLimit == nil {
+		return size - (namespaceReady + namespacesCreating)
 	}
 
-	if poolTotal == *sizeLimit {
-		r.Log.Info(fmt.Sprintf("max number of namespaces for pool [%s] already created [%d]", pool.Name, *pool.Spec.SizeLimit))
-		return 0
-	}
+	sizeLimit := *poolSizeLimit
 
-	if poolTotal > *sizeLimit {
-		return *sizeLimit - poolTotal
-	}
+	return calculatePoolNamespaceChanges(sizeLimit, size, namespaceReady, namespacesCreating, namespaceReserved)
 
-	return *sizeLimit - (ready + creating + reserved)
 }
 
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
