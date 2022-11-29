@@ -90,7 +90,7 @@ help: ## Display this help.
 no-update:
 	git fetch origin
 	git checkout origin/main -- config/manager/kustomization.yaml \
-								  controllers/cloud.redhat.com/version.txt \
+								  controllers/cloud.redhat.com/version.txt
 								  
 ##@ Development
 
