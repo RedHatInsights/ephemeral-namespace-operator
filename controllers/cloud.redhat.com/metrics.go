@@ -67,6 +67,14 @@ var (
 		},
 		[]string{"user"},
 	)
+
+	enoVersion = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "eno_version",
+			Help: "ENOVersion 1 if present, 0 if not",
+		},
+		[]string{"version"},
+	)
 )
 
 func init() {
@@ -78,5 +86,6 @@ func init() {
 		averageReservationToDeploymentMetrics,
 		activeReservationTotalMetrics,
 		resQuantityByUserMetrics,
+		enoVersion,
 	)
 }
