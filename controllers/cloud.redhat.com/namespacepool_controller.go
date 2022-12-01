@@ -179,7 +179,11 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.N
 	return errNamespaceList, nil
 }
 
-func calculatePoolNamespaceChanges(poolSizeLimit *int, size int, namespaceReady int, namespaceCreating int, namespaceReserved int) int {
+func isPoolAtLimit(currentSize int, sizeLimit int) bool {
+	return currentSize == sizeLimit
+}
+
+func calculateNamespaceQuantityDelta(poolSizeLimit *int, size int, namespaceReady int, namespaceCreating int, namespaceReserved int) int {
 	if poolSizeLimit == nil {
 		return size - (namespaceReady + namespaceCreating)
 	}
@@ -194,25 +198,29 @@ func calculatePoolNamespaceChanges(poolSizeLimit *int, size int, namespaceReady 
 }
 
 func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePool) int {
+	var isAtLimit bool
 	poolSizeLimit := pool.Spec.SizeLimit
 	size := pool.Spec.Size
 	namespaceReady := pool.Status.Ready
 	namespaceCreating := pool.Status.Creating
 	namespaceReserved := pool.Status.Reserved
+	currentNamespaceTotal := namespaceReady + namespaceCreating + namespaceReserved
 
-	sizeLimit := *poolSizeLimit
+	namespaceDelta := calculateNamespaceQuantityDelta(poolSizeLimit, size, namespaceReady, namespaceCreating, namespaceReserved)
 
-	namespaceDelta := calculatePoolNamespaceChanges(poolSizeLimit, size, namespaceReady, namespaceCreating, namespaceReserved)
-	if (namespaceReady + namespaceCreating + namespaceReserved) == sizeLimit {
-		limit := *pool.Spec.SizeLimit
-		r.Log.Info(fmt.Sprintf("max number of namespaces for pool [%s] already created [%d]", pool.Name, limit))
+	if poolSizeLimit != nil {
+		isAtLimit = isPoolAtLimit(currentNamespaceTotal, *poolSizeLimit)
+	}
+
+	if namespaceDelta == 0 && isAtLimit {
+		r.Log.Info(fmt.Sprintf("max number of namespaces for pool [%s] already created [%d]", pool.Name, poolSizeLimit))
 	}
 
 	return namespaceDelta
 }
 
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
-	for i := 0; i < r.getNamespaceQuantityDelta(pool); i++ {
+	for i := 0; i < increaseSize; i++ {
 		nsName, err := helpers.CreateNamespace(ctx, r.Client, &pool)
 		if err != nil {
 			r.Log.Error(err, "error while creating namespace")
