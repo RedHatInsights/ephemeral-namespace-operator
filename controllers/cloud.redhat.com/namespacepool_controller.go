@@ -179,12 +179,18 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.N
 	return errNamespaceList, nil
 }
 
-func calculatePoolNamespaceChanges(sizeLimit int, size int, namespaceReady int, namespacesCreating int, namespaceReserved int) int {
-	if sizeLimit-(namespaceReserved+namespaceReady+namespacesCreating) < size-(namespaceReady+namespacesCreating) {
-		return sizeLimit - (namespaceReserved + namespaceReady + namespacesCreating)
+func calculatePoolNamespaceChanges(poolSizeLimit *int, size int, namespaceReady int, namespaceCreating int, namespaceReserved int) int {
+	if poolSizeLimit == nil {
+		return size - (namespaceReady + namespaceCreating)
 	}
 
-	return size - (namespaceReady + namespacesCreating)
+	sizeLimit := *poolSizeLimit
+
+	if sizeLimit-(namespaceReserved+namespaceReady+namespaceCreating) < size-(namespaceReady+namespaceCreating) {
+		return sizeLimit - (namespaceReserved + namespaceReady + namespaceCreating)
+	}
+
+	return size - (namespaceReady + namespaceCreating)
 }
 
 func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePool) int {
@@ -194,20 +200,15 @@ func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePo
 	namespaceCreating := pool.Status.Creating
 	namespaceReserved := pool.Status.Reserved
 
-	if poolSizeLimit == nil {
-		return size - (namespaceReady + namespaceCreating)
-	}
-
 	sizeLimit := *poolSizeLimit
 
-	namespaceDelta := calculatePoolNamespaceChanges(sizeLimit, size, namespaceReady, namespaceCreating, namespaceReserved)
+	namespaceDelta := calculatePoolNamespaceChanges(poolSizeLimit, size, namespaceReady, namespaceCreating, namespaceReserved)
 	if (namespaceReady + namespaceCreating + namespaceReserved) == sizeLimit {
 		limit := *pool.Spec.SizeLimit
 		r.Log.Info(fmt.Sprintf("max number of namespaces for pool [%s] already created [%d]", pool.Name, limit))
 	}
 
 	return namespaceDelta
-
 }
 
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
