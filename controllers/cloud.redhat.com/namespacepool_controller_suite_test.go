@@ -231,44 +231,44 @@ var _ = Describe("Edge cases for creating namespaces with pool limit set", func(
 		It("Should calculate namespace creation, deletion, or return 0 if no changes are needed", func() {
 			// With a size limit of 8, ready at 0, and total namespaces at 2; create 2 ready namespaces
 			By("Testing edge case => SizeLimit: 8, Size: 2, Ready: 0, Creating: 0, Reserved: 2")
-			namespaceDelta := calculateNamespaceQuantityDelta(utils.IntPtr(8), 2, 0, 0, 2)
+			namespaceDelta := helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(8), 2, 0, 0, 2)
 
 			Expect(namespaceDelta).To(Equal(2))
 
 			// With a size limit of 3, ready at 0, and total namespaces at 2; create 1 more ready namespace
 			By("Testing edge case => SizeLimit: 3, Size: 2, Ready: 0, Creating: 0, Reserved: 2")
-			namespaceDelta = calculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 0, 0, 2)
+			namespaceDelta = helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 0, 0, 2)
 
 			Expect(namespaceDelta).To(Equal(1))
 
 			// Total namespaces equals pool limit, therefore no more namespaces are created
-			By("Testing edge case => SizeLimit: 3, Size: 0, Ready: 0, Creating: 0, Reserved: 3")
-			namespaceDelta = calculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 0, 0, 3)
+			By("Testing edge case => SizeLimit: 3, Size: 2, Ready: 0, Creating: 0, Reserved: 3")
+			namespaceDelta = helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 0, 0, 3)
 
 			Expect(namespaceDelta).To(Equal(0))
 
 			// No size limit on pool but we are at the max for ready namespace size then we don't create more namespaces
 			By("Testing edge case => SizeLimit: nil, Size: 2, Ready: 2, Creating: 0, Reserved: 2")
-			namespaceDelta = calculateNamespaceQuantityDelta(nil, 2, 2, 0, 2)
+			namespaceDelta = helpers.CalculateNamespaceQuantityDelta(nil, 2, 2, 0, 2)
 
 			Expect(namespaceDelta).To(Equal(0))
 
 			// With no ready, but two creating, size is already hit and no more are created
 			By("Testing edge case => SizeLimit: 5, Size: 2, Ready: 0, Creating: 2, Reserved: 2")
-			namespaceDelta = calculateNamespaceQuantityDelta(utils.IntPtr(5), 2, 0, 2, 2)
+			namespaceDelta = helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(5), 2, 0, 2, 2)
 
 			Expect(namespaceDelta).To(Equal(0))
 
 			// If there are more namespaces then the size limit we reduce the ready namespace count from 2 to 1
 			By("Testing edge case => SizeLimit: 3, Size: 2, Ready: 2, Creating: 0, Reserved: 2")
-			namespaceDelta = calculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 2, 0, 2)
+			namespaceDelta = helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 2, 0, 2)
 
 			Expect(namespaceDelta).To(Equal(-1))
 
 			// If 4 namespaces are reserved with pool size limit of 3, don't create more and don't remove any that are reserved
 			// Since there are no ready namespaces to delete, this will not remove any namespaces
 			By("Testing edge case => SizeLimit: 3, Size: 2, Ready: 0, Creating: 0, Reserved: 4")
-			namespaceDelta = calculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 0, 0, 4)
+			namespaceDelta = helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 0, 0, 4)
 
 			Expect(namespaceDelta).To(Equal(-1))
 		})

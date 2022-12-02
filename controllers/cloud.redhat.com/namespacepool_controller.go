@@ -73,7 +73,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	r.Log.Info(fmt.Sprintf("'%s' pool status", pool.Name),
+	r.Log.Info(fmt.Sprintf("[%s] pool status", pool.Name),
 		"ready", pool.Status.Ready,
 		"creating", pool.Status.Creating,
 		"reserved", pool.Status.Reserved)
@@ -88,7 +88,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	} else if quantityOfNamespaces < 0 {
 		r.Log.Info(fmt.Sprintf("excess number of ready namespaces in [%s] pool detected, removing [%d] namespace(s)", pool.Name, (quantityOfNamespaces * -1)))
-		err := r.decreaseReadyNamespacesQueue(ctx, pool, quantityOfNamespaces)
+		err := r.decreaseReadyNamespacesQueue(ctx, pool.Name, quantityOfNamespaces)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("unable to delete excess namespaces for [%s] pool.", pool.Name))
 		}
@@ -179,24 +179,6 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.N
 	return errNamespaceList, nil
 }
 
-func isPoolAtLimit(currentSize int, sizeLimit int) bool {
-	return currentSize == sizeLimit
-}
-
-func calculateNamespaceQuantityDelta(poolSizeLimit *int, size int, namespaceReady int, namespaceCreating int, namespaceReserved int) int {
-	if poolSizeLimit == nil {
-		return size - (namespaceReady + namespaceCreating)
-	}
-
-	sizeLimit := *poolSizeLimit
-
-	if sizeLimit-(namespaceReserved+namespaceReady+namespaceCreating) < size-(namespaceReady+namespaceCreating) {
-		return sizeLimit - (namespaceReserved + namespaceReady + namespaceCreating)
-	}
-
-	return size - (namespaceReady + namespaceCreating)
-}
-
 func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePool) int {
 	var isAtLimit bool
 	poolSizeLimit := pool.Spec.SizeLimit
@@ -206,10 +188,10 @@ func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePo
 	namespaceReserved := pool.Status.Reserved
 	currentNamespaceTotal := namespaceReady + namespaceCreating + namespaceReserved
 
-	namespaceDelta := calculateNamespaceQuantityDelta(poolSizeLimit, size, namespaceReady, namespaceCreating, namespaceReserved)
+	namespaceDelta := helpers.CalculateNamespaceQuantityDelta(poolSizeLimit, size, namespaceReady, namespaceCreating, namespaceReserved)
 
 	if poolSizeLimit != nil {
-		isAtLimit = isPoolAtLimit(currentNamespaceTotal, *poolSizeLimit)
+		isAtLimit = helpers.IsPoolAtLimit(currentNamespaceTotal, *poolSizeLimit)
 	}
 
 	if namespaceDelta == 0 && isAtLimit {
@@ -241,11 +223,15 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 	return nil
 }
 
-func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, decreaseSize int) error {
-	nsList, err := helpers.GetReadyNamespaces(ctx, r.Client, pool.Name)
+func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Context, poolName string, decreaseSize int) error {
+	nsList, err := helpers.GetReadyNamespaces(ctx, r.Client, poolName)
 	if err != nil {
-		r.Log.Error(err, fmt.Sprintf("unable to retrieve list of namespaces from '%s' pool", pool.Name))
+		r.Log.Error(err, fmt.Sprintf("unable to retrieve list of namespaces from [%s] pool", poolName))
 		return err
+	}
+
+	if len(nsList) == 0 {
+		r.Log.Info(fmt.Sprintf("no ready namespaces to delete for [%s] pool", poolName))
 	}
 
 	for i := decreaseSize; i < 0; i++ {
@@ -257,7 +243,7 @@ func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Conte
 					return err
 				}
 
-				r.Log.Info(fmt.Sprintf("successfully deleted excess namespace [%s] from [%s] pool", ns.Name, pool.Name))
+				r.Log.Info(fmt.Sprintf("successfully deleted excess namespace [%s] from [%s] pool", ns.Name, poolName))
 				break
 			}
 		}
