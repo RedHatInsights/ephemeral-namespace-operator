@@ -66,7 +66,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	if len(errNamespaceList) > 0 {
 		r.Log.Info(fmt.Sprintf("[%d] namespaces in error state are queued for deletion", len(errNamespaceList)))
-		err = r.handleErrorNamespaces(ctx, errNamespaceList)
+		err = r.deleteErrorNamespaces(ctx, errNamespaceList)
 		if err != nil {
 			r.Log.Error(err, "Unable to delete namespaces in error state")
 			return ctrl.Result{Requeue: true}, err
@@ -126,13 +126,13 @@ func (r *NamespacePoolReconciler) EnqueueNamespace(a client.Object) []reconcile.
 
 }
 
-func (r *NamespacePoolReconciler) handleErrorNamespaces(ctx context.Context, errNamespaceList []string) error {
+func (r *NamespacePoolReconciler) deleteErrorNamespaces(ctx context.Context, errNamespaceList []string) error {
 	for _, nsName := range errNamespaceList {
 		r.Log.Info("deleting namespace", "namespace", nsName)
 		err := helpers.DeleteNamespace(ctx, r.Client, nsName)
 		if err != nil {
 			r.Log.Error(err, fmt.Sprintf("error deleting namespace: [%s]", nsName))
-			return fmt.Errorf("handleErrorNamespace error: Couldn't delete namespace: [%v]", err)
+			return fmt.Errorf("could not delete namespace in error state: [%v]", err)
 		}
 	}
 
