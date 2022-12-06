@@ -277,6 +277,12 @@ var _ = Describe("Edge cases for creating namespaces with pool limit set", func(
 			namespaceDelta = helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 1, 1, 1)
 
 			Expect(namespaceDelta).To(Equal(0))
+
+			// Ensure at startup that t
+			By("Testing edge case => SizeLimit: 3, Size: 2, Ready: 0, Creating: 0, Reserved: 0")
+			namespaceDelta = helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 0, 0, 0)
+
+			Expect(namespaceDelta).To(Equal(2))
 		})
 	})
 })
