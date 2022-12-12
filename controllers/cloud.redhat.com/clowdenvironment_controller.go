@@ -35,9 +35,10 @@ import (
 
 // ClowdenvironmentReconciler reconciles a Clowdenvironment object
 type ClowdenvironmentReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
-	Log    logr.Logger
+	ctx    context.Context
+	client client.Client
+	scheme *runtime.Scheme
+	log    logr.Logger
 }
 
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
@@ -45,12 +46,12 @@ type ClowdenvironmentReconciler struct {
 
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	env := clowder.ClowdEnvironment{}
-	if err := r.Client.Get(ctx, req.NamespacedName, &env); err != nil {
-		r.Log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
+	if err := r.client.Get(ctx, req.NamespacedName, &env); err != nil {
+		r.log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
 		return ctrl.Result{}, err
 	}
 
-	r.Log.Info(
+	r.log.Info(
 		"Reconciling clowdenv",
 		"env-name", env.Name,
 		"deployments", fmt.Sprintf("%d / %d", env.Status.Deployments.ReadyDeployments, env.Status.Deployments.ManagedDeployments),
@@ -61,22 +62,22 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	nsName := env.Spec.TargetNamespace
-	r.Log.Info("clowdenvironment ready", "namespace", nsName)
+	r.log.Info("clowdenvironment ready", "namespace", nsName)
 
-	if exists := helpers.FrontendEnvironmentExists(ctx, r.Client, nsName); !exists {
-		r.Log.Info("creating frontend environment", "namespace", nsName)
-		if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
-			r.Log.Error(err, "error encountered when attempting frontend environment creation", "namespace", nsName)
-			helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap())
+	if exists := helpers.FrontendEnvironmentExists(ctx, r.client, nsName); !exists {
+		r.log.Info("creating frontend environment", "namespace", nsName)
+		if err := helpers.CreateFrontendEnv(ctx, r.client, nsName, env); err != nil {
+			r.log.Error(err, "error encountered when attempting frontend environment creation", "namespace", nsName)
+			helpers.UpdateAnnotations(ctx, r.client, nsName, helpers.AnnotationEnvError.ToMap())
 		}
 	}
 
-	r.Log.Info("namespace ready", "namespace", nsName)
-	helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvReady.ToMap())
+	r.log.Info("namespace ready", "namespace", nsName)
+	helpers.UpdateAnnotations(ctx, r.client, nsName, helpers.AnnotationEnvReady.ToMap())
 
-	ns, err := helpers.GetNamespace(ctx, r.Client, nsName)
+	ns, err := helpers.GetNamespace(ctx, r.client, nsName)
 	if err != nil {
-		r.Log.Error(err, "could not retrieve newly created namespace", "namespace", nsName)
+		r.log.Error(err, "could not retrieve newly created namespace", "namespace", nsName)
 	}
 
 	if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; ok {
@@ -86,12 +87,12 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	nsCompletionTime := time.Now()
 	var AnnotationCompletionTime = helpers.CustomAnnotation{Annotation: helpers.COMPLETION_TIME, Value: nsCompletionTime.String()}
 
-	err = helpers.UpdateAnnotations(ctx, r.Client, ns.Name, AnnotationCompletionTime.ToMap())
+	err = helpers.UpdateAnnotations(ctx, r.client, ns.Name, AnnotationCompletionTime.ToMap())
 	if err != nil {
-		r.Log.Error(err, "could not update annotation with completion time", "namespace", nsName)
+		r.log.Error(err, "could not update annotation with completion time", "namespace", nsName)
 	}
 
-	if err := r.Client.Update(ctx, &ns); err != nil {
+	if err := r.client.Update(ctx, &ns); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -107,7 +108,7 @@ func (r *ClowdenvironmentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	ctx := context.Background()
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&clowder.ClowdEnvironment{}).
-		WithEventFilter(poolFilter(ctx, r.Client)).
+		WithEventFilter(poolFilter(ctx, r.client)).
 		Complete(r)
 }
 

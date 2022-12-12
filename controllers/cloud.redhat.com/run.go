@@ -62,26 +62,26 @@ func Run(metricsAddr string, probeAddr string, enableLeaderElection bool) {
 	}
 
 	if err = (&NamespaceReservationReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Poller: &poller,
-		Log:    ctrl.Log.WithName("controllers").WithName("ReservationController"),
+		client: mgr.GetClient(),
+		scheme: mgr.GetScheme(),
+		poller: &poller,
+		log:    ctrl.Log.WithName("controllers").WithName("ReservationController"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NamespaceReservation")
 		os.Exit(1)
 	}
 	if err = (&NamespacePoolReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Log:    ctrl.Log.WithName("controllers").WithName("NamespacePoolController"),
+		client: mgr.GetClient(),
+		scheme: mgr.GetScheme(),
+		log:    ctrl.Log.WithName("controllers").WithName("NamespacePoolController"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NamespacePool")
 		os.Exit(1)
 	}
 	if err = (&ClowdenvironmentReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Log:    ctrl.Log.WithName("controllers").WithName("ClowdEnvController"),
+		client: mgr.GetClient(),
+		scheme: mgr.GetScheme(),
+		log:    ctrl.Log.WithName("controllers").WithName("ClowdEnvController"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Clowdenvironment")
 		os.Exit(1)
