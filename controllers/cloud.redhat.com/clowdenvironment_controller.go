@@ -63,9 +63,12 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	nsName := env.Spec.TargetNamespace
 	r.Log.Info("clowdenvironment ready", "namespace", nsName)
 
-	if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
-		r.Log.Error(err, "error encountered with frontend environment", "namespace", nsName)
-		helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap())
+	if exists := helpers.FrontendEnvironmentExists(ctx, r.Client, nsName); !exists {
+		r.Log.Info("creating frontend environment", "namespace", nsName)
+		if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
+			r.Log.Error(err, "error encountered when attempting frontend environment creation", "namespace", nsName)
+			helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap())
+		}
 	}
 
 	r.Log.Info("namespace ready", "namespace", nsName)
