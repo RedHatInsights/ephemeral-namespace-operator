@@ -180,18 +180,18 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.N
 }
 
 func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePool) int {
-	var isAtLimit bool
 	poolSizeLimit := pool.Spec.SizeLimit
 	size := pool.Spec.Size
-	namespaceReady := pool.Status.Ready
-	namespaceCreating := pool.Status.Creating
-	namespaceReserved := pool.Status.Reserved
-	currentNamespaceTotal := namespaceReady + namespaceCreating + namespaceReserved
+	namespacesReady := pool.Status.Ready
+	namespacesCreating := pool.Status.Creating
+	namespacesReserved := pool.Status.Reserved
+	namespacePoolTotal := namespacesReady + namespacesCreating + namespacesReserved
 
-	namespaceDelta := helpers.CalculateNamespaceQuantityDelta(poolSizeLimit, size, namespaceReady, namespaceCreating, namespaceReserved)
+	namespaceDelta := helpers.CalculateNamespaceQuantityDelta(poolSizeLimit, size, namespacesReady, namespacesCreating, namespacesReserved)
 
+	isAtLimit := false
 	if poolSizeLimit != nil {
-		isAtLimit = helpers.IsPoolAtLimit(currentNamespaceTotal, *poolSizeLimit)
+		isAtLimit = helpers.IsPoolAtLimit(namespacePoolTotal, *poolSizeLimit)
 	}
 
 	if namespaceDelta == 0 && isAtLimit {
