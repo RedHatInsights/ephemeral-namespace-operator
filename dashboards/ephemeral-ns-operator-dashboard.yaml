@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "iteration": 1666731605471,
+      "iteration": 1669994266471,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -1319,6 +1319,96 @@ data:
           "title": "CPU Usage",
           "transparent": true,
           "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 9,
+            "x": 7,
+            "y": 24
+          },
+          "id": 52,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(workqueue_depth{service=\"ephemeral-namespace-operator-controller-metrics-non-auth\"}) by (name)",
+              "legendFormat": "{{name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "WorkQueue Depth",
+          "transparent": true,
+          "type": "timeseries"
         }
       ],
       "refresh": false,
@@ -1329,7 +1419,7 @@ data:
         "list": [
           {
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "c-rh-c-eph-prometheus",
               "value": "c-rh-c-eph-prometheus"
             },
@@ -1347,7 +1437,7 @@ data:
           },
           {
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "All",
               "value": "$__all"
             },
@@ -1393,6 +1483,6 @@ data:
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 3,
+      "version": 2,
       "weekStart": ""
     }
