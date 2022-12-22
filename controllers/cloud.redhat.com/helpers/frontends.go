@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -30,17 +29,17 @@ func CreateFrontendEnv(ctx context.Context, cl client.Client, nsName string, clo
 			domain = strings.Join(splitFqdn[1:], ".")
 		}
 
-		var ssoUrl string
+		var ssoURL string
 		if domain == "" {
-			ssoUrl = fmt.Sprintf("https://%s-auth/auth/", host)
+			ssoURL = fmt.Sprintf("https://%s-auth/auth/", host)
 		} else {
-			ssoUrl = fmt.Sprintf("https://%s-auth.%s/auth/", host, domain)
+			ssoURL = fmt.Sprintf("https://%s-auth.%s/auth/", host, domain)
 		}
 
 		frontendEnv = frontend.FrontendEnvironment{
 			Spec: frontend.FrontendEnvironmentSpec{
 				Hostname:     clowdEnv.Status.Hostname,
-				SSO:          ssoUrl,
+				SSO:          ssoURL,
 				IngressClass: clowdEnv.Spec.Providers.Web.IngressClass,
 			},
 		}
@@ -110,7 +109,7 @@ func createShimServices(ctx context.Context, cl client.Client, ns core.Namespace
 
 		err = cl.Create(ctx, &newSvc)
 		if err != nil {
-			return errors.New(fmt.Sprintf("failed to create shim service for '%s'", serviceName))
+			return fmt.Errorf("failed to create shim service for %s: %w", serviceName, err)
 		}
 	}
 

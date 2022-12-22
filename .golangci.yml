@@ -1,0 +1,6 @@
+issues:
+  exclude-rules:
+    - path: apis/cloud.redhat.com/v1alpha1/groupversion_info.go
+      linters:
+        - gofmt
+        - goimports

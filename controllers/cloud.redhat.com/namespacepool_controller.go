@@ -35,8 +35,8 @@ import (
 )
 
 const (
-	POOL_STATUS_READY    = "ready"
-	POOL_STATUS_CREATING = "creating"
+	PoolStatusReady    = "ready"
+	PoolStatusCreating = "creating"
 )
 
 // NamespacePoolReconciler reconciles a NamespacePool object
@@ -157,12 +157,12 @@ func (r *NamespacePoolReconciler) getPoolStatus(ctx context.Context, pool *crd.N
 	for _, ns := range nsList.Items {
 		for _, owner := range ns.GetOwnerReferences() {
 			if owner.UID == pool.GetUID() {
-				switch ns.Annotations[helpers.ANNOTATION_ENV_STATUS] {
-				case helpers.ENV_STATUS_READY:
+				switch ns.Annotations[helpers.AnnotationEnvStatus] {
+				case helpers.EnvStatusReady:
 					readyNamespaceCount++
-				case helpers.ENV_STATUS_CREATING:
+				case helpers.EnvStatusCreating:
 					creatingNamespaceCount++
-				case helpers.ENV_STATUS_ERROR:
+				case helpers.EnvStatusError:
 					r.Log.Info("prepping for deletion due to error status", "namespace", ns.Name)
 					errNamespaceList = append(errNamespaceList, ns.Name)
 				}
@@ -238,7 +238,7 @@ func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Conte
 
 	for i := decreaseSize; i < 0; i++ {
 		for _, ns := range nsList {
-			if ns.Annotations[helpers.ANNOTATION_ENV_STATUS] == helpers.ENV_STATUS_READY && ns.Annotations[helpers.ANNOTATION_RESERVED] == "false" {
+			if ns.Annotations[helpers.AnnotationEnvStatus] == helpers.EnvStatusReady && ns.Annotations[helpers.AnnotationReserved] == "false" {
 				err := helpers.UpdateAnnotations(ctx, r.Client, ns.Name, helpers.AnnotationEnvError.ToMap())
 				if err != nil {
 					r.Log.Error(err, "error while updating annotations on namespace", "namespace", ns.Name)
