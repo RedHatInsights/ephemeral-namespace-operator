@@ -65,23 +65,27 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
 		r.Log.Error(err, "error encountered with frontend environment", "namespace", nsName)
-		helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap())
+		if aerr := helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap()); aerr != nil {
+			return ctrl.Result{Requeue: true}, fmt.Errorf("error setting annotations: %w", aerr)
+		}
 	}
 
 	r.Log.Info("namespace ready", "namespace", nsName)
-	helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvReady.ToMap())
+	if err := helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvReady.ToMap()); err != nil {
+		return ctrl.Result{Requeue: true}, fmt.Errorf("error setting annotations: %w", err)
+	}
 
 	ns, err := helpers.GetNamespace(ctx, r.Client, nsName)
 	if err != nil {
 		r.Log.Error(err, "could not retrieve newly created namespace", "namespace", nsName)
 	}
 
-	if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; ok {
+	if _, ok := ns.Annotations[helpers.CompletionTime]; ok {
 		return ctrl.Result{}, nil
 	}
 
 	nsCompletionTime := time.Now()
-	var AnnotationCompletionTime = helpers.CustomAnnotation{Annotation: helpers.COMPLETION_TIME, Value: nsCompletionTime.String()}
+	var AnnotationCompletionTime = helpers.CustomAnnotation{Annotation: helpers.CompletionTime, Value: nsCompletionTime.String()}
 
 	err = helpers.UpdateAnnotations(ctx, r.Client, ns.Name, AnnotationCompletionTime.ToMap())
 	if err != nil {

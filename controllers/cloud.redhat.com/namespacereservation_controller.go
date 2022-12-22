@@ -124,7 +124,9 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
 			r.Log.Error(err, "Could not set expiration time on reservation. Deleting", "res-name", res.Name)
-			r.Client.Delete(ctx, &res)
+			if err := r.Client.Delete(ctx, &res); err != nil {
+				r.Log.Error(err, "cannot delete resource - aborting delete", "name", res.Name)
+			}
 			return ctrl.Result{}, err
 		}
 
@@ -200,13 +202,13 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			userNamespaceReservationCount[res.Spec.Requester] = 0
 		}
 
-		userNamespaceReservationCount[res.Spec.Requester] += 1
+		userNamespaceReservationCount[res.Spec.Requester]++
 
 		resQuantityByUserMetrics.With(prometheus.Labels{"user": res.Spec.Requester}).Set(float64(userNamespaceReservationCount[res.Spec.Requester]))
 
 		averageRequestedDurationMetrics.With(prometheus.Labels{"controller": "namespacereservation", "pool": res.Spec.Pool}).Observe(float64(duration.Hours()))
 
-		elapsed := time.Now().Sub(res.CreationTimestamp.Time)
+		elapsed := time.Since(res.CreationTimestamp.Time)
 
 		averageReservationToDeploymentMetrics.With(prometheus.Labels{"controller": "namespacereservation", "pool": res.Spec.Pool}).Observe(float64(elapsed.Seconds()))
 

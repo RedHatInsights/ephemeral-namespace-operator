@@ -26,6 +26,7 @@ import (
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -70,7 +71,8 @@ func populateClowdEnvStatus(client client.Client) {
 			continue
 		}
 		for _, env := range clowdEnvs.Items {
-			if len(env.Status.Conditions) == 0 {
+			innerEnv := env
+			if len(innerEnv.Status.Conditions) == 0 {
 				status := clowder.ClowdEnvironmentStatus{
 					Conditions: []clusterv1.Condition{
 						{
@@ -85,8 +87,8 @@ func populateClowdEnvStatus(client client.Client) {
 						},
 					},
 				}
-				env.Status = status
-				err := client.Status().Update(ctx, &env)
+				innerEnv.Status = status
+				err := client.Status().Update(ctx, &innerEnv)
 				if err != nil {
 					fmt.Println("ERROR: ", err)
 				}
@@ -112,9 +114,9 @@ var _ = BeforeSuite(func() {
 	Expect(cfg).NotTo(BeNil())
 
 	k8sscheme := runtime.NewScheme()
-	clientgoscheme.AddToScheme(k8sscheme)
-	clowder.AddToScheme(k8sscheme)
-	frontend.AddToScheme(k8sscheme)
+	utilruntime.Must(clientgoscheme.AddToScheme(k8sscheme))
+	utilruntime.Must(clowder.AddToScheme(k8sscheme))
+	utilruntime.Must(frontend.AddToScheme(k8sscheme))
 
 	err = crd.AddToScheme(k8sscheme)
 	Expect(err).NotTo(HaveOccurred())

@@ -12,15 +12,15 @@ type CustomLabel struct {
 
 func CreateInitialAnnotations() map[string]string {
 	return map[string]string{
-		ANNOTATION_ENV_STATUS: ENV_STATUS_CREATING,
-		ANNOTATION_RESERVED:   FALSE_VALUE,
+		AnnotationEnvStatus: EnvStatusCreating,
+		AnnotationReserved:  FalseValue,
 	}
 }
 
 func CreateInitialLabels(poolName string) map[string]string {
 	return map[string]string{
-		LABEL_OPERATOR_NS: TRUE_VALUE,
-		LABEL_POOL:        poolName,
+		LabelOperatorNS: TrueValue,
+		LabelPool:       poolName,
 	}
 }
 
@@ -32,12 +32,12 @@ func (l *CustomLabel) ToMap() map[string]string {
 	return map[string]string{l.Label: l.Value}
 }
 
-var AnnotationEnvReady = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_READY}
-var AnnotationEnvCreating = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_CREATING}
-var AnnotationEnvError = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_ERROR}
-var AnnotationEnvDeleting = CustomAnnotation{Annotation: ANNOTATION_ENV_STATUS, Value: ENV_STATUS_DELETING}
+var AnnotationEnvReady = CustomAnnotation{Annotation: AnnotationEnvStatus, Value: EnvStatusReady}
+var AnnotationEnvCreating = CustomAnnotation{Annotation: AnnotationEnvStatus, Value: EnvStatusCreating}
+var AnnotationEnvError = CustomAnnotation{Annotation: AnnotationEnvStatus, Value: EnvStatusError}
+var AnnotationEnvDeleting = CustomAnnotation{Annotation: AnnotationEnvStatus, Value: EnvStatusDeleting}
 
-var AnnotationReservedTrue = CustomAnnotation{Annotation: ANNOTATION_RESERVED, Value: TRUE_VALUE}
-var AnnotationReservedFalse = CustomAnnotation{Annotation: ANNOTATION_RESERVED, Value: FALSE_VALUE}
+var AnnotationReservedTrue = CustomAnnotation{Annotation: AnnotationReserved, Value: TrueValue}
+var AnnotationReservedFalse = CustomAnnotation{Annotation: AnnotationReserved, Value: FalseValue}
 
-var LabelOperatorNamespaceTrue = CustomLabel{Label: LABEL_OPERATOR_NS, Value: TRUE_VALUE}
+var LabelOperatorNamespaceTrue = CustomLabel{Label: LabelOperatorNS, Value: TrueValue}

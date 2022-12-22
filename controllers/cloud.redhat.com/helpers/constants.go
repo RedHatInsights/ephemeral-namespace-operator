@@ -1,27 +1,27 @@
 package helpers
 
 const (
-	ANNOTATION_ENV_STATUS = "env-status"
-	ANNOTATION_RESERVED   = "reserved"
+	AnnotationEnvStatus = "env-status"
+	AnnotationReserved  = "reserved"
 
-	COMPLETION_TIME = "completion-time"
+	CompletionTime = "completion-time"
 
-	ENV_STATUS_CREATING = "creating"
-	ENV_STATUS_DELETING = "deleting"
-	ENV_STATUS_ERROR    = "error"
-	ENV_STATUS_READY    = "ready"
+	EnvStatusCreating = "creating"
+	EnvStatusDeleting = "deleting"
+	EnvStatusError    = "error"
+	EnvStatusReady    = "ready"
 
-	KIND_NAMESPACEPOOL = "NamespacePool"
+	KindNamespacePool = "NamespacePool"
 
-	LABEL_OPERATOR_NS = "operator-ns"
-	LABEL_POOL        = "pool"
+	LabelOperatorNS = "operator-ns"
+	LabelPool       = "pool"
 
-	NAMESPACE_EPHEMERAL_BASE = "ephemeral-base"
+	NamespaceEphemeralBase = "ephemeral-base"
 
-	BONFIRE_IGNORE_SECRET          = "bonfire.ignore"
-	OPENSHIFT_VAULT_SECRETS_SECRET = "openshift-vault-secrets"
-	QONTRACT_INTEGRATION_SECRET    = "qontract.integration"
+	BonfireGinoreSecret         = "bonfire.ignore"
+	OpenShiftVaultSecretsSecret = "openshift-vault-secrets"
+	QontractIntegrationSecret   = "qontract.integration"
 
-	TRUE_VALUE  = "true"
-	FALSE_VALUE = "false"
+	TrueValue  = "true"
+	FalseValue = "false"
 )

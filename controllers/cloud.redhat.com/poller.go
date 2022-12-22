@@ -18,9 +18,9 @@ type Poller struct {
 	Log                logr.Logger
 }
 
-const POLL_CYCLE time.Duration = 10
+const PollCycle time.Duration = 10
 
-func (p *Poller) Poll() error {
+func (p *Poller) Poll() {
 	ctx := context.Background()
 	p.Log.Info("Starting poller...")
 
@@ -31,7 +31,7 @@ func (p *Poller) Poll() error {
 	p.Log.Info("Populating poller with active reservations")
 	if err := p.populateActiveReservations(ctx); err != nil {
 		p.Log.Error(err, "Unable to populate pool with active reservations")
-		return err
+		return
 	}
 
 	for {
@@ -55,7 +55,7 @@ func (p *Poller) Poll() error {
 			}
 		}
 
-		time.Sleep(time.Duration(POLL_CYCLE * time.Second))
+		time.Sleep(time.Duration(PollCycle * time.Second))
 	}
 }
 
@@ -88,7 +88,7 @@ func (p *Poller) getExistingReservations(ctx context.Context) (*crd.NamespaceRes
 }
 
 func (p *Poller) namespaceIsExpired(expiration metav1.Time) bool {
-	remainingTime := expiration.Sub(time.Now())
+	remainingTime := time.Until(expiration.Time)
 	if !expiration.IsZero() && remainingTime <= 0 {
 		return true
 	}
