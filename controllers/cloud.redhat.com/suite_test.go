@@ -54,7 +54,8 @@ func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	RunSpecs(t,
-		"Controller Suite")
+		"Controller Suite",
+		Label("Ephemeral Namespace Operator"))
 }
 
 // routine that will auto-update ClowdEnvironment status during suite test run
@@ -268,7 +269,7 @@ var _ = BeforeSuite(func() {
 		Expect(err).ToNot(HaveOccurred())
 	}()
 
-}, 60)
+})
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
