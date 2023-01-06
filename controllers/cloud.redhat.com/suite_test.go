@@ -54,8 +54,7 @@ func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	RunSpecs(t,
-		"Controller Suite",
-	)
+		"Controller Suite")
 }
 
 // routine that will auto-update ClowdEnvironment status during suite test run
