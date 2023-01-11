@@ -208,20 +208,19 @@ func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePo
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
 	for i := 0; i < increaseSize; i++ {
 		namespaceName, err := helpers.CreateNamespace(ctx, r.Client, &pool)
-		if err != nil {
-			r.Log.Error(err, fmt.Sprintf("error while creating namespace [%s]", namespaceName))
-			if namespaceName != "" {
-				err := helpers.UpdateAnnotations(ctx, r.Client, namespaceName, helpers.AnnotationEnvError.ToMap())
-				if err != nil {
-					r.Log.Error(err, "error while updating annotations on namespace", "namespace", namespaceName)
-					return err
-				}
-			}
-
-			return err
+		if err == nil {
+			r.Log.Info(fmt.Sprintf("successfully created namespace [%s] in [%s] pool", namespaceName, pool.Name))
+			continue
 		}
 
-		r.Log.Info(fmt.Sprintf("successfully created namespace [%s] in [%s] pool", namespaceName, pool.Name))
+		r.Log.Error(err, fmt.Sprintf("error while creating namespace [%s]", namespaceName))
+		if namespaceName != "" {
+			err := helpers.UpdateAnnotations(ctx, r.Client, namespaceName, helpers.AnnotationEnvError.ToMap())
+			if err != nil {
+				r.Log.Error(err, "error while updating annotations on namespace", "namespace", namespaceName)
+				return err
+			}
+		}
 	}
 
 	return nil
