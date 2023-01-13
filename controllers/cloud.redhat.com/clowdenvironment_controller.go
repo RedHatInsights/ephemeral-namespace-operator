@@ -93,7 +93,7 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if err := r.Client.Update(ctx, &ns); err != nil {
-		return ctrl.Result{}, err
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	elapsed := nsCompletionTime.Sub(ns.CreationTimestamp.Time)
