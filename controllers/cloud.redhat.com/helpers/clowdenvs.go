@@ -62,10 +62,11 @@ func VerifyClowdEnvReady(env clowder.ClowdEnvironment) (bool, error) {
 		return false, errors.New("hostname not populated")
 	}
 
-	// check that all deployments are ready
 	conditions := env.Status.Conditions
+
 	reconciliationSuccessful := false
 	deploymentsReady := false
+
 	for i := range conditions {
 		if conditions[i].Type == "ReconciliationSuccessful" && conditions[i].Status == "True" {
 			reconciliationSuccessful = true
@@ -75,12 +76,5 @@ func VerifyClowdEnvReady(env clowder.ClowdEnvironment) (bool, error) {
 		}
 	}
 
-	if !reconciliationSuccessful {
-		return false, nil
-	}
-	if !deploymentsReady {
-		return false, nil
-	}
-
-	return true, nil
+	return (reconciliationSuccessful && deploymentsReady), nil
 }

@@ -94,6 +94,11 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
+	if err := r.Client.Get(ctx, req.NamespacedName, &pool); err != nil {
+		r.Log.Error(err, fmt.Sprintf("cannot retrieve [%s] pool resource", pool.Name))
+		return ctrl.Result{Requeue: true}, err
+	}
+
 	if err := r.Status().Update(ctx, &pool); err != nil {
 		r.Log.Error(err, fmt.Sprintf("cannot update [%s] pool status", pool.Name))
 		return ctrl.Result{}, err
@@ -196,8 +201,6 @@ func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePo
 
 	if namespaceDelta == 0 && isAtLimit {
 		r.Log.Info(fmt.Sprintf("max number of namespaces for pool [%s] already created", pool.Name), "max namespaces", poolSizeLimit)
-	} else {
-		r.Log.Info(fmt.Sprintf("Namespaces should change by [%s]", pool.Name))
 	}
 
 	return namespaceDelta
