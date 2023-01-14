@@ -25,6 +25,7 @@ import (
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -61,44 +62,45 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	nsName := env.Spec.TargetNamespace
-	r.log.Info("clowdenvironment ready", "namespace", nsName)
+	namespacesName := env.Spec.TargetNamespace
+	r.log.Info("clowdenvironment ready", "namespace", namespacesName)
 
-	if exists := helpers.FrontendEnvironmentExists(ctx, r.client, nsName); !exists {
-		r.log.Info("creating frontend environment", "namespace", nsName)
-		if err := helpers.CreateFrontendEnv(ctx, r.client, nsName, env); err != nil {
-			r.log.Error(err, "error encountered when attempting frontend environment creation", "namespace", nsName)
-			helpers.UpdateAnnotations(ctx, r.client, nsName, helpers.AnnotationEnvError.ToMap())
+	if exists := helpers.FrontendEnvironmentExists(ctx, r.client, namespacesName); !exists {
+		r.log.Info("creating frontend environment", "namespace", namespacesName)
+		if err := helpers.CreateFrontendEnv(ctx, r.client, namespacesName, env); err != nil {
+			r.log.Error(err, "error encountered when attempting frontend environment creation", "namespace", namespacesName)
+			helpers.UpdateAnnotations(ctx, r.client, namespacesName, helpers.AnnotationEnvError.ToMap())
 		}
 	}
 
-	r.log.Info("namespace ready", "namespace", nsName)
-	helpers.UpdateAnnotations(ctx, r.client, nsName, helpers.AnnotationEnvReady.ToMap())
+	r.log.Info("namespace ready", "namespace", namespacesName)
+	helpers.UpdateAnnotations(ctx, r.client, namespacesName, helpers.AnnotationEnvReady.ToMap())
 
-	ns, err := helpers.GetNamespace(ctx, r.client, nsName)
+	namespace := core.Namespace{}
+	err := r.client.Get(ctx, types.NamespacedName{Name: namespacesName}, &namespace)
 	if err != nil {
-		r.log.Error(err, "could not retrieve newly created namespace", "namespace", nsName)
+		r.log.Error(err, "could not retrieve newly created namespace", "namespace", namespacesName)
 	}
 
-	if _, ok := ns.Annotations[helpers.COMPLETION_TIME]; ok {
+	if _, ok := namespace.Annotations[helpers.COMPLETION_TIME]; ok {
 		return ctrl.Result{}, nil
 	}
 
 	nsCompletionTime := time.Now()
 	var AnnotationCompletionTime = helpers.CustomAnnotation{Annotation: helpers.COMPLETION_TIME, Value: nsCompletionTime.String()}
 
-	err = helpers.UpdateAnnotations(ctx, r.client, ns.Name, AnnotationCompletionTime.ToMap())
+	err = helpers.UpdateAnnotations(ctx, r.client, namespace.Name, AnnotationCompletionTime.ToMap())
 	if err != nil {
-		r.log.Error(err, "could not update annotation with completion time", "namespace", nsName)
+		r.log.Error(err, "could not update annotation with completion time", "namespace", namespacesName)
 	}
 
-	if err := r.client.Update(ctx, &ns); err != nil {
+	if err := r.client.Update(ctx, &namespace); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	elapsed := nsCompletionTime.Sub(ns.CreationTimestamp.Time)
+	elapsed := nsCompletionTime.Sub(namespace.CreationTimestamp.Time)
 
-	averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": ns.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
+	averageNamespaceCreationMetrics.With(prometheus.Labels{"pool": namespace.Labels["pool"]}).Observe(float64(elapsed.Seconds()))
 
 	return ctrl.Result{}, nil
 }
@@ -128,12 +130,13 @@ func poolFilter(ctx context.Context, cl client.Client) predicate.Predicate {
 	}
 }
 
-func isOwnedByPool(ctx context.Context, cl client.Client, nsName string) bool {
-	ns, err := helpers.GetNamespace(ctx, cl, nsName)
-	if err != nil {
+func isOwnedByPool(ctx context.Context, cl client.Client, namespaceName string) bool {
+	namespace := core.Namespace{}
+	if err := cl.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace); err != nil {
 		return false
 	}
-	for _, owner := range ns.GetOwnerReferences() {
+
+	for _, owner := range namespace.GetOwnerReferences() {
 		if owner.Kind == "NamespacePool" {
 			return true
 		}
@@ -142,12 +145,13 @@ func isOwnedByPool(ctx context.Context, cl client.Client, nsName string) bool {
 	return false
 }
 
-func isOwnedBySpecificPool(ctx context.Context, cl client.Client, nsName string, uid types.UID) bool {
-	ns, err := helpers.GetNamespace(ctx, cl, nsName)
-	if err != nil {
+func isOwnedBySpecificPool(ctx context.Context, cl client.Client, namespacesName string, uid types.UID) bool {
+	namespace := core.Namespace{}
+	if err := cl.Get(ctx, types.NamespacedName{Name: namespacesName}, &namespace); err != nil {
 		return false
 	}
-	for _, owner := range ns.GetOwnerReferences() {
+
+	for _, owner := range namespace.GetOwnerReferences() {
 		if owner.Kind == "NamespacePool" && owner.UID == uid {
 			return true
 		}

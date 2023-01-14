@@ -8,29 +8,31 @@ import (
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/go-logr/logr"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnvironmentSpec, nsName string) error {
+func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnvironmentSpec, namespaceName string) error {
 	env := clowder.ClowdEnvironment{
 		Spec: spec,
 	}
-	env.SetName(fmt.Sprintf("env-%s", nsName))
-	env.Spec.TargetNamespace = nsName
+	env.SetName(fmt.Sprintf("env-%s", namespaceName))
+	env.Spec.TargetNamespace = namespaceName
 
-	ns, err := GetNamespace(ctx, cl, nsName)
-	if err != nil {
+	// ns, err := GetNamespace(ctx, cl, nsName)
+	namespace := core.Namespace{}
+	if err := cl.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace); err != nil {
 		return err
 	}
 
 	env.SetOwnerReferences([]metav1.OwnerReference{
 		{
-			APIVersion: ns.APIVersion,
-			Kind:       ns.Kind,
-			Name:       ns.Name,
-			UID:        ns.UID,
+			APIVersion: namespace.APIVersion,
+			Kind:       namespace.Kind,
+			Name:       namespace.Name,
+			UID:        namespace.UID,
 		},
 	})
 
