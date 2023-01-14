@@ -58,7 +58,7 @@ func WaitForClowdEnv(ctx context.Context, cl client.Client, log logr.Logger, nsN
 		// env is not ready
 		msg := "ClowdEnvironment is not yet ready for namespace"
 		if err != nil {
-			msg = msg + fmt.Sprintf(" (%s)", err)
+			msg += fmt.Sprintf(" (%s)", err)
 		}
 		log.Info(msg, "namespace", nsName)
 	}

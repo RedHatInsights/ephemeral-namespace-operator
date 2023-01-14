@@ -1,0 +1,39 @@
+name: Run Linter
+
+on:
+  - pull_request
+
+permissions:
+  contents: read
+jobs:
+  golangci:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display build environment
+        run: printenv
+
+      - uses: actions/setup-go@v3
+        name: Set up Go 1.x
+        with:
+          go-version: 1.18
+
+      - uses: actions/checkout@v3
+        name: Checkout ENO
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+
+          args: >
+            --enable=errcheck,gocritic,gofmt,goimports,gosec,gosimple,govet,ineffassign,revive,staticcheck,typecheck,unused,bodyclose
+            --fix=false
+            --max-same-issues=20
+            --out-${NO_FUTURE}format=colored-line-number
+            --print-issued-lines=true
+            --print-linter-name=true
+            --sort-results=true
+            --timeout=5m0s
+            --uniq-by-line=false
+          only-new-issues: false

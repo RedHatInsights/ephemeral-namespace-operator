@@ -65,16 +65,17 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	namespacesName := env.Spec.TargetNamespace
 	r.log.Info("clowdenvironment ready", "namespace", namespacesName)
 
-	if exists := helpers.FrontendEnvironmentExists(ctx, r.client, namespacesName); !exists {
-		r.log.Info("creating frontend environment", "namespace", namespacesName)
-		if err := helpers.CreateFrontendEnv(ctx, r.client, namespacesName, env); err != nil {
-			r.log.Error(err, "error encountered when attempting frontend environment creation", "namespace", namespacesName)
-			helpers.UpdateAnnotations(ctx, r.client, namespacesName, helpers.AnnotationEnvError.ToMap())
+	if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
+		r.Log.Error(err, "error encountered with frontend environment", "namespace", nsName)
+		if aerr := helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap()); aerr != nil {
+			return ctrl.Result{Requeue: true}, fmt.Errorf("error setting annotations: %w", aerr)
 		}
 	}
 
-	r.log.Info("namespace ready", "namespace", namespacesName)
-	helpers.UpdateAnnotations(ctx, r.client, namespacesName, helpers.AnnotationEnvReady.ToMap())
+	r.Log.Info("namespace ready", "namespace", nsName)
+	if err := helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvReady.ToMap()); err != nil {
+		return ctrl.Result{Requeue: true}, fmt.Errorf("error setting annotations: %w", err)
+	}
 
 	namespace := core.Namespace{}
 	err := r.client.Get(ctx, types.NamespacedName{Name: namespacesName}, &namespace)
@@ -87,7 +88,7 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	nsCompletionTime := time.Now()
-	var AnnotationCompletionTime = helpers.CustomAnnotation{Annotation: helpers.COMPLETION_TIME, Value: nsCompletionTime.String()}
+	var AnnotationCompletionTime = helpers.CustomAnnotation{Annotation: helpers.CompletionTime, Value: nsCompletionTime.String()}
 
 	err = helpers.UpdateAnnotations(ctx, r.client, namespace.Name, AnnotationCompletionTime.ToMap())
 	if err != nil {
