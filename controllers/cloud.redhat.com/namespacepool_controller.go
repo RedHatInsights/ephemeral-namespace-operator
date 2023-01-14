@@ -94,11 +94,6 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	if err := r.Client.Get(ctx, req.NamespacedName, &pool); err != nil {
-		r.Log.Error(err, fmt.Sprintf("cannot retrieve [%s] pool resource", pool.Name))
-		return ctrl.Result{Requeue: true}, err
-	}
-
 	if err := r.Status().Update(ctx, &pool); err != nil {
 		r.Log.Error(err, fmt.Sprintf("cannot update [%s] pool status", pool.Name))
 		return ctrl.Result{}, err
