@@ -16,7 +16,7 @@ done <<< "$(git log --pretty=format:%s $(git merge-base main HEAD)..HEAD)"
 set -exv
 
 BASE_TAG=`cat go.mod go.sum Dockerfile | sha256sum  | head -c 8`
-BASE_IMG=quay.io/cloudservices/clowder-base:$BASE_TAG
+BASE_IMG=quay.io/cloudservices/ephemeral-namespace-operator:$BASE_TAG
 
 DOCKER_CONF="$PWD/.docker"
 mkdir -p "$DOCKER_CONF"
@@ -70,10 +70,10 @@ ENO_VERSION=`git describe --tags`
 IMG=$IMAGE_NAME:$IMAGE_TAG BASE_IMG=$BASE_IMG make docker-build
 IMG=$IMAGE_NAME:$IMAGE_TAG make docker-push
 
-docker rm clowdercopy || true
-docker create --name clowdercopy $IMAGE_NAME:$IMAGE_TAG
-docker cp clowdercopy:/manifest.yaml .
-docker rm clowdercopy || true
+docker rm enocopy || true
+docker create --name enocopy $IMAGE_NAME:$IMAGE_TAG
+docker cp enocopy:/manifest.yaml .
+docker rm enocopy || true
 
 CONTAINER_NAME="ephemeral-namespace-operator-pr-check-$ghprbPullId"
 docker rm -f $CONTAINER_NAME || true
