@@ -90,6 +90,7 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	err = helpers.UpdateAnnotations(ctx, r.Client, ns.Name, AnnotationCompletionTime.ToMap())
 	if err != nil {
 		r.Log.Error(err, "could not update annotation with completion time", "namespace", nsName)
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	if err := r.Client.Update(ctx, &ns); err != nil {
