@@ -77,7 +77,7 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	namespace, err := helpers.GetNamespace(ctx, r.Client, nsName)
 	if err != nil {
-		r.Log.Error(err, "could not retrieve newly created namespace", "namespace", nsName)
+		r.Log.Error(err, "could not retrieve updated resource", "namespace", nsName)
 	}
 
 	if _, ok := namespace.Annotations[helpers.CompletionTime]; ok {
