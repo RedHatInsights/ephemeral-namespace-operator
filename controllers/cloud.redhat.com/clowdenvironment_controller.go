@@ -60,24 +60,24 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		"deployments", fmt.Sprintf("%d / %d", env.Status.Deployments.ReadyDeployments, env.Status.Deployments.ManagedDeployments),
 	)
 
-	nsName := env.Spec.TargetNamespace
-	r.Log.Info("clowdenvironment ready", "namespace", nsName)
+	namespaceName := env.Spec.TargetNamespace
+	r.Log.Info("clowdenvironment ready", "namespace", namespaceName)
 
-	if err := helpers.CreateFrontendEnv(ctx, r.Client, nsName, env); err != nil {
-		r.Log.Error(err, "error encountered with frontend environment", "namespace", nsName)
-		if aerr := helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvError.ToMap()); aerr != nil {
+	if err := helpers.CreateFrontendEnv(ctx, r.Client, namespaceName, env); err != nil {
+		r.Log.Error(err, "error encountered with frontend environment", "namespace", namespaceName)
+		if aerr := helpers.UpdateAnnotations(ctx, r.Client, namespaceName, helpers.AnnotationEnvError.ToMap()); aerr != nil {
 			return ctrl.Result{Requeue: true}, fmt.Errorf("error setting annotations: %w", aerr)
 		}
 	}
 
-	r.Log.Info("namespace ready", "namespace", nsName)
-	if err := helpers.UpdateAnnotations(ctx, r.Client, nsName, helpers.AnnotationEnvReady.ToMap()); err != nil {
+	r.Log.Info("namespace ready", "namespace", namespaceName)
+	if err := helpers.UpdateAnnotations(ctx, r.Client, namespaceName, helpers.AnnotationEnvReady.ToMap()); err != nil {
 		return ctrl.Result{Requeue: true}, fmt.Errorf("error setting annotations: %w", err)
 	}
 
-	namespace, err := helpers.GetNamespace(ctx, r.Client, nsName)
+	namespace, err := helpers.GetNamespace(ctx, r.Client, namespaceName)
 	if err != nil {
-		r.Log.Error(err, "could not retrieve updated resource", "namespace", nsName)
+		return ctrl.Result{Requeue: true}, fmt.Errorf("could not retrieve updated namespace %s: %w", namespaceName, err)
 	}
 
 	if _, ok := namespace.Annotations[helpers.CompletionTime]; ok {
@@ -89,12 +89,12 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	err = helpers.UpdateAnnotations(ctx, r.Client, namespace.Name, AnnotationCompletionTime.ToMap())
 	if err != nil {
-		r.Log.Error(err, "could not update annotation with completion time", "namespace", nsName)
+		return ctrl.Result{Requeue: true}, fmt.Errorf("could not retrieve updated namespace %s after updating annotations: %w", namespaceName, err)
 	}
 
-	namespace, err = helpers.GetNamespace(ctx, r.Client, nsName)
+	namespace, err = helpers.GetNamespace(ctx, r.Client, namespaceName)
 	if err != nil {
-		r.Log.Error(err, "could not retrieve newly created namespace", "namespace", nsName)
+		r.Log.Error(err, "could not retrieve newly created namespace", "namespace", namespaceName)
 	}
 
 	if err := r.Client.Update(ctx, &namespace); err != nil {
