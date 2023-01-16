@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
+	"github.com/go-logr/logr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,6 +41,29 @@ func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnv
 	return nil
 }
 
+func WaitForClowdEnv(ctx context.Context, cl client.Client, log logr.Logger, nsName string) *clowder.ClowdEnvironment {
+	var clowdEnv *clowder.ClowdEnvironment
+	var ready bool
+	var err error
+	for {
+		time.Sleep(10 * time.Second)
+
+		ready, clowdEnv, err = GetClowdEnv(ctx, cl, nsName)
+		if ready && clowdEnv != nil {
+			break
+		}
+
+		// env is not ready
+		msg := "ClowdEnvironment is not yet ready for namespace"
+		if err != nil {
+			msg += fmt.Sprintf(" (%s)", err)
+		}
+		log.Info(msg, "namespace", nsName)
+	}
+
+	return clowdEnv
+}
+
 func GetClowdEnv(ctx context.Context, cl client.Client, nsName string) (bool, *clowder.ClowdEnvironment, error) {
 	env := clowder.ClowdEnvironment{}
 	nn := types.NamespacedName{
@@ -62,11 +87,10 @@ func VerifyClowdEnvReady(env clowder.ClowdEnvironment) (bool, error) {
 		return false, errors.New("hostname not populated")
 	}
 
+	// check that all deployments are ready
 	conditions := env.Status.Conditions
-
 	reconciliationSuccessful := false
 	deploymentsReady := false
-
 	for i := range conditions {
 		if conditions[i].Type == "ReconciliationSuccessful" && conditions[i].Status == "True" {
 			reconciliationSuccessful = true
@@ -76,5 +100,12 @@ func VerifyClowdEnvReady(env clowder.ClowdEnvironment) (bool, error) {
 		}
 	}
 
-	return (reconciliationSuccessful && deploymentsReady), nil
+	if !reconciliationSuccessful {
+		return false, errors.New("reconciliation not successful")
+	}
+	if !deploymentsReady {
+		return false, errors.New("deployments not ready")
+	}
+
+	return true, nil
 }
