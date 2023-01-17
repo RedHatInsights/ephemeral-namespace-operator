@@ -144,6 +144,10 @@ build: update-version generate fmt vet ## Build manager binary.
 run: update-version manifests generate install fmt vet ## Run a controller from your host.
 	go run ./main.go
 
+docker-build-and-push-base:
+	$(RUNTIME) build -f Dockerfile . -t $(BASE_IMG)
+	$(RUNTIME) push $(BASE_IMG)
+
 docker-build: update-version test ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
@@ -168,6 +172,10 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 update-version: ## Updates the version in the image
 	$(shell echo -n $(ENO_VERSION) > controllers/cloud.redhat.com/version.txt)
 	echo "Building version: $(ENO_VERSION)"
+
+ENVTEST = $(shell pwd)/bin/setup-envtest
+envtest: ## Download envtest-setup locally if necessary.
+	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
 
 CONTROLLER_GEN = ${ENVTEST_ASSETS_DIR}/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
