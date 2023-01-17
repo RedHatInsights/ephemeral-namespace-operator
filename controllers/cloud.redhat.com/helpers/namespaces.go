@@ -144,7 +144,7 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, nsName string, ann
 	utils.UpdateAnnotations(&ns, annotations)
 
 	if err := cl.Update(ctx, &ns); err != nil {
-		return err
+		return fmt.Errorf("there was issue updating annotations for namespace [%s]", ns.Name)
 	}
 
 	return nil
