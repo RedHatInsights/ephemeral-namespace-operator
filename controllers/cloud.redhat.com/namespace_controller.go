@@ -21,6 +21,10 @@ type NamespaceReconciler struct {
 	Log    logr.Logger
 }
 
+//+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespace,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespace/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespace/finalizers,verbs=update
+
 func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
