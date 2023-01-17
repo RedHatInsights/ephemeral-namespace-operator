@@ -89,7 +89,7 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	err = helpers.UpdateAnnotations(ctx, r.Client, namespace.Name, AnnotationCompletionTime.ToMap())
 	if err != nil {
-		return ctrl.Result{Requeue: true}, fmt.Errorf("could not retrieve updated namespace %s after updating annotations: %w", namespaceName, err)
+		return ctrl.Result{Requeue: true}, fmt.Errorf("could not retrieve updated namespace [%s] after updating annotations: %w", namespaceName, err)
 	}
 
 	namespace, err = helpers.GetNamespace(ctx, r.Client, namespaceName)

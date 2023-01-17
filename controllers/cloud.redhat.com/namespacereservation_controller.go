@@ -159,6 +159,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			r.Log.Error(err, err.Error(), "namespace", readyNsName)
 			if err := helpers.UpdateAnnotations(ctx, r.Client, readyNsName, helpers.AnnotationEnvError.ToMap()); err != nil {
 				r.Log.Error(err, fmt.Sprintf("unable to update annotations for unready namespace in '%s' pool", res.Status.Pool), "namespace", readyNsName)
+				return ctrl.Result{Requeue: true}, err
 			}
 			return ctrl.Result{Requeue: true}, err
 		}
