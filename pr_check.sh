@@ -103,3 +103,5 @@ docker rm -f $CONTAINER_NAME
 set -e
 
 exit $TEST_RESULT
+
+echo "Test"
