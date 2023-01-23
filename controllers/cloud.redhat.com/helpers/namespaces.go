@@ -135,16 +135,20 @@ func CheckReadyStatus(pool string, ns core.Namespace, ready []core.Namespace) []
 	return ready
 }
 
-func UpdateAnnotations(ctx context.Context, cl client.Client, nsName string, annotations map[string]string) error {
-	ns, err := GetNamespace(ctx, cl, nsName)
+func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName string, annotations map[string]string) error {
+	namespace, err := GetNamespace(ctx, cl, namespaceName)
 	if err != nil {
 		return err
 	}
 
-	utils.UpdateAnnotations(&ns, annotations)
+	utils.UpdateAnnotations(&namespace, annotations)
 
-	if err := cl.Update(ctx, &ns); err != nil {
-		return fmt.Errorf("there was issue updating annotations for namespace [%s]", ns.Name)
+	if err := cl.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace); err != nil {
+		return fmt.Errorf("there was issue retrieving namespace [%s] with newly added annotations", namespaceName)
+	}
+
+	if err := cl.Update(ctx, &namespace); err != nil {
+		return fmt.Errorf("there was issue updating annotations for namespace [%s]", namespaceName)
 	}
 
 	return nil
