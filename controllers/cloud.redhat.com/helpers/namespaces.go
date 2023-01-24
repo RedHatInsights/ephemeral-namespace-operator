@@ -143,10 +143,6 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 
 	utils.UpdateAnnotations(&namespace, annotations)
 
-	if err := cl.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace); err != nil {
-		return fmt.Errorf("there was an issue retrieving namespace [%s] with newly added annotations", namespaceName)
-	}
-
 	if err := cl.Update(ctx, &namespace); err != nil {
 		return fmt.Errorf("there was an issue updating annotations for namespace [%s]", namespaceName)
 	}
