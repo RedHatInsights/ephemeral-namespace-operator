@@ -143,9 +143,17 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 
 	utils.UpdateAnnotations(&namespace, annotations)
 
-	if err := cl.Update(ctx, &namespace); err != nil {
-		return fmt.Errorf("there was an issue updating annotations for namespace [%s]", namespaceName)
-	}
+	err = retry.OnError(
+		wait.Backoff(retry.DefaultBackoff),
+		func(error) bool { return true },
+		func() error {
+			if err = cl.Update(ctx, &namespace); err != nil {
+				return fmt.Errorf("there was an issue updating annotations for namespace [%s]", namespaceName)
+			}
+
+			return nil
+		},
+	)
 
 	return nil
 }
