@@ -38,9 +38,10 @@ func CreateFrontendEnv(ctx context.Context, cl client.Client, nsName string, clo
 
 		frontendEnv = frontend.FrontendEnvironment{
 			Spec: frontend.FrontendEnvironmentSpec{
-				Hostname:     clowdEnv.Status.Hostname,
-				SSO:          ssoURL,
-				IngressClass: clowdEnv.Spec.Providers.Web.IngressClass,
+				Hostname:             clowdEnv.Status.Hostname,
+				SSO:                  ssoURL,
+				IngressClass:         clowdEnv.Spec.Providers.Web.IngressClass,
+				GenerateChromeConfig: true,
 			},
 		}
 
