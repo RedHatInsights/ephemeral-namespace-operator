@@ -173,10 +173,6 @@ update-version: ## Updates the version in the image
 	$(shell echo -n $(ENO_VERSION) > controllers/cloud.redhat.com/version.txt)
 	echo "Building version: $(ENO_VERSION)"
 
-ENVTEST = $(shell pwd)/bin/setup-envtest
-envtest: ## Download envtest-setup locally if necessary.
-	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
-
 CONTROLLER_GEN = ${ENVTEST_ASSETS_DIR}/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
 	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0)
