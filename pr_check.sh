@@ -41,7 +41,6 @@ export IMAGE_NAME=quay.io/cloudservices/ephemeral-namespace-operator
 
 echo $BASE_IMG
 
-make envtest
 make update-version
 
 TEST_CONT="ephemeral-namespace-operator-unit-"$IMAGE_TAG
@@ -81,8 +80,6 @@ docker rm -f $CONTAINER_NAME || true
 set +e
 docker run -i \
     --name $CONTAINER_NAME \
-    -v $PWD:/workspace:ro \
-    -v `$PWD/bin/setup-envtest use -p path`:/bins:ro \
     -e IMAGE_NAME=$IMAGE_NAME \
     -e IMAGE_TAG=$IMAGE_TAG \
     -e QUAY_USER=$QUAY_USER \
