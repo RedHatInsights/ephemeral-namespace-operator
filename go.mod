@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/RedHatInsights/clowder v0.52.0
-	github.com/RedHatInsights/frontend-operator v0.1.1
+	github.com/RedHatInsights/frontend-operator v0.1.4
 	github.com/RedHatInsights/rhc-osdk-utils v0.7.0
 	github.com/go-logr/logr v1.2.3
 	github.com/onsi/ginkgo/v2 v2.6.1
@@ -27,7 +27,9 @@ require (
 	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
+	github.com/RedHatInsights/go-difflib v1.0.0 // indirect
 	github.com/RedHatInsights/strimzi-client-go v0.28.1 // indirect
+	github.com/aws/aws-sdk-go v1.44.88 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -40,6 +42,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
+	github.com/gobuffalo/flect v0.2.5 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -49,6 +52,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kedacore/keda/v2 v2.8.1 // indirect
@@ -59,9 +63,12 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.56.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.39.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
+	github.com/redhatinsights/platform-go-middlewares v0.10.0 // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
