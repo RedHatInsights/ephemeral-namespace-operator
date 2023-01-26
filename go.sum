@@ -73,6 +73,8 @@ github.com/RedHatInsights/frontend-operator v0.1.1 h1:GZIrwoUih32lO7ae/+bivRPS1E
 github.com/RedHatInsights/frontend-operator v0.1.1/go.mod h1:g3eS64QwSB+imIzUkow4M/bQSLKUbFo7nn4fNRhkhCs=
 github.com/RedHatInsights/frontend-operator v0.1.3 h1:Ke52XW4bAN/xxKhfnBrTu68AGuuOYemKsc3yh9xyYmA=
 github.com/RedHatInsights/frontend-operator v0.1.3/go.mod h1:+JhACpj89EFEjfLbFwpVvDsiEoU7PSl9oah5E8/kzM0=
+github.com/RedHatInsights/frontend-operator v0.1.4 h1:Z3d9SfkZdgYd5ERVmoXMBaYBE8JDnSQkGl0jVQXjie4=
+github.com/RedHatInsights/frontend-operator v0.1.4/go.mod h1:+JhACpj89EFEjfLbFwpVvDsiEoU7PSl9oah5E8/kzM0=
 github.com/RedHatInsights/go-difflib v1.0.0 h1:BoruyjZfxO81sEynhkG6c4SMAQOjuBWezcJxtGK8dyw=
 github.com/RedHatInsights/go-difflib v1.0.0/go.mod h1:UMKOFdypYfrKT1B1nbGodM09nhOiAmcjes8qWP7Myrs=
 github.com/RedHatInsights/rhc-osdk-utils v0.7.0 h1:KgOiw2nKS26RuiSRVWVHtXNPx23VMspuB0bLCLIAlTs=
