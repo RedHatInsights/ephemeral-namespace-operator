@@ -47,7 +47,7 @@ TEST_CONT="ephemeral-namespace-operator-unit-"$IMAGE_TAG
 docker build -t $TEST_CONT -f Dockerfile.test --build-arg BASE_IMAGE=$BASE_IMG . 
 
 docker run -i \
-    -v `$PWD/testbin use -p path`:/bins:ro \
+    -v `$PWD/testbin/setup-envtest.sh use -p path`:/bins:ro \
     -e IMAGE_NAME=$IMAGE_NAME \
     -e IMAGE_TAG=$IMAGE_TAG \
     -e QUAY_USER=$QUAY_USER \
