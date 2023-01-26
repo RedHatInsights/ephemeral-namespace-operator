@@ -130,15 +130,16 @@ docker-push-minikube:
 
 deploy-minikube-quick: docker-build-no-test-quick bundle docker-push-minikube deploy
 
-ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test: update-version manifests envtest generate fmt vet ## Run tests.
-	mkdir -p ${ENVTEST_ASSETS_DIR}
-	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -v -coverprofile cover.out
+ENVTEST_ASSETS_DIR=$(shell pwd)/testbin/bin
+test: update-version manifests generate fmt vet ## Run tests.
+	go test ./... -v -coverprofile cover.out
 
-ENVTEST = $(shell pwd)/bin/setup-envtest
+ENVTEST = $(shell pwd)/testbin/bin
 envtest: ## Download envtest-setup locally if necessary.
 	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
+	mkdir -p ${ENVTEST_ASSETS_DIR}
+	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR);
 
 ##@ Build
 
