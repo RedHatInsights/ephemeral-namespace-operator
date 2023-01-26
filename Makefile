@@ -130,15 +130,18 @@ docker-push-minikube:
 
 deploy-minikube-quick: docker-build-no-test-quick bundle docker-push-minikube deploy
 
-ENVTEST_ASSETS_DIR=$(shell pwd)/testbin/bin
-test: update-version manifests generate fmt vet ## Run tests.
-	go test ./... -v -coverprofile cover.out
-
-ENVTEST = $(shell pwd)/testbin/bin
-envtest: ## Download envtest-setup locally if necessary.
-	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
+ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
+test2: update-version manifests generate fmt vet ## Run tests.
+	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
-	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR);
+	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -v -coverprofile cover.out
+
+test: update-version manifests envtest generate fmt vet
+	KUBEBUILDER_ASSETS="$(shell setup-envtest.sh use $(ENVTEST_K8S_VERSION) -p path)" CLOWDER_CONFIG_PATH=$(PROJECT_DIR)/test_config.json go test ./... -coverprofile cover.out
+
+ENVTEST = $(shell pwd)/bin/setup-envtest
+envtest: ## Download envtest-setup locally if necessary.
+	$(call go-install-tool,setup-envtest.sh,sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
 
 ##@ Build
 
