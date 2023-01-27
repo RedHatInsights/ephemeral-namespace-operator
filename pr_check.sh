@@ -48,7 +48,7 @@ TEST_CONT="ephemeral-namespace-operator-unit-"$IMAGE_TAG
 docker build -t $TEST_CONT -f Dockerfile.test --build-arg BASE_IMAGE=$BASE_IMG . 
 
 docker run -i \
-    -v `$PWD/testbin use -p path`:/bins:ro \
+    -v `$PWD/bin use -p path`:/bins:ro \
     -e IMAGE_NAME=$IMAGE_NAME \
     -e IMAGE_TAG=$IMAGE_TAG \
     -e QUAY_USER=$QUAY_USER \
@@ -58,7 +58,6 @@ docker run -i \
     -e MINIKUBE_USER=$MINIKUBE_USER \
     -e ENO_VERSION=$ENO_VERSION \
     $TEST_CONT \
-    setup-envtest.sh \
     make test
 UNIT_TEST_RESULT=$?
 
