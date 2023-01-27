@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Testing the thing"
+
 go version
 
 echo "$MINIKUBE_SSH_KEY" > minikube-ssh-ident
