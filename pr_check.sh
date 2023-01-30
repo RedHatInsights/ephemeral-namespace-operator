@@ -55,7 +55,7 @@ echo "--------------------------------------------------------"
 echo $(which setup-envtest)
 
 docker run -i \
-    -v `$PWD/testbin/setup-envtest.sh use -p path`:/bins:ro \
+    #-v `$PWD/testbin/setup-envtest.sh use -p path`:/bins:ro \
     -e IMAGE_NAME=$IMAGE_NAME \
     -e IMAGE_TAG=$IMAGE_TAG \
     -e QUAY_USER=$QUAY_USER \
