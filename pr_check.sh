@@ -46,20 +46,10 @@ make update-version
 TEST_CONT="ephemeral-namespace-operator-unit-"$IMAGE_TAG
 docker build -t $TEST_CONT -f Dockerfile.test --build-arg BASE_IMAGE=$BASE_IMG . 
 
-echo $(pwd)
-echo "--------------------------------------------------------"
-echo $(ls -l)
-echo "--------------------------------------------------------"
-echo $(ls -l bin)
-echo "--------------------------------------------------------"
-echo $(which setup-envtest)
-
-GO_TOOLSET_IMAGE='registry.access.redhat.com/ubi9/go-toolset:1.18.9'
-
 docker run -i \
-    -v "$(pwd):/bins:ro" \
-    --workdir / --name "$TEST_CONT" \
-    "$GO_TOOLSET_IMAGE" make test
+    -v `$PWD/bin/setup-envtest`:/bins:ro \
+    $TEST_CONT \
+    make test
 UNIT_TEST_RESULT=$?
 
 if [[ $UNIT_TEST_RESULT -ne 0 ]]; then
