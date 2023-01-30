@@ -5,9 +5,6 @@
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
 VERSION ?= 0.0.1
 
-# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.24
-
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "preview,fast,stable")
 # To re-generate a bundle for other specific channels without changing the standard setup, you can:
@@ -133,18 +130,11 @@ docker-push-minikube:
 
 deploy-minikube-quick: docker-build-no-test-quick bundle docker-push-minikube deploy
 
-ENVTEST_ASSETS_DIR=$(shell pwd)/bin
-test2: update-version manifests generate fmt vet ## Run tests.
+ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
+test: update-version manifests generate fmt vet ## Run tests.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -v -coverprofile cover.out
-
-test: update-version manifests envtest generate fmt vet
-	go test ./... -coverprofile cover.out
-
-ENVTEST = $(shell pwd)/bin/setup-envtest
-envtest: ## Download envtest-setup locally if necessary.
-	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
 
 ##@ Build
 
@@ -179,11 +169,11 @@ update-version: ## Updates the version in the image
 	$(shell echo -n $(ENO_VERSION) > controllers/cloud.redhat.com/version.txt)
 	echo "Building version: $(ENO_VERSION)"
 
-CONTROLLER_GEN = ${ENVTEST_ASSETS_DIR}/controller-gen
+CONTROLLER_GEN = ${ENVTEST_ASSETS_DIR}/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
 	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0)
 
-KUSTOMIZE = ${ENVTEST_ASSETS_DIR}/kustomize
+KUSTOMIZE = ${ENVTEST_ASSETS_DIR}/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.2)
 
@@ -192,7 +182,7 @@ PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 define go-get-tool
 @[ -f $(1) ] || { \
 set -e ;\
-GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
+GOBIN=$(PROJECT_DIR)/testbin/bin go install $(2) ;\
 }
 endef
 
