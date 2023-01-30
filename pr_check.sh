@@ -58,7 +58,7 @@ GO_TOOLSET_IMAGE='registry.access.redhat.com/ubi9/go-toolset:1.18.9'
 
 docker run -i \
     -v "$(pwd):/bins:ro" \
-    --workdir /workdir --name "$TEST_CONT" \
+    --workdir / --name "$TEST_CONT" \
     "$GO_TOOLSET_IMAGE" make test
 UNIT_TEST_RESULT=$?
 
