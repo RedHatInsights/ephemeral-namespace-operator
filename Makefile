@@ -65,8 +65,8 @@ endif
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # This is a requirement for 'setup-envtest.sh' in the test target.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
-SHELL = /usr/bin/env bash -o pipefail
-.SHELLFLAGS = -ec
+# SHELL = /usr/bin/env bash -o pipefail
+# .SHELLFLAGS = -ec
 
 all: build
 
@@ -131,12 +131,20 @@ docker-push-minikube:
 deploy-minikube-quick: docker-build-no-test-quick bundle docker-push-minikube deploy
 
 ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
-test: update-version manifests generate fmt vet ## Run tests.
+test2: update-version manifests generate fmt vet ## Run tests.
 	mkdir -p ${ENVTEST_ASSETS_DIR}
 	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
 	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -v -coverprofile cover.out
 
+
+test: update-version manifests envtest generate fmt vet
+	go test ./... -coverprofile cover.out
+
 ##@ Build
+
+ENVTEST = $(shell pwd)/testbin/bin/setup-envtest
+envtest: ## Download envtest-setup locally if necessary.
+	$(call go-install-tool,$(ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
 
 build: update-version generate fmt vet ## Build manager binary.
 	go build -o bin/manager main.go
