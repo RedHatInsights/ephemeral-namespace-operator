@@ -54,18 +54,12 @@ echo $(ls -l bin)
 echo "--------------------------------------------------------"
 echo $(which setup-envtest)
 
+GO_TOOLSET_IMAGE='registry.access.redhat.com/ubi9/go-toolset:1.18.9'
+
 docker run -i \
-    -e IMAGE_NAME=$IMAGE_NAME \
-    -e IMAGE_TAG=$IMAGE_TAG \
-    -e QUAY_USER=$QUAY_USER \
-    -e QUAY_TOKEN=$QUAY_TOKEN \
-    -e MINIKUBE_HOST=$MINIKUBE_HOST \
-    -e MINIKUBE_ROOTDIR=$MINIKUBE_ROOTDIR \
-    -e MINIKUBE_USER=$MINIKUBE_USER \
-    -e ENO_VERSION=$ENO_VERSION \
-    $TEST_CONT \
-    ./$PWD/bin/setup-envtest.sh \
-    make test
+    -v "$(pwd):/workdir" \
+    --workdir /workdir --name "$TEST_CONTAINER_NAME" \
+    "$GO_TOOLSET_IMAGE" make test
 UNIT_TEST_RESULT=$?
 
 if [[ $UNIT_TEST_RESULT -ne 0 ]]; then
