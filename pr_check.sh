@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -exv
+
 WORKDIR=$(pwd)
 CONTAINER_ENGINE_CMD=''
 TEST_CONTAINER_NAME=''
