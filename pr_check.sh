@@ -64,6 +64,7 @@ docker run -i \
     -e MINIKUBE_USER=$MINIKUBE_USER \
     -e ENO_VERSION=$ENO_VERSION \
     $TEST_CONT \
+    ./$PWD/bin/setup-envtest.sh \
     make test
 UNIT_TEST_RESULT=$?
 
