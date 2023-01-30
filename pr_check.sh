@@ -41,7 +41,6 @@ export IMAGE_NAME=quay.io/cloudservices/ephemeral-namespace-operator
 
 echo $BASE_IMG
 
-make envtest
 make update-version
 
 TEST_CONT="ephemeral-namespace-operator-unit-"$IMAGE_TAG
