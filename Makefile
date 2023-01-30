@@ -144,10 +144,6 @@ build: update-version generate fmt vet ## Build manager binary.
 run: update-version manifests generate install fmt vet ## Run a controller from your host.
 	go run ./main.go
 
-docker-build-and-push-base:
-	$(RUNTIME) build -f Dockerfile . -t $(BASE_IMG)
-	$(RUNTIME) push $(BASE_IMG)
-
 docker-build: update-version test ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
