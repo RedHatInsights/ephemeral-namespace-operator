@@ -47,6 +47,12 @@ make update-version
 TEST_CONT="ephemeral-namespace-operator-unit-"$IMAGE_TAG
 docker build -t $TEST_CONT -f Dockerfile.test --build-arg BASE_IMAGE=$BASE_IMG . 
 
+echo $(pwd)
+echo "--------------------------------------------------------"
+echo $(ls -l)
+echo "--------------------------------------------------------"
+echo $(ls -l bin)
+
 docker run -i \
     -v `$PWD/bin/setup-envtest use -p path`:/bins:ro \
     -e IMAGE_NAME=$IMAGE_NAME \
