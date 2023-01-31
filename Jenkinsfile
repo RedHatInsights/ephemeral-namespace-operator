@@ -10,7 +10,10 @@ pipeline {
     stages {
         stage('cicd bootstrap') {
             steps {
-                sh 'curl -s ${CICD_URL}/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh'
+                sh '''
+                    curl -s ${CICD_URL}/bootstrap.sh > .cicd_bootstrap.sh
+                    source .cicd_bootstrap.sh'
+                '''
             }
         }
 
@@ -19,13 +22,6 @@ pipeline {
                 echo "Hello, World!"
             }
         }
-
-        // stage('snyk') {
-        //     snykSecurity(
-        //         snykInstallation: ''
-        //         snykTokenId: ''
-        //     )
-        // }
 
         stage('test') {
             steps {
