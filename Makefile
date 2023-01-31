@@ -47,6 +47,14 @@ endif
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:generateEmbeddedObjectMeta=true"
 
+# Use podman by default, docker as fallback
+ifeq (,$(shell which podman))
+$(info "no podman in $(PATH), using docker")
+RUNTIME ?= docker
+else
+RUNTIME ?= podman
+endif
+
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.26.0
 
@@ -60,11 +68,8 @@ endif
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # This is a requirement for 'setup-envtest.sh' in the test target.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
-SHELL = /usr/bin/env bash -o pipefail
+SHELL = /usr/bin/env bash -x -o pipefail
 .SHELLFLAGS = -ec
-
-# TODO: review and delete
-ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 
 .PHONY: all
 all: build
@@ -132,9 +137,6 @@ deploy-minikube-quick: docker-build-no-test-quick bundle docker-push-minikube de
 .PHONY: test
 test: update-version manifests generate fmt vet gotestsum envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" $(GOTESTSUM) --junitfile junit-eno.xml --format standard-verbose  -- -coverprofile cover.out ./...
-#	mkdir -p ${ENVTEST_ASSETS_DIR}
-#	test -f ${ENVTEST_ASSETS_DIR}/setup-envtest.sh || curl -sSLo ${ENVTEST_ASSETS_DIR}/setup-envtest.sh https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v0.8.3/hack/setup-envtest.sh
-#	source ${ENVTEST_ASSETS_DIR}/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -v -coverprofile cover.out
 
 ##@ Build
 
@@ -168,15 +170,6 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 update-version: ## Updates the version in the image
 	$(shell echo -n $(ENO_VERSION) > controllers/cloud.redhat.com/version.txt)
 	echo "Building version: $(ENO_VERSION)"
-
-
-#CONTROLLER_GEN = ${ENVTEST_ASSETS_DIR}/bin/controller-gen
-#controller-gen: ## Download controller-gen locally if necessary.
-#	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0)
-
-#KUSTOMIZE = ${ENVTEST_ASSETS_DIR}/bin/kustomize
-#kustomize: ## Download kustomize locally if necessary.
-#	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v4@v4.5.2)
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
