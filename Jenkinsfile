@@ -8,24 +8,24 @@ pipeline {
         CICD_URL="https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd"
     }
     stages {
-        stage('cicd bootstrap') {
+        step('cicd bootstrap') {
             sh 'curl -s ${CICD_URL}/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh'
         }
 
-        stage('build') {
+        step('build') {
             steps {
                 echo "Hello, World!"
             }
         }
 
-        // stage('snyk') {
+        // step('snyk') {
         //     snykSecurity(
         //         snykInstallation: ''
         //         snykTokenId: ''
         //     )
         // }
 
-        stage('test') {
+        step('test') {
             steps {
                 echo "Hello, World!"
             }
