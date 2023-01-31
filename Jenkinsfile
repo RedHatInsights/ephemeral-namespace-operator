@@ -10,10 +10,8 @@ pipeline {
     stages {
         stage('cicd bootstrap') {
             steps {
-                sh '''
-                    curl -s ${CICD_URL}/bootstrap.sh > .cicd_bootstrap.sh
-                    source .cicd_bootstrap.sh
-                '''
+                def cicdbootstrap = sh(script: 'curl -s ${CICD_URL}/bootstrap.sh > .cicd_bootstrap.sh'
+                echo cicd_bootstrap
             }
         }
 
