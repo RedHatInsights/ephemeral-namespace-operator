@@ -123,11 +123,11 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
-			r.Log.Error(err, "could not set expiration time on reservation. Deleting", "res-name", res.Name)
-			if err := r.Client.Delete(ctx, &res); err != nil {
-				r.Log.Error(err, "cannot delete resource - aborting delete", "name", res.Name)
+			r.log.Error(err, "could not set expiration time on reservation. Deleting", "res-name", res.Name)
+			if err := r.client.Delete(ctx, &res); err != nil {
+				r.log.Error(err, "cannot delete resource - aborting delete", "name", res.Name)
 			}
-      
+
 			return ctrl.Result{}, err
 		}
 
