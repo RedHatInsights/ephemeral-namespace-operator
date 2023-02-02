@@ -191,30 +191,30 @@ var _ = BeforeSuite(func() {
 	}
 
 	poller := Poller{
-		Client:             k8sManager.GetClient(),
-		ActiveReservations: make(map[string]metav1.Time),
-		Log:                ctrl.Log.WithName("Poller"),
+		client:             k8sManager.GetClient(),
+		activeReservations: make(map[string]metav1.Time),
+		log:                ctrl.Log.WithName("Poller"),
 	}
 
 	err = (&NamespacePoolReconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
-		Log:    ctrl.Log.WithName("controllers").WithName("NamespacePoolReconciler"),
+		client: k8sManager.GetClient(),
+		scheme: k8sManager.GetScheme(),
+		log:    ctrl.Log.WithName("controllers").WithName("NamespacePoolReconciler"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&NamespaceReservationReconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
-		Poller: &poller,
-		Log:    ctrl.Log.WithName("controllers").WithName("NamespaceReconciler"),
+		client: k8sManager.GetClient(),
+		scheme: k8sManager.GetScheme(),
+		poller: &poller,
+		log:    ctrl.Log.WithName("controllers").WithName("NamespaceReconciler"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&ClowdenvironmentReconciler{
-		Client: k8sManager.GetClient(),
-		Scheme: k8sManager.GetScheme(),
-		Log:    ctrl.Log.WithName("controllers").WithName("ClowdEnvController"),
+		client: k8sManager.GetClient(),
+		scheme: k8sManager.GetScheme(),
+		log:    ctrl.Log.WithName("controllers").WithName("ClowdEnvController"),
 	}).SetupWithManager(k8sManager)
 	Expect(err).ToNot(HaveOccurred())
 
