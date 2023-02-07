@@ -34,11 +34,6 @@ import (
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 )
 
-const (
-	PoolStatusReady    = "ready"
-	PoolStatusCreating = "creating"
-)
-
 // NamespacePoolReconciler reconciles a NamespacePool object
 type NamespacePoolReconciler struct {
 	client client.Client
