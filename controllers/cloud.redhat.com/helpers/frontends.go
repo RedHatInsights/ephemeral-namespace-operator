@@ -42,6 +42,7 @@ func CreateFrontendEnv(ctx context.Context, cl client.Client, nsName string, clo
 				SSO:             ssoURL,
 				IngressClass:    clowdEnv.Spec.Providers.Web.IngressClass,
 				GenerateNavJSON: true,
+				SSL:             true,
 			},
 		}
 
