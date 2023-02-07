@@ -22,3 +22,4 @@ kubeconfig
 *~
 
 controllers/cloud.redhat.com/version.txt
+junit-eno.xml

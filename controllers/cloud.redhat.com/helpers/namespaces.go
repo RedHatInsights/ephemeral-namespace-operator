@@ -81,15 +81,15 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	return ns.Name, nil
 }
 
-func GetNamespace(ctx context.Context, cl client.Client, namespaceName string) (core.Namespace, error) {
-	namespace := core.Namespace{}
+func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Namespace, error) {
+	ns := core.Namespace{}
 
 	// Use retry in case object retrieval is attempted before creation is done
 	err := retry.OnError(
 		wait.Backoff(retry.DefaultBackoff),
 		func(error) bool { return true }, // hack - return true if err is notFound
 		func() error {
-			err := cl.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace)
+			err := cl.Get(ctx, types.NamespacedName{Name: nsName}, &ns)
 			return err
 		},
 	)
@@ -97,7 +97,7 @@ func GetNamespace(ctx context.Context, cl client.Client, namespaceName string) (
 		return core.Namespace{}, err
 	}
 
-	return namespace, nil
+	return ns, nil
 }
 
 func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) ([]core.Namespace, error) {
