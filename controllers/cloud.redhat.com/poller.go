@@ -37,22 +37,24 @@ func (p *Poller) Poll() {
 	for {
 		// Check for expired reservations
 		for k, v := range p.activeReservations {
-			if p.namespaceIsExpired(v) {
-				delete(p.activeReservations, k)
-
-				res := crd.NamespaceReservation{}
-				if err := p.client.Get(ctx, types.NamespacedName{Name: k}, &res); err != nil {
-					p.log.Error(err, "Unable to retrieve reservation")
-				}
-
-				if err := p.client.Delete(ctx, &res); err != nil {
-					p.log.Error(err, "Unable to delete reservation", "namespace", res.Status.Namespace)
-				} else {
-					p.log.Info("deleting expired reservation", "namespace", res.Status.Namespace)
-				}
-
-				activeReservationTotalMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Set(float64(len(p.activeReservations)))
+			if !p.namespaceIsExpired(v) {
+				continue
 			}
+
+			delete(p.activeReservations, k)
+
+			res := crd.NamespaceReservation{}
+			if err := p.client.Get(ctx, types.NamespacedName{Name: k}, &res); err != nil {
+				p.log.Error(err, "Unable to retrieve reservation")
+			}
+
+			if err := p.client.Delete(ctx, &res); err != nil {
+				p.log.Error(err, "Unable to delete reservation", "namespace", res.Status.Namespace)
+			} else {
+				p.log.Info("deleting expired reservation", "namespace", res.Status.Namespace)
+			}
+
+			activeReservationTotalMetrics.With(prometheus.Labels{"controller": "namespacereservation"}).Set(float64(len(p.activeReservations)))
 		}
 
 		time.Sleep(time.Duration(PollCycle * time.Second))
