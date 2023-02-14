@@ -27,6 +27,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -97,9 +99,17 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		r.log.Error(err, "could not retrieve newly created namespace", "namespace", namespaceName)
 	}
 
-	if err := r.client.Update(ctx, &namespace); err != nil {
-		return ctrl.Result{Requeue: true}, err
-	}
+	err = retry.OnError(
+		wait.Backoff(retry.DefaultBackoff),
+		func(error) bool { return true }, // hack - return true if err is notFound
+		func() error {
+			if err := r.client.Update(ctx, &namespace); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	)
 
 	elapsed := nsCompletionTime.Sub(namespace.CreationTimestamp.Time)
 
