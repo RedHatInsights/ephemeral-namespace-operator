@@ -24,8 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -93,18 +91,10 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	err = retry.OnError(
-		wait.Backoff(retry.DefaultBackoff),
-		func(error) bool { return true }, // hack - return true if err is notFound
-		func() error {
-			if err := r.client.Status().Update(ctx, &pool); err != nil {
-				r.log.Error(err, fmt.Sprintf("cannot update [%s] pool status", pool.Name))
-				return err
-			}
-
-			return nil
-		},
-	)
+	if err := r.client.Status().Update(ctx, &pool); err != nil {
+		r.log.Error(err, fmt.Sprintf("cannot update [%s] pool status", pool.Name))
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
