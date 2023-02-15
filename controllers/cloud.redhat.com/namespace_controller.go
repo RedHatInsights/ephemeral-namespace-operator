@@ -31,8 +31,8 @@ func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 func (r *NamespaceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&crd.NamespacePool{}).
-		Watches(&source.Kind{Type: &core.Namespace{}},
+		For(&core.Namespace{}).
+		Watches(&source.Kind{Type: &crd.NamespacePool{}},
 			handler.EnqueueRequestsFromMapFunc(r.EnqueueNamespace),
 		).
 		Complete(r)
