@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
+	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -16,9 +18,9 @@ import (
 )
 
 type NamespaceReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
-	Log    logr.Logger
+	client client.Client
+	scheme *runtime.Scheme
+	log    logr.Logger
 }
 
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespace,verbs=get;list;watch;create;update;patch;delete
@@ -26,6 +28,24 @@ type NamespaceReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespace/finalizers,verbs=update
 
 func (r *NamespaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	namespace := core.Namespace{}
+
+	err := r.client.Get(ctx, req.NamespacedName, &namespace)
+	if err != nil {
+		return reconcile.Result{Requeue: true}, fmt.Errorf("could not retrieve namespace [%s]: %s", namespace.Name, err)
+	}
+
+	if namespace.Annotations[helpers.AnnotationEnvStatus] == helpers.EnvStatusError {
+		err = r.client.Delete(ctx, &namespace)
+		r.log.Info(fmt.Sprintf("namespace [%s] was in error state and has been deleted", namespace.Name))
+		if err != nil {
+			r.log.Error(err, "Unable to delete namespaces in error state")
+			return ctrl.Result{Requeue: true}, err
+		}
+
+		return ctrl.Result{}, nil
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -48,6 +68,6 @@ func (r *NamespaceReconciler) EnqueueNamespace(a client.Object) []reconcile.Requ
 			},
 		}}
 	}
-	return []reconcile.Request{}
 
+	return []reconcile.Request{}
 }
