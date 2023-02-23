@@ -65,13 +65,13 @@ func CreateFrontendEnv(ctx context.Context, cl client.Client, namespaceName stri
 	})
 
 	if err := cl.Create(ctx, &frontendEnv); err != nil {
-		return err
+		return fmt.Errorf("error creating frontend environment [%s]: %s", frontendEnv.Name, err)
 	}
 
 	// create "shim" services for keycloak, mbop, mocktitlements
 	// this is a temporary solution until apps begin to read the hostnames for these from their cdappconfig.json
 	if err := createShimServices(ctx, cl, namespace, clowdEnv); err != nil {
-		return err
+		return fmt.Errorf("creation of shim services for keycloak, mbop, and mocktitlements failed for [%s]: %s", clowdEnv.Name, err)
 	}
 
 	return nil
