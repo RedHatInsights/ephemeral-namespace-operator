@@ -111,7 +111,7 @@ func createShimServices(ctx context.Context, cl client.Client, ns core.Namespace
 
 		err = cl.Create(ctx, &newSvc)
 		if err != nil {
-			return fmt.Errorf("failed to create shim service for [%s]: %w", serviceName, err)
+			return fmt.Errorf("failed to create shim service for [%s]: %s", serviceName, err)
 		}
 	}
 
