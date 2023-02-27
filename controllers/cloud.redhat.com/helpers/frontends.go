@@ -17,12 +17,13 @@ import (
 func CreateFrontendEnv(ctx context.Context, cl client.Client, namespaceName string, clowdEnv clowder.ClowdEnvironment) error {
 	frontendEnv := frontend.FrontendEnvironment{}
 	err := cl.Get(ctx, types.NamespacedName{Name: fmt.Sprintf("env-%s", namespaceName)}, &frontendEnv)
+	// Checks if frontenv environment exists
 	if err == nil {
 		return nil
 	}
 
 	if err != nil && !k8serr.IsNotFound(err) {
-		return fmt.Errorf("there was an error when retrieving the frontend environment [env-%s]: %s", namespaceName, err)
+		return fmt.Errorf("there was an error when retrieving the frontend environment [env-%s]: %w", namespaceName, err)
 	}
 
 	// if frontendEnv not found create it
@@ -65,13 +66,13 @@ func CreateFrontendEnv(ctx context.Context, cl client.Client, namespaceName stri
 	})
 
 	if err := cl.Create(ctx, &frontendEnv); err != nil {
-		return fmt.Errorf("error creating frontend environment [%s]: %s", frontendEnv.Name, err)
+		return fmt.Errorf("error creating frontend environment [%s]: %w", frontendEnv.Name, err)
 	}
 
 	// create "shim" services for keycloak, mbop, mocktitlements
 	// this is a temporary solution until apps begin to read the hostnames for these from their cdappconfig.json
 	if err := createShimServices(ctx, cl, namespace, clowdEnv); err != nil {
-		return fmt.Errorf("creation of shim services for keycloak, mbop, and mocktitlements failed for [%s]: %s", clowdEnv.Name, err)
+		return fmt.Errorf("creation of shim services for keycloak, mbop, and mocktitlements failed for [%s]: %w", clowdEnv.Name, err)
 	}
 
 	return nil
@@ -111,7 +112,7 @@ func createShimServices(ctx context.Context, cl client.Client, ns core.Namespace
 
 		err = cl.Create(ctx, &newSvc)
 		if err != nil {
-			return fmt.Errorf("failed to create shim service for [%s]: %s", serviceName, err)
+			return fmt.Errorf("failed to create shim service for [%s]: %w", serviceName, err)
 		}
 	}
 

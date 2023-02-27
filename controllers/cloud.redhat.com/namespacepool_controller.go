@@ -128,8 +128,7 @@ func (r *NamespacePoolReconciler) deleteErrorNamespaces(ctx context.Context, err
 		r.log.Info("deleting namespace", "namespace", nsName)
 		err := helpers.DeleteNamespace(ctx, r.client, nsName)
 		if err != nil {
-			r.log.Error(err, fmt.Sprintf("error deleting namespace: [%s]", nsName))
-			return fmt.Errorf("could not delete namespace in error state: [%v]", err)
+			return fmt.Errorf("could not delete namespace in error state: [%w]", err)
 		}
 	}
 

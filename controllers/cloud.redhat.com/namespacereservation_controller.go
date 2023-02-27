@@ -279,7 +279,7 @@ func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Co
 		r.log.Error(err, "could not retrieve Clowdenvironment", "namespace", readyNsName)
 	}
 	if !ready {
-		return fmt.Errorf("ClowdEnvironment is not ready for namespace: %s", readyNsName) // No need to wrap the string when fmt does errors for us
+		return fmt.Errorf("ClowdEnvironment is not ready for namespace [%s]: %w", readyNsName, err)
 	}
 
 	return nil

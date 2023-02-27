@@ -52,7 +52,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	// Create ClowdEnvironment
 	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, namespace.Name); err != nil {
-		return "", fmt.Errorf("error creating ClowdEnvironment: %s", err.Error())
+		return "", fmt.Errorf("error creating ClowdEnvironment for namespace [%s]: %w", namespace.Name, err.Error())
 	}
 
 	// Create LimitRange
@@ -60,7 +60,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	limitRange.SetNamespace(namespace.Name)
 
 	if err := cl.Create(ctx, &limitRange); err != nil {
-		return "", fmt.Errorf("error creating LimitRange: %s", err.Error())
+		return "", fmt.Errorf("error creating LimitRange for namespace [%s]: %w", namespace.Name, err.Error())
 	}
 
 	// Create ResourceQuotas
@@ -69,13 +69,13 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 		innerQuota := quota
 		innerQuota.SetNamespace(namespace.Name)
 		if err := cl.Create(ctx, &innerQuota); err != nil {
-			return "", fmt.Errorf("error creating ResourceQuota: %s", err.Error())
+			return "", fmt.Errorf("error creating ResourceQuota for namespace [%s]: %w", namespace.Name, err.Error())
 		}
 	}
 
 	// Copy secrets
 	if err := CopySecrets(ctx, cl, namespace.Name); err != nil {
-		return "", fmt.Errorf("error copying secrets from ephemeral-base namespace: %s", err.Error())
+		return "", fmt.Errorf("error copying secrets from ephemeral-base namespace to namespace [%s]: %w", namespace.Name, err.Error())
 	}
 
 	return namespace.Name, nil
@@ -87,7 +87,7 @@ func GetNamespace(ctx context.Context, cl client.Client, namespaceName string) (
 	// Use retry in case object retrieval is attempted before creation is done
 	err := retry.OnError(
 		wait.Backoff(retry.DefaultBackoff),
-		func(error) bool { return true }, // hack - return true if err is notFound
+		func(error) bool { return true },
 		func() error {
 			err := cl.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace)
 			return err
@@ -147,7 +147,7 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 		retry.DefaultBackoff,
 		func() error {
 			if err = cl.Update(ctx, &namespace); err != nil {
-				return fmt.Errorf("there was an issue updating annotations for namespace [%s]", namespaceName)
+				return fmt.Errorf("there was an issue updating annotations for namespace [%s]: %w", namespaceName, err)
 			}
 
 			return nil
@@ -160,7 +160,7 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) error {
 	secrets := core.SecretList{}
 	if err := cl.List(ctx, &secrets, client.InNamespace(NamespaceEphemeralBase)); err != nil {
-		return fmt.Errorf("could not list secrets in [%s]: %s", NamespaceEphemeralBase, err)
+		return fmt.Errorf("could not list secrets in [%s]: %w", NamespaceEphemeralBase, err)
 	}
 
 	for _, secret := range secrets.Items {
@@ -178,7 +178,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 			}
 		}
 
-		sourceNamespace := types.NamespacedName{
+		sourceNamespaceName := types.NamespacedName{
 			Name:      secret.Name,
 			Namespace: secret.Namespace,
 		}
@@ -188,13 +188,13 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 			Namespace: namespaceName,
 		}
 
-		newNamespaceSecret, err := utils.CopySecret(ctx, cl, sourceNamespace, destinationNamespace)
+		newNamespaceSecret, err := utils.CopySecret(ctx, cl, sourceNamespaceName, destinationNamespace)
 		if err != nil {
-			return fmt.Errorf("could not copy secrets into newly created namespace [%s]: %s", namespaceName, err)
+			return fmt.Errorf("could not copy secrets into newly created namespace [%s]: %w", namespaceName, err)
 		}
 
 		if err := cl.Create(ctx, newNamespaceSecret); err != nil {
-			return fmt.Errorf("could not create new secret for namespace [%s]: %s", namespaceName, err)
+			return fmt.Errorf("could not create new secret for namespace [%s]: %w", namespaceName, err)
 		}
 
 	}
@@ -203,16 +203,16 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 
 func DeleteNamespace(ctx context.Context, cl client.Client, namespaceName string) error {
 	if err := UpdateAnnotations(ctx, cl, namespaceName, AnnotationEnvDeleting.ToMap()); err != nil {
-		return fmt.Errorf("error updating annotations: %w", err)
+		return fmt.Errorf("error updating annotations for [%s]: %w", namespaceName, err)
 	}
 
 	namespace, err := GetNamespace(ctx, cl, namespaceName)
 	if err != nil {
-		return fmt.Errorf("could not retrieve namespace [%s] to be deleted: %s", namespaceName, err)
+		return fmt.Errorf("could not retrieve namespace [%s] to be deleted: %w", namespaceName, err)
 	}
 
 	if err := cl.Delete(ctx, &namespace); err != nil {
-		return fmt.Errorf("could not delete namespace [%s]: %s", namespaceName, err)
+		return fmt.Errorf("could not delete namespace [%s]: %w", namespaceName, err)
 	}
 
 	return nil
