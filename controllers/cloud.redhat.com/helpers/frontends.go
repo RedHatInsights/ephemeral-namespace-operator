@@ -52,7 +52,7 @@ func CreateFrontendEnv(ctx context.Context, cl client.Client, namespaceName stri
 
 	namespace, err := GetNamespace(ctx, cl, namespaceName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not find namespace [%s] for newly created frontendenv: %w", namespaceName, err)
 	}
 
 	frontendEnv.SetName(fmt.Sprintf("env-%s", namespace.Name))

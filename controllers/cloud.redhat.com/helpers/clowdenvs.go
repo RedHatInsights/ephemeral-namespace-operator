@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
@@ -48,7 +47,7 @@ func GetClowdEnv(ctx context.Context, cl client.Client, namespaceName string) (b
 
 	err := cl.Get(ctx, nn, &env)
 	if err != nil {
-		return false, nil, err
+		return false, nil, fmt.Errorf("could not retrieve clowdenvironment [%s]: %w", env.Name, err)
 	}
 
 	ready, err := VerifyClowdEnvReady(env)
@@ -59,7 +58,7 @@ func GetClowdEnv(ctx context.Context, cl client.Client, namespaceName string) (b
 func VerifyClowdEnvReady(env clowder.ClowdEnvironment) (bool, error) {
 	// check that hostname is populated if ClowdEnvironment is operating in 'local' web mode
 	if env.Spec.Providers.Web.Mode == "local" && env.Status.Hostname == "" {
-		return false, errors.New("hostname not populated")
+		return false, fmt.Errorf("hostname not populated for clowdenvironment [%s]", env.Name)
 	}
 
 	conditions := env.Status.Conditions
