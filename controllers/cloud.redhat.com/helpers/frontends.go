@@ -22,7 +22,7 @@ func CreateFrontendEnv(ctx context.Context, cl client.Client, namespaceName stri
 		return nil
 	}
 
-	if err != nil && !k8serr.IsNotFound(err) {
+	if !k8serr.IsNotFound(err) {
 		return fmt.Errorf("there was an error when retrieving the frontend environment [env-%s]: %w", namespaceName, err)
 	}
 
