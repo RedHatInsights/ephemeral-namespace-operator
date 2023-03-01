@@ -19,17 +19,17 @@ import (
 )
 
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
-	ns := core.Namespace{}
+	namespace := core.Namespace{}
 
-	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
+	namespace.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
 
 	if pool.Spec.Local {
-		if err := cl.Create(ctx, &ns); err != nil {
+		if err := cl.Create(ctx, &namespace); err != nil {
 			return "", err
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
-		project.Name = ns.Name
+		project.Name = namespace.Name
 		if err := cl.Create(ctx, &project); err != nil {
 			return "", err
 		}
@@ -37,59 +37,59 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	// WORKAROUND: Can't set annotations and ownerref on project request during create
 	// Performing annotation and ownerref change in one transaction
-	ns, err := GetNamespace(ctx, cl, ns.Name)
+	namespace, err := GetNamespace(ctx, cl, namespace.Name)
 	if err != nil {
-		return ns.Name, err
+		return namespace.Name, err
 	}
 
-	utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
-	utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
-	ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
+	utils.UpdateAnnotations(&namespace, CreateInitialAnnotations())
+	utils.UpdateLabels(&namespace, CreateInitialLabels(pool.Name))
+	namespace.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
 
-	if err := cl.Update(ctx, &ns); err != nil {
-		return ns.Name, err
+	if err := cl.Update(ctx, &namespace); err != nil {
+		return namespace.Name, err
 	}
 
 	// Create ClowdEnvironment
-	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, ns.Name); err != nil {
-		return "", fmt.Errorf("error creating ClowdEnvironment: %s", err.Error())
+	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, namespace.Name); err != nil {
+		return "", fmt.Errorf("error creating ClowdEnvironment for namespace [%s]: %w", namespace.Name, err)
 	}
 
 	// Create LimitRange
 	limitRange := pool.Spec.LimitRange
-	limitRange.SetNamespace(ns.Name)
+	limitRange.SetNamespace(namespace.Name)
 
 	if err := cl.Create(ctx, &limitRange); err != nil {
-		return "", fmt.Errorf("error creating LimitRange: %s", err.Error())
+		return "", fmt.Errorf("error creating LimitRange for namespace [%s]: %w", namespace.Name, err)
 	}
 
 	// Create ResourceQuotas
 	resourceQuotas := pool.Spec.ResourceQuotas
 	for _, quota := range resourceQuotas.Items {
 		innerQuota := quota
-		innerQuota.SetNamespace(ns.Name)
+		innerQuota.SetNamespace(namespace.Name)
 		if err := cl.Create(ctx, &innerQuota); err != nil {
-			return "", fmt.Errorf("error creating ResourceQuota: %s", err.Error())
+			return "", fmt.Errorf("error creating ResourceQuota for namespace [%s]: %w", namespace.Name, err)
 		}
 	}
 
 	// Copy secrets
-	if err := CopySecrets(ctx, cl, ns.Name); err != nil {
-		return "", fmt.Errorf("error copying secrets from ephemeral-base namespace: %s", err.Error())
+	if err := CopySecrets(ctx, cl, namespace.Name); err != nil {
+		return "", fmt.Errorf("error copying secrets from ephemeral-base namespace to namespace [%s]: %w", namespace.Name, err)
 	}
 
-	return ns.Name, nil
+	return namespace.Name, nil
 }
 
-func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Namespace, error) {
-	ns := core.Namespace{}
+func GetNamespace(ctx context.Context, cl client.Client, namespaceName string) (core.Namespace, error) {
+	namespace := core.Namespace{}
 
 	// Use retry in case object retrieval is attempted before creation is done
 	err := retry.OnError(
 		wait.Backoff(retry.DefaultBackoff),
-		func(error) bool { return true }, // hack - return true if err is notFound
+		func(error) bool { return true },
 		func() error {
-			err := cl.Get(ctx, types.NamespacedName{Name: nsName}, &ns)
+			err := cl.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace)
 			return err
 		},
 	)
@@ -97,27 +97,27 @@ func GetNamespace(ctx context.Context, cl client.Client, nsName string) (core.Na
 		return core.Namespace{}, err
 	}
 
-	return ns, nil
+	return namespace, nil
 }
 
 func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) ([]core.Namespace, error) {
-	nsList := core.NamespaceList{}
+	namespaceList := core.NamespaceList{}
 
 	var LabelPoolType = CustomLabel{Label: LabelPool, Value: poolName}
 	validatedSelector, _ := labels.ValidatedSelectorFromSet(LabelPoolType.ToMap())
 
-	nsListOptions := &client.ListOptions{LabelSelector: validatedSelector}
+	namespaceListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
-	if err := cl.List(ctx, &nsList, nsListOptions); err != nil {
+	if err := cl.List(ctx, &namespaceList, namespaceListOptions); err != nil {
 		return nil, err
 	}
 
 	var ready []core.Namespace
 
-	for _, ns := range nsList.Items {
-		for _, owner := range ns.GetOwnerReferences() {
+	for _, namespace := range namespaceList.Items {
+		for _, owner := range namespace.GetOwnerReferences() {
 			if owner.Kind == KindNamespacePool {
-				ready = CheckReadyStatus(poolName, ns, ready)
+				ready = CheckReadyStatus(poolName, namespace, ready)
 			}
 		}
 	}
@@ -125,10 +125,10 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) 
 	return ready, nil
 }
 
-func CheckReadyStatus(pool string, ns core.Namespace, ready []core.Namespace) []core.Namespace {
-	if val := ns.ObjectMeta.Labels[LabelPool]; val == pool {
-		if val, ok := ns.ObjectMeta.Annotations[AnnotationEnvStatus]; ok && val == EnvStatusReady {
-			ready = append(ready, ns)
+func CheckReadyStatus(pool string, namespace core.Namespace, ready []core.Namespace) []core.Namespace {
+	if val := namespace.ObjectMeta.Labels[LabelPool]; val == pool {
+		if val, ok := namespace.ObjectMeta.Annotations[AnnotationEnvStatus]; ok && val == EnvStatusReady {
+			ready = append(ready, namespace)
 		}
 	}
 
@@ -147,7 +147,7 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 		retry.DefaultBackoff,
 		func() error {
 			if err = cl.Update(ctx, &namespace); err != nil {
-				return fmt.Errorf("there was an issue updating annotations for namespace [%s]", namespaceName)
+				return fmt.Errorf("there was an issue updating annotations for namespace [%s]: %w", namespaceName, err)
 			}
 
 			return nil
@@ -157,10 +157,10 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 	return nil
 }
 
-func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
+func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) error {
 	secrets := core.SecretList{}
 	if err := cl.List(ctx, &secrets, client.InNamespace(NamespaceEphemeralBase)); err != nil {
-		return err
+		return fmt.Errorf("could not list secrets in [%s]: %w", NamespaceEphemeralBase, err)
 	}
 
 	for _, secret := range secrets.Items {
@@ -178,41 +178,41 @@ func CopySecrets(ctx context.Context, cl client.Client, nsName string) error {
 			}
 		}
 
-		src := types.NamespacedName{
+		sourceNamespaceName := types.NamespacedName{
 			Name:      secret.Name,
 			Namespace: secret.Namespace,
 		}
 
-		dst := types.NamespacedName{
+		destinationNamespace := types.NamespacedName{
 			Name:      secret.Name,
-			Namespace: nsName,
+			Namespace: namespaceName,
 		}
 
-		newNsSecret, err := utils.CopySecret(ctx, cl, src, dst)
+		newNamespaceSecret, err := utils.CopySecret(ctx, cl, sourceNamespaceName, destinationNamespace)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not copy secrets into newly created namespace [%s]: %w", namespaceName, err)
 		}
 
-		if err := cl.Create(ctx, newNsSecret); err != nil {
-			return err
+		if err := cl.Create(ctx, newNamespaceSecret); err != nil {
+			return fmt.Errorf("could not create new secret for namespace [%s]: %w", namespaceName, err)
 		}
 
 	}
 	return nil
 }
 
-func DeleteNamespace(ctx context.Context, cl client.Client, nsName string) error {
-	if err := UpdateAnnotations(ctx, cl, nsName, AnnotationEnvDeleting.ToMap()); err != nil {
-		return fmt.Errorf("error updating annotations: %w", err)
+func DeleteNamespace(ctx context.Context, cl client.Client, namespaceName string) error {
+	if err := UpdateAnnotations(ctx, cl, namespaceName, AnnotationEnvDeleting.ToMap()); err != nil {
+		return fmt.Errorf("error updating annotations for [%s]: %w", namespaceName, err)
 	}
 
-	ns, err := GetNamespace(ctx, cl, nsName)
+	namespace, err := GetNamespace(ctx, cl, namespaceName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve namespace [%s] to be deleted: %w", namespaceName, err)
 	}
 
-	if err := cl.Delete(ctx, &ns); err != nil {
-		return err
+	if err := cl.Delete(ctx, &namespace); err != nil {
+		return fmt.Errorf("could not delete namespace [%s]: %w", namespaceName, err)
 	}
 
 	return nil

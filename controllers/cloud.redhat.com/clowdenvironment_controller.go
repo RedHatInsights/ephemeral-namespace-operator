@@ -35,9 +35,9 @@ import (
 
 // ClowdenvironmentReconciler reconciles a Clowdenvironment object
 type ClowdenvironmentReconciler struct {
-	client.Client
-	Scheme *runtime.Scheme
-	Log    logr.Logger
+	client client.Client
+	scheme *runtime.Scheme
+	log    logr.Logger
 }
 
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
@@ -45,8 +45,8 @@ type ClowdenvironmentReconciler struct {
 
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	env := clowder.ClowdEnvironment{}
-	if err := r.Client.Get(ctx, req.NamespacedName, &env); err != nil {
-		r.Log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
+	if err := r.client.Get(ctx, req.NamespacedName, &env); err != nil {
+		r.log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
 		return ctrl.Result{}, err
 	}
 
@@ -54,28 +54,28 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	r.Log.Info(
+	r.log.Info(
 		"Reconciling clowdenv",
 		"env-name", env.Name,
 		"deployments", fmt.Sprintf("%d / %d", env.Status.Deployments.ReadyDeployments, env.Status.Deployments.ManagedDeployments),
 	)
 
 	namespaceName := env.Spec.TargetNamespace
-	r.Log.Info("clowdenvironment ready", "namespace", namespaceName)
+	r.log.Info("clowdenvironment ready", "namespace", namespaceName)
 
-	if err := helpers.CreateFrontendEnv(ctx, r.Client, namespaceName, env); err != nil {
-		r.Log.Error(err, "error encountered with frontend environment", "namespace", namespaceName)
-		if aerr := helpers.UpdateAnnotations(ctx, r.Client, namespaceName, helpers.AnnotationEnvError.ToMap()); aerr != nil {
+	if err := helpers.CreateFrontendEnv(ctx, r.client, namespaceName, env); err != nil {
+		r.log.Error(err, "error encountered with frontend environment", "namespace", namespaceName)
+		if aerr := helpers.UpdateAnnotations(ctx, r.client, namespaceName, helpers.AnnotationEnvError.ToMap()); aerr != nil {
 			return ctrl.Result{Requeue: true}, fmt.Errorf("error setting annotations: %w", aerr)
 		}
 	}
 
-	r.Log.Info("namespace ready", "namespace", namespaceName)
-	if err := helpers.UpdateAnnotations(ctx, r.Client, namespaceName, helpers.AnnotationEnvReady.ToMap()); err != nil {
+	r.log.Info("namespace ready", "namespace", namespaceName)
+	if err := helpers.UpdateAnnotations(ctx, r.client, namespaceName, helpers.AnnotationEnvReady.ToMap()); err != nil {
 		return ctrl.Result{Requeue: true}, fmt.Errorf("error setting annotations: %w", err)
 	}
 
-	namespace, err := helpers.GetNamespace(ctx, r.Client, namespaceName)
+	namespace, err := helpers.GetNamespace(ctx, r.client, namespaceName)
 	if err != nil {
 		return ctrl.Result{Requeue: true}, fmt.Errorf("could not retrieve updated namespace %s: %w", namespaceName, err)
 	}
@@ -87,18 +87,18 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	nsCompletionTime := time.Now()
 	var AnnotationCompletionTime = helpers.CustomAnnotation{Annotation: helpers.CompletionTime, Value: nsCompletionTime.String()}
 
-	err = helpers.UpdateAnnotations(ctx, r.Client, namespace.Name, AnnotationCompletionTime.ToMap())
+	err = helpers.UpdateAnnotations(ctx, r.client, namespace.Name, AnnotationCompletionTime.ToMap())
 	if err != nil {
 		return ctrl.Result{Requeue: true}, fmt.Errorf("could not retrieve updated namespace [%s] after updating annotations: %w", namespaceName, err)
 	}
 
-	namespace, err = helpers.GetNamespace(ctx, r.Client, namespaceName)
+	namespace, err = helpers.GetNamespace(ctx, r.client, namespaceName)
 	if err != nil {
-		r.Log.Error(err, "could not retrieve newly created namespace", "namespace", namespaceName)
+		r.log.Error(err, "could not retrieve newly created namespace", "namespace", namespaceName)
 	}
 
-	if err := r.Client.Update(ctx, &namespace); err != nil {
-		return ctrl.Result{Requeue: true}, err
+	if err := r.client.Update(ctx, &namespace); err != nil {
+		return ctrl.Result{}, err
 	}
 
 	elapsed := nsCompletionTime.Sub(namespace.CreationTimestamp.Time)
@@ -113,7 +113,7 @@ func (r *ClowdenvironmentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	ctx := context.Background()
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&clowder.ClowdEnvironment{}).
-		WithEventFilter(poolFilter(ctx, r.Client)).
+		WithEventFilter(poolFilter(ctx, r.client)).
 		Complete(r)
 }
 

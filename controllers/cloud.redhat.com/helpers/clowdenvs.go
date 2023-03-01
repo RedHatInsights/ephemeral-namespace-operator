@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
@@ -11,14 +10,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnvironmentSpec, nsName string) error {
+func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnvironmentSpec, namespaceName string) error {
 	env := clowder.ClowdEnvironment{
 		Spec: spec,
 	}
-	env.SetName(fmt.Sprintf("env-%s", nsName))
-	env.Spec.TargetNamespace = nsName
+	env.SetName(fmt.Sprintf("env-%s", namespaceName))
+	env.Spec.TargetNamespace = namespaceName
 
-	ns, err := GetNamespace(ctx, cl, nsName)
+	ns, err := GetNamespace(ctx, cl, namespaceName)
 	if err != nil {
 		return err
 	}
@@ -33,22 +32,22 @@ func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnv
 	})
 
 	if err := cl.Create(ctx, &env); err != nil {
-		return err
+		return fmt.Errorf("could not create clowdenvironment for namespace [%s]: %w", namespaceName, err)
 	}
 
 	return nil
 }
 
-func GetClowdEnv(ctx context.Context, cl client.Client, nsName string) (bool, *clowder.ClowdEnvironment, error) {
+func GetClowdEnv(ctx context.Context, cl client.Client, namespaceName string) (bool, *clowder.ClowdEnvironment, error) {
 	env := clowder.ClowdEnvironment{}
 	nn := types.NamespacedName{
-		Name:      fmt.Sprintf("env-%s", nsName),
-		Namespace: nsName,
+		Name:      fmt.Sprintf("env-%s", namespaceName),
+		Namespace: namespaceName,
 	}
 
 	err := cl.Get(ctx, nn, &env)
 	if err != nil {
-		return false, nil, err
+		return false, nil, fmt.Errorf("could not retrieve clowdenvironment [%s]: %w", env.Name, err)
 	}
 
 	ready, err := VerifyClowdEnvReady(env)
@@ -59,7 +58,7 @@ func GetClowdEnv(ctx context.Context, cl client.Client, nsName string) (bool, *c
 func VerifyClowdEnvReady(env clowder.ClowdEnvironment) (bool, error) {
 	// check that hostname is populated if ClowdEnvironment is operating in 'local' web mode
 	if env.Spec.Providers.Web.Mode == "local" && env.Status.Hostname == "" {
-		return false, errors.New("hostname not populated")
+		return false, fmt.Errorf("hostname not populated for clowdenvironment [%s]", env.Name)
 	}
 
 	conditions := env.Status.Conditions
