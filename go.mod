@@ -6,7 +6,7 @@ require (
 	github.com/RedHatInsights/clowder v0.60.0
 	github.com/RedHatInsights/frontend-operator v0.1.4
 	github.com/RedHatInsights/rhc-osdk-utils v0.8.0
-	github.com/go-logr/logr v1.2.3
+	github.com/go-logr/logr v1.2.4
 	github.com/onsi/ginkgo/v2 v2.6.1
 	github.com/onsi/gomega v1.24.2
 	github.com/openshift/api v0.0.0-20230105153616-8ac112765edc
