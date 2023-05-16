@@ -14,7 +14,7 @@ pipeline {
         stage('Run Unit Tests') {
             steps {
                 sh '''
-                    ./ci/helpers.sh
+                    . ./ci/helpers.sh
                     ./ci/unit_tests.sh
                 '''
             }
@@ -23,7 +23,8 @@ pipeline {
 
     post { 
         always { 
-            archiveArtifacts artifacts: 'artifacts/*.jar', fingerprint: true
+            archiveArtifacts artifacts: 'artifacts/**/*', fingerprint: true
+            junit skipPublishingChecks: true, testResults: 'test-results.xml'
         }
     }
 }
