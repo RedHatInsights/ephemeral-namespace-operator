@@ -14,8 +14,8 @@ pipeline {
         stage('Run Unit Tests') {
             steps {
                 sh '''
-                    ./helpers.sh
-                    ./unit_tests.sh
+                    ./ci/helpers.sh
+                    ./ci/unit_tests.sh
                 '''
             }
         }
