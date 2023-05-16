@@ -1,6 +1,6 @@
 #!/bin/bash
 
-local TEST_RESULT=0
+TEST_RESULT=0
 
 trap teardown EXIT ERR SIGINT SIGTERM
 
