@@ -24,7 +24,7 @@ pipeline {
     post { 
         always { 
             archiveArtifacts artifacts: 'artifacts/**/*', fingerprint: true
-            junit skipPublishingChecks: true, testResults: 'test-results.xml'
+            junit skipPublishingChecks: true, testResults: 'artifacts/junit-eno.xml'
         }
     }
 }
