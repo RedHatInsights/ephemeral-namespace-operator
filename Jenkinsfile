@@ -15,7 +15,7 @@ pipeline {
             steps {
                 sh '''
                     . ./ci/helpers.sh
-                    ./ci/unit_tests.sh
+                    . ./ci/unit_tests.sh
                 '''
             }
         }
