@@ -25,14 +25,7 @@ pipeline {
         always {
             archiveArtifacts artifacts: 'artifacts/**/*', fingerprint: true
             junit skipPublishingChecks: true, testResults: 'artifacts/junit-eno.xml'
-            sh '''
-                [ "$TEARDOWN_RAN" -ne "0" ] && return
-
-                echo "Running teardown..."
-
-                container_engine_cmd rm -f "$TEST_CONTAINER_NAME"
-                TEARDOWN_RAN=1
-            '''
+            sh 'teardown()'
         }
     }
 }
