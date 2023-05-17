@@ -23,9 +23,9 @@ pipeline {
 
     post { 
         always {
+            sh 'teardown'
             archiveArtifacts artifacts: 'artifacts/**/*', fingerprint: true
             junit skipPublishingChecks: true, testResults: 'artifacts/junit-eno.xml'
-            sh 'teardown'
         }
     }
 }
