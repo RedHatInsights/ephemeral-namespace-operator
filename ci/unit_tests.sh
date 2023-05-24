@@ -25,5 +25,5 @@ if [ $TEST_RESULT -eq 0 ]; then
     echo "tests ran successfully"
 else
     echo "tests failed"
-    return $TEST_RESULT
+    sh "exit 1"
 fi
