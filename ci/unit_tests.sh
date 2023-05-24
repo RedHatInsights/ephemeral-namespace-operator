@@ -2,6 +2,8 @@
 
 TEST_RESULT=0
 
+trap teardown EXIT ERR SIGINT SIGTERM
+
 mkdir -p artifacts
 
 TEST_CONTAINER_NAME="ENO-$(get_N_chars_commit_hash 7)"
