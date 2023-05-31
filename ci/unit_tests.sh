@@ -7,7 +7,7 @@ trap teardown EXIT ERR SIGINT SIGTERM
 mkdir -p artifacts
 
 RANDOM_ID=$(md5sum -z <<< "$RANDOM" | cut -c -6)
-TEST_CONTAINER_NAME="ENO-pipeline-$RANDOM_ID"
+TEST_CONTAINER_NAME="ENO-pipeline-${RANDOM_ID}"
 
 container_engine_cmd run -d --name "$TEST_CONTAINER_NAME" \
     "$GO_TOOLSET_IMAGE" sleep infinity
