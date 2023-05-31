@@ -6,7 +6,7 @@ trap teardown EXIT ERR SIGINT SIGTERM
 
 mkdir -p artifacts
 
-TEST_CONTAINER_NAME="ENO-$(get_N_chars_commit_hash 7)"
+TEST_CONTAINER_NAME="ENO-pipeline-$(get_N_chars_commit_hash 7)"
 
 container_engine_cmd run -d --name "$TEST_CONTAINER_NAME" \
     "$GO_TOOLSET_IMAGE" sleep infinity
