@@ -99,8 +99,7 @@ main() {
     container_engine_cmd run -d --name "$TEST_CONTAINER_NAME" \
         "$GO_TOOLSET_IMAGE" sleep infinity
 
-
-    container_engine_cmd cp -a . "$TEST_CONTAINER_NAME:/workdir"
+    container_engine_cmd cp -a . "${TEST_CONTAINER_NAME}:/workdir"
 
 
     container_engine_cmd exec --workdir /workdir "$TEST_CONTAINER_NAME" make test > 'artifacts/test_logs.txt'
