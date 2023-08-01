@@ -318,28 +318,6 @@ spec:
                           enableLegacyStrimzi:
                             description: EnableLegacyStrimzi disables TLS + user auth
                             type: boolean
-                          ephemManagedDeletePrefix:
-                            description: 'Deprecated: topics being deleted will be
-                              done so using the env name and a regex that combines
-                              - with . There is also a clowder top level setting to
-                              ensure that only certain topics can be deleted.'
-                            type: string
-                          ephemManagedSecretRef:
-                            description: Defines the secret reference for the Ephemeral
-                              Managed Kafka mode. Only used in (*_managed-ephem_*)
-                              mode.
-                            properties:
-                              name:
-                                description: Name defines the Name of a resource.
-                                type: string
-                              namespace:
-                                description: Namespace defines the Namespace of a
-                                  resource.
-                                type: string
-                            required:
-                            - name
-                            - namespace
-                            type: object
                           managedPrefix:
                             description: Managed topic prefix for the managed cluster.
                               Only used in (*_managed_*) mode.
@@ -548,6 +526,30 @@ spec:
                                   the default resource requirements from the ClowdEnvironment
                                   will be used.
                                 properties:
+                                  claims:
+                                    description: "Claims lists the names of resources,
+                                      defined in spec.resourceClaims, that are used
+                                      by this container. \n This is an alpha field
+                                      and requires enabling the DynamicResourceAllocation
+                                      feature gate. \n This field is immutable. It
+                                      can only be set for containers."
+                                    items:
+                                      description: ResourceClaim references one entry
+                                        in PodSpec.ResourceClaims.
+                                      properties:
+                                        name:
+                                          description: Name must match the name of
+                                            one entry in pod.spec.resourceClaims of
+                                            the Pod where this field is used. It makes
+                                            that resource available inside a container.
+                                          type: string
+                                      required:
+                                      - name
+                                      type: object
+                                    type: array
+                                    x-kubernetes-list-map-keys:
+                                    - name
+                                    x-kubernetes-list-type: map
                                   limits:
                                     additionalProperties:
                                       anyOf:
@@ -569,8 +571,8 @@ spec:
                                       of compute resources required. If Requests is
                                       omitted for a container, it defaults to Limits
                                       if that is explicitly specified, otherwise to
-                                      an implementation-defined value. More info:
-                                      https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                      an implementation-defined value. Requests cannot
+                                      exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                     type: object
                                 type: object
                               ui:
@@ -593,6 +595,32 @@ spec:
                                         description: Defines the resource requests/limits
                                           set on selenium containers
                                         properties:
+                                          claims:
+                                            description: "Claims lists the names of
+                                              resources, defined in spec.resourceClaims,
+                                              that are used by this container. \n
+                                              This is an alpha field and requires
+                                              enabling the DynamicResourceAllocation
+                                              feature gate. \n This field is immutable.
+                                              It can only be set for containers."
+                                            items:
+                                              description: ResourceClaim references
+                                                one entry in PodSpec.ResourceClaims.
+                                              properties:
+                                                name:
+                                                  description: Name must match the
+                                                    name of one entry in pod.spec.resourceClaims
+                                                    of the Pod where this field is
+                                                    used. It makes that resource available
+                                                    inside a container.
+                                                  type: string
+                                              required:
+                                              - name
+                                              type: object
+                                            type: array
+                                            x-kubernetes-list-map-keys:
+                                            - name
+                                            x-kubernetes-list-type: map
                                           limits:
                                             additionalProperties:
                                               anyOf:
@@ -616,7 +644,8 @@ spec:
                                               If Requests is omitted for a container,
                                               it defaults to Limits if that is explicitly
                                               specified, otherwise to an implementation-defined
-                                              value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                              value. Requests cannot exceed Limits.
+                                              More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                             type: object
                                         type: object
                                     type: object
@@ -748,6 +777,28 @@ spec:
                       k8s format in the event that they omitted from a PodSpec inside
                       a ClowdApp.
                     properties:
+                      claims:
+                        description: "Claims lists the names of resources, defined
+                          in spec.resourceClaims, that are used by this container.
+                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
+                        items:
+                          description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                          properties:
+                            name:
+                              description: Name must match the name of one entry in
+                                pod.spec.resourceClaims of the Pod where this field
+                                is used. It makes that resource available inside a
+                                container.
+                              type: string
+                          required:
+                          - name
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - name
+                        x-kubernetes-list-type: map
                       limits:
                         additionalProperties:
                           anyOf:
@@ -768,7 +819,8 @@ spec:
                         description: 'Requests describes the minimum amount of compute
                           resources required. If Requests is omitted for a container,
                           it defaults to Limits if that is explicitly specified, otherwise
-                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                          to an implementation-defined value. Requests cannot exceed
+                          Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
                   serviceConfig:
