@@ -9,6 +9,7 @@ require (
 	github.com/go-logr/logr v1.2.4
 	github.com/onsi/ginkgo/v2 v2.9.5
 	github.com/onsi/gomega v1.27.7
+	github.com/openshift/api v0.0.0-20230105153616-8ac112765edc
 	github.com/prometheus/client_golang v1.15.1
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
@@ -35,7 +36,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic v0.6.9 // indirect
-	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20230228050547-1710fef4ab10 // indirect
@@ -49,7 +49,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/openshift/api v0.0.0-20230105153616-8ac112765edc // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.44.0 // indirect
@@ -74,7 +73,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.26.1 // indirect
 	k8s.io/component-base v0.26.1 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20230614213217-ba0abe644833 // indirect
+	k8s.io/kube-openapi v0.0.0-20221123214604-86e75ddd809a // indirect
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
 	knative.dev/pkg v0.0.0-20221123154742-05b694ec4d3a // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
