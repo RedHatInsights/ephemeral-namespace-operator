@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 68914,
+      "id": 171618,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -433,7 +433,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "PD295346F7C930967"
           },
           "description": "",
           "fieldConfig": {
@@ -485,7 +485,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "PD295346F7C930967"
               },
               "exemplar": true,
               "expr": "sum(eno_version) by (version)",
@@ -596,7 +596,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "PA6124D83F67FD625"
           },
           "fieldConfig": {
             "defaults": {
@@ -647,7 +647,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "PA6124D83F67FD625"
               },
               "exemplar": true,
               "expr": "sum(eno_version) by (version)",
@@ -1434,7 +1434,7 @@ data:
         "list": [
           {
             "current": {
-              "selected": false,
+              "selected": true,
               "text": "c-rh-c-eph-prometheus",
               "value": "c-rh-c-eph-prometheus"
             },
