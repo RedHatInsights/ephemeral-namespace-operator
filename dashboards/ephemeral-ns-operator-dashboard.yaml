@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 68914,
+      "id": 173984,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -433,7 +433,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "PD295346F7C930967"
           },
           "description": "",
           "fieldConfig": {
@@ -485,7 +485,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "PD295346F7C930967"
               },
               "exemplar": true,
               "expr": "sum(eno_version) by (version)",
@@ -596,7 +596,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "PA6124D83F67FD625"
           },
           "fieldConfig": {
             "defaults": {
@@ -606,8 +606,7 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "light-blue",
-                    "value": null
+                    "color": "light-blue"
                   },
                   {
                     "color": "red",
@@ -624,7 +623,7 @@ data:
             "x": 0,
             "y": 11
           },
-          "id": 42,
+          "id": 43,
           "options": {
             "colorMode": "value",
             "graphMode": "none",
@@ -647,7 +646,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "PA6124D83F67FD625"
               },
               "exemplar": true,
               "expr": "sum(eno_version) by (version)",
@@ -1424,9 +1423,105 @@ data:
           "title": "WorkQueue Depth",
           "transparent": true,
           "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 35,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "line"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "dark-red",
+                    "value": 0.95
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 9,
+            "x": 7,
+            "y": 32
+          },
+          "id": 42,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.0.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "$datasource"
+              },
+              "editorMode": "code",
+              "expr": "sum(avg_over_time(controller_runtime_reconcile_time_seconds_bucket{controller=~\"namespacepool|namespacereservation|clowdenvironment\", le=\"4\"}[28d])) by (controller) / sum(avg_over_time(controller_runtime_reconcile_time_seconds_bucket{controller=~\"namespacepool|namespacereservation|clowdenvironment\", le=\"+Inf\"}[28d])) by (controller)",
+              "hide": false,
+              "legendFormat": "{{controller}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "ENO Reconciliation Time Per Controller SLI",
+          "transparent": true,
+          "type": "timeseries"
         }
       ],
-      "refresh": false,
+      "refresh": "5s",
       "schemaVersion": 37,
       "style": "dark",
       "tags": [],
@@ -1434,7 +1529,7 @@ data:
         "list": [
           {
             "current": {
-              "selected": false,
+              "selected": true,
               "text": "c-rh-c-eph-prometheus",
               "value": "c-rh-c-eph-prometheus"
             },
@@ -1491,13 +1586,13 @@ data:
         ]
       },
       "time": {
-        "from": "now-6h",
+        "from": "now-2d",
         "to": "now"
       },
       "timepicker": {},
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 3,
+      "version": 1,
       "weekStart": ""
     }
