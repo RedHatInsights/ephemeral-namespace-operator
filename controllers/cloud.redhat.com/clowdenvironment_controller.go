@@ -25,6 +25,7 @@ import (
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
+	error "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -46,8 +47,10 @@ type ClowdenvironmentReconciler struct {
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	env := clowder.ClowdEnvironment{}
 	if err := r.client.Get(ctx, req.NamespacedName, &env); err != nil {
-		r.log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
-		return ctrl.Result{}, err
+		if !error.IsNotFound(err) {
+			r.log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
+			return ctrl.Result{}, err
+		}
 	}
 
 	if ready, err := helpers.VerifyClowdEnvReady(env); !ready {
