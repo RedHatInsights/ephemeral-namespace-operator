@@ -53,20 +53,11 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	errNamespaceList, err := r.getPoolStatus(ctx, &pool)
-	if err != nil {
-		r.log.Error(err, "unable to get status of owned namespaces")
-		return ctrl.Result{Requeue: true}, err
-	}
-
-	if len(errNamespaceList) > 0 {
-		r.log.Info(fmt.Sprintf("[%d] namespaces in error state are queued for deletion", len(errNamespaceList)))
-		err = r.deleteErrorNamespaces(ctx, errNamespaceList)
-		if err != nil {
-			r.log.Error(err, "Unable to delete namespaces in error state")
-			return ctrl.Result{Requeue: true}, err
-		}
-	}
+	// errNamespaceList, err := r.getPoolStatus(ctx, &pool)
+	// if err != nil {
+	// 	r.Log.Error(err, "unable to get status of owned namespaces")
+	// 	return ctrl.Result{Requeue: true}, err
+	// }
 
 	r.log.Info(fmt.Sprintf("[%s] pool status", pool.Name),
 		"ready", pool.Status.Ready,

@@ -54,6 +54,32 @@ rules:
 - apiGroups:
   - cloud.redhat.com
   resources:
+  - namespace
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - namespace/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - namespace/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud.redhat.com
+  resources:
   - namespacepools
   verbs:
   - create
