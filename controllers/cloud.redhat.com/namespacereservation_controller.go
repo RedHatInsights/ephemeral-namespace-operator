@@ -67,7 +67,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			// Must have been deleted
 			return ctrl.Result{}, nil
 		}
-		r.log.Error(err, "Reservation Not Found")
+		r.log.Error(err, fmt.Sprintf("Reservation not found for namespace [%s]", req.NamespacedName.Namespace))
 		return ctrl.Result{}, err
 	}
 

@@ -19,13 +19,14 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
-	error "k8s.io/apimachinery/pkg/api/errors"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -39,17 +40,23 @@ type ClowdenvironmentReconciler struct {
 	client client.Client
 	scheme *runtime.Scheme
 	log    logr.Logger
+	lock   sync.RWMutex
 }
 
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/status,verbs=get
 
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
 	env := clowder.ClowdEnvironment{}
 	if err := r.client.Get(ctx, req.NamespacedName, &env); err != nil {
-		if !error.IsNotFound(err) {
-			r.log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
+		if !k8serr.IsNotFound(err) {
 			return ctrl.Result{}, err
+		} else {
+			r.log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
+			return ctrl.Result{Requeue: true}, err
 		}
 	}
 
@@ -101,7 +108,8 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if err := r.client.Update(ctx, &namespace); err != nil {
-		return ctrl.Result{}, err
+		r.log.Info(fmt.Sprintf("cannot update clowdenvironment status for namespace [%s]", namespaceName))
+		return ctrl.Result{Requeue: true}, nil
 	}
 
 	elapsed := nsCompletionTime.Sub(namespace.CreationTimestamp.Time)
