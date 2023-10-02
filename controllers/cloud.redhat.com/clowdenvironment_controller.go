@@ -104,12 +104,12 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		if err := r.client.Update(ctx, &namespace); err != nil {
+		if err = r.client.Update(ctx, &namespace); err != nil {
 			return err
 		}
 
 		r.log.Info(fmt.Sprintf("Updated clowdenvironment status for namespace [%s]", namespaceName))
-		return nil
+		return err
 	})
 
 	elapsed := nsCompletionTime.Sub(namespace.CreationTimestamp.Time)
