@@ -88,10 +88,15 @@ var _ = Describe("Pool controller basic functionality", func() {
 				return k8sClient.Update(ctx, &pool)
 			}, timeout, interval).Should(BeNil())
 		})
+	})
+})
 
-		It("Should delete namespaces in an error state", func() {
+var _ = Describe("Rogue namespaces should be deleted", func() {
+	Context("When a namespaces fails to be created properly", func() {
+		It("Should delete the namespace with the `env-status: error` annotation", func() {
 			By("Checking namespace annotations")
 			ctx := context.Background()
+
 			nsList := core.NamespaceList{}
 			err := k8sClient.List(ctx, &nsList)
 			Expect(err).NotTo(HaveOccurred())
@@ -124,6 +129,7 @@ var _ = Describe("Ensure new namespaces are setup properly", func() {
 	Context("When a new namespace is created", func() {
 		It("Should contain necessary labels and annotations", func() {
 			ctx := context.Background()
+
 			nsList := core.NamespaceList{}
 			err := k8sClient.List(ctx, &nsList)
 			Expect(err).NotTo(HaveOccurred())
@@ -136,8 +142,7 @@ var _ = Describe("Ensure new namespaces are setup properly", func() {
 						_, ok := ns.Labels["pool"]
 						Expect(ok).To(BeTrue())
 
-						_, ok = ns.Annotations["env-status"]
-						Expect(ok).To(BeTrue())
+						Expect(ns.Annotations["env-status"]).To(Equal("ready"))
 					}
 				}
 			}
