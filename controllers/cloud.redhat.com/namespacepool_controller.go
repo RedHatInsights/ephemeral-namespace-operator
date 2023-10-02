@@ -18,7 +18,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
@@ -41,7 +40,6 @@ type NamespacePoolReconciler struct {
 	client client.Client
 	scheme *runtime.Scheme
 	log    logr.Logger
-	lock   sync.RWMutex
 }
 
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacepools,verbs=get;list;watch;create;update;patch;delete
@@ -80,9 +78,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	if quantityOfNamespaces > 0 {
 		r.log.Info(fmt.Sprintf("filling [%s] pool with [%d] namespace(s)", pool.Name, quantityOfNamespaces))
-		r.lock.Lock()
 		err := r.increaseReadyNamespacesQueue(ctx, pool, quantityOfNamespaces)
-		r.lock.Unlock()
 		if err != nil {
 			r.log.Error(err, fmt.Sprintf("unable to create more namespaces for [%s] pool.", pool.Name))
 			return ctrl.Result{Requeue: true}, err
