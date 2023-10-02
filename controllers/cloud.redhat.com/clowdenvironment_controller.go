@@ -50,10 +50,10 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	if err := r.client.Get(ctx, req.NamespacedName, &env); err != nil {
 		if !k8serr.IsNotFound(err) {
 			return ctrl.Result{}, err
-		} else {
-			r.log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
-			return ctrl.Result{Requeue: true}, err
 		}
+
+		r.log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	if ready, err := helpers.VerifyClowdEnvReady(env); !ready {
