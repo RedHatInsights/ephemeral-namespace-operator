@@ -28,7 +28,6 @@ import (
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -98,19 +97,9 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{Requeue: true}, fmt.Errorf("could not retrieve updated namespace [%s] after updating annotations: %w", namespaceName, err)
 	}
 
-	namespace, err = helpers.GetNamespace(ctx, r.client, namespaceName)
-	if err != nil {
-		r.log.Error(err, "could not retrieve newly created namespace", "namespace", namespaceName)
+	if err = r.client.Update(ctx, &namespace); err != nil {
+		return ctrl.Result{Requeue: true}, nil
 	}
-
-	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		if err = r.client.Update(ctx, &namespace); err != nil {
-			return err
-		}
-
-		r.log.Info(fmt.Sprintf("Updated clowdenvironment status for namespace [%s]", namespaceName))
-		return err
-	})
 
 	elapsed := nsCompletionTime.Sub(namespace.CreationTimestamp.Time)
 
