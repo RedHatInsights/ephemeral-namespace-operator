@@ -188,8 +188,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			"status", res.Status,
 		)
 		if err := r.client.Status().Update(ctx, &res); err != nil {
-			r.log.Error(err, "cannot update status")
-			return ctrl.Result{}, err
+			return ctrl.Result{Requeue: true}, nil
 		}
 
 		duration, err := parseDurationTime(*res.Spec.Duration)
