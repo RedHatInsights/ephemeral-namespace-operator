@@ -72,6 +72,13 @@ type NamespacePoolList struct {
 	Items           []NamespacePool `json:"items"`
 }
 
+// Caching system for keeping track of the status of namespaces in the NamespacePool
+type NamespacePoolCache struct {
+	ready    map[string]bool
+	creating map[string]bool
+	reserved map[string]bool
+}
+
 func init() {
 	SchemeBuilder.Register(&NamespacePool{}, &NamespacePoolList{})
 }
