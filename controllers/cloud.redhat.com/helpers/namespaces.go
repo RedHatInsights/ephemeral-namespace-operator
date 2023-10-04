@@ -35,18 +35,28 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 		}
 	}
 
-	// WORKAROUND: Can't set annotations and ownerref on project request during create
-	// Performing annotation and ownerref change in one transaction
-	namespace, err := GetNamespace(ctx, cl, namespace.Name)
+	err := retry.RetryOnConflict(
+		retry.DefaultBackoff,
+		func() error {
+			// WORKAROUND: Can't set annotations and ownerref on project request during create
+			// Performing annotation and ownerref change in one transaction
+			namespace, err := GetNamespace(ctx, cl, namespace.Name)
+			if err != nil {
+				return err
+			}
+
+			utils.UpdateAnnotations(&namespace, CreateInitialAnnotations())
+			utils.UpdateLabels(&namespace, CreateInitialLabels(pool.Name))
+			namespace.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
+
+			if err := cl.Update(ctx, &namespace); err != nil {
+				return err
+			}
+
+			return nil
+		},
+	)
 	if err != nil {
-		return namespace.Name, err
-	}
-
-	utils.UpdateAnnotations(&namespace, CreateInitialAnnotations())
-	utils.UpdateLabels(&namespace, CreateInitialLabels(pool.Name))
-	namespace.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
-
-	if err := cl.Update(ctx, &namespace); err != nil {
 		return namespace.Name, err
 	}
 

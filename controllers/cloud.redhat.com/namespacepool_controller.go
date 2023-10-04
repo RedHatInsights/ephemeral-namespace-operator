@@ -205,13 +205,9 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 			continue
 		}
 
-		r.log.Error(err, fmt.Sprintf("error while creating namespace [%s]", namespaceName))
-		if namespaceName != "" {
-			err := helpers.UpdateAnnotations(ctx, r.client, namespaceName, helpers.AnnotationEnvError.ToMap())
-			if err != nil {
-				r.log.Error(err, "error while updating annotations on namespace", "namespace", namespaceName)
-				return err
-			}
+		err = r.NamespaceDeletionAnnotation(ctx, r.client, namespaceName, err)
+		if err != nil {
+			r.log.Error(err, fmt.Sprint("there was a problem updating the error namespace with `env-status:"))
 		}
 	}
 
@@ -244,5 +240,19 @@ func (r *NamespacePoolReconciler) decreaseReadyNamespacesQueue(ctx context.Conte
 		}
 	}
 
+	return nil
+}
+
+func (r *NamespacePoolReconciler) NamespaceDeletionAnnotation(ctx context.Context, cl client.Client, namespaceName string, err error) error {
+	r.log.Error(err, fmt.Sprintf("error while creating namespace [%s]", namespaceName))
+	if namespaceName != "" {
+		err := helpers.UpdateAnnotations(ctx, r.client, namespaceName, helpers.AnnotationEnvError.ToMap())
+		if err != nil {
+			r.log.Error(err, "error while updating annotations on namespace", "namespace", namespaceName)
+			return err
+		}
+	}
+
+	r.log.Info(fmt.Sprintf("successfully updated `env-status` annotation to `error` for namespace [%s]", namespaceName))
 	return nil
 }
