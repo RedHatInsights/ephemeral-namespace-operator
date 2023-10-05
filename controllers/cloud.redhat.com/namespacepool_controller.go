@@ -92,7 +92,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	if err = r.client.Status().Update(ctx, &pool); err != nil {
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	return ctrl.Result{}, nil
