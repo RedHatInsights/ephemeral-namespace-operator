@@ -98,7 +98,7 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if err = r.client.Update(ctx, &namespace); err != nil {
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	elapsed := nsCompletionTime.Sub(namespace.CreationTimestamp.Time)
