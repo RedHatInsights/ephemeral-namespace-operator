@@ -44,6 +44,7 @@ import (
 // NamespaceReservationReconciler reconciles a NamespaceReservation object
 type NamespaceReservationReconciler struct {
 	client client.Client
+	ctx    context.Context
 	scheme *runtime.Scheme
 	poller *Poller
 	log    logr.Logger

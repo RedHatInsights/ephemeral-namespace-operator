@@ -38,6 +38,7 @@ import (
 // NamespacePoolReconciler reconciles a NamespacePool object
 type NamespacePoolReconciler struct {
 	client client.Client
+	ctx    context.Context
 	scheme *runtime.Scheme
 	log    logr.Logger
 }
