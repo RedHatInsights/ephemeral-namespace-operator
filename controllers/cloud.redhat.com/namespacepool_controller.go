@@ -30,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/RedHatInsights/clowder/controllers/cloud.redhat.com/errors"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/RedHatInsights/rhc-osdk-utils/utils"
@@ -49,7 +48,7 @@ type NamespacePoolReconciler struct {
 
 func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("rid", utils.RandString(5))
-	ctx = context.WithValue(ctx, errors.ClowdKey("log"), &log)
+	ctx = context.WithValue(ctx, helpers.ErrType("log"), &log)
 
 	pool := crd.NamespacePool{}
 

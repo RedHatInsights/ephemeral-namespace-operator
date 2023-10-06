@@ -62,6 +62,7 @@ type NamespaceReservationReconciler struct {
 
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("rid", utils.RandString(5))
+	ctx = context.WithValue(ctx, helpers.ErrType("log"), &log)
 
 	// Fetch the reservation
 	res := crd.NamespaceReservation{}
