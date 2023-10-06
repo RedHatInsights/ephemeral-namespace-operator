@@ -37,7 +37,6 @@ import (
 // ClowdenvironmentReconciler reconciles a Clowdenvironment object
 type ClowdenvironmentReconciler struct {
 	client client.Client
-	ctx    context.Context
 	scheme *runtime.Scheme
 	log    logr.Logger
 }
