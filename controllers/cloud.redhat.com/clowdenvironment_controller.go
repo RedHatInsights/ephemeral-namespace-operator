@@ -23,6 +23,7 @@ import (
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
+	"github.com/RedHatInsights/rhc-osdk-utils/utils"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -45,6 +46,9 @@ type ClowdenvironmentReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/status,verbs=get
 
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	log := r.log.WithValues("rid", utils.RandString(5))
+	ctx = context.WithValue(ctx, helpers.ErrType("log"), &log)
+
 	env := clowder.ClowdEnvironment{}
 	if err := r.client.Get(ctx, req.NamespacedName, &env); err != nil {
 		if !k8serr.IsNotFound(err) {
@@ -59,14 +63,14 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	r.log.Info(
+	log.Info(
 		"Reconciling clowdenv",
 		"env-name", env.Name,
 		"deployments", fmt.Sprintf("%d / %d", env.Status.Deployments.ReadyDeployments, env.Status.Deployments.ManagedDeployments),
 	)
 
 	namespaceName := env.Spec.TargetNamespace
-	r.log.Info("clowdenvironment ready", "namespace", namespaceName)
+	log.Info("clowdenvironment ready", "namespace", namespaceName)
 
 	if err := helpers.CreateFrontendEnv(ctx, r.client, namespaceName, env); err != nil {
 		r.log.Error(err, "error encountered with frontend environment", "namespace", namespaceName)
@@ -75,7 +79,7 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
-	r.log.Info("namespace ready", "namespace", namespaceName)
+	log.Info("namespace ready", "namespace", namespaceName)
 	if err := helpers.UpdateAnnotations(ctx, r.client, namespaceName, helpers.AnnotationEnvReady.ToMap()); err != nil {
 		return ctrl.Result{Requeue: true}, fmt.Errorf("error setting annotations: %w", err)
 	}

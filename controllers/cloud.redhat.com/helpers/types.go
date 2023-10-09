@@ -41,3 +41,5 @@ var AnnotationReservedTrue = CustomAnnotation{Annotation: AnnotationReserved, Va
 var AnnotationReservedFalse = CustomAnnotation{Annotation: AnnotationReserved, Value: FalseValue}
 
 var LabelOperatorNamespaceTrue = CustomLabel{Label: LabelOperatorNS, Value: TrueValue}
+
+type ErrType string
