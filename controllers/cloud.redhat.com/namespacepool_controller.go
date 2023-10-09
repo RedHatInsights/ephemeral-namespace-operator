@@ -32,6 +32,7 @@ import (
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
+	"github.com/RedHatInsights/rhc-osdk-utils/utils"
 )
 
 // NamespacePoolReconciler reconciles a NamespacePool object
@@ -46,21 +47,24 @@ type NamespacePoolReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacepools/finalizers,verbs=update
 
 func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	log := r.log.WithValues("rid", utils.RandString(5))
+	ctx = context.WithValue(ctx, helpers.ErrType("log"), &log)
+
 	pool := crd.NamespacePool{}
 
 	if err := r.client.Get(ctx, req.NamespacedName, &pool); err != nil {
-		r.log.Error(err, fmt.Sprintf("cannot retrieve [%s] pool resource", pool.Name))
+		log.Error(err, fmt.Sprintf("cannot retrieve [%s] pool resource", pool.Name))
 		return ctrl.Result{Requeue: true}, err
 	}
 
 	errNamespaceList, err := r.getPoolStatus(ctx, &pool)
 	if err != nil {
-		r.log.Error(err, "unable to get status of owned namespaces")
+		log.Error(err, "unable to get status of owned namespaces")
 		return ctrl.Result{Requeue: true}, err
 	}
 
 	if len(errNamespaceList) > 0 {
-		r.log.Info(fmt.Sprintf("[%d] namespaces in error state are queued for deletion", len(errNamespaceList)))
+		log.Info(fmt.Sprintf("[%d] namespaces in error state are queued for deletion", len(errNamespaceList)))
 		err = r.deleteErrorNamespaces(ctx, errNamespaceList)
 		if err != nil {
 			r.log.Error(err, "Unable to delete namespaces in error state")
@@ -68,7 +72,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 
-	r.log.Info(fmt.Sprintf("[%s] pool status", pool.Name),
+	log.Info(fmt.Sprintf("[%s] pool status", pool.Name),
 		"ready", pool.Status.Ready,
 		"creating", pool.Status.Creating,
 		"reserved", pool.Status.Reserved)
@@ -76,14 +80,14 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	quantityOfNamespaces := r.getNamespaceQuantityDelta(pool)
 
 	if quantityOfNamespaces > 0 {
-		r.log.Info(fmt.Sprintf("filling [%s] pool with [%d] namespace(s)", pool.Name, quantityOfNamespaces))
+		log.Info(fmt.Sprintf("filling [%s] pool with [%d] namespace(s)", pool.Name, quantityOfNamespaces))
 		err := r.increaseReadyNamespacesQueue(ctx, pool, quantityOfNamespaces)
 		if err != nil {
-			r.log.Error(err, fmt.Sprintf("unable to create more namespaces for [%s] pool.", pool.Name))
+			log.Error(err, fmt.Sprintf("unable to create more namespaces for [%s] pool.", pool.Name))
 			return ctrl.Result{Requeue: true}, err
 		}
 	} else if quantityOfNamespaces < 0 {
-		r.log.Info(fmt.Sprintf("excess number of ready namespaces in [%s] pool detected, removing [%d] namespace(s)", pool.Name, (quantityOfNamespaces * -1)))
+		log.Info(fmt.Sprintf("excess number of ready namespaces in [%s] pool detected, removing [%d] namespace(s)", pool.Name, (quantityOfNamespaces * -1)))
 		err := r.decreaseReadyNamespacesQueue(ctx, pool.Name, quantityOfNamespaces)
 		if err != nil {
 			r.log.Error(err, fmt.Sprintf("unable to delete excess namespaces for [%s] pool.", pool.Name))
@@ -92,7 +96,7 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 
 	if err := r.client.Status().Update(ctx, &pool); err != nil {
-		r.log.Error(err, fmt.Sprintf("cannot update [%s] pool status", pool.Name))
+		log.Error(err, fmt.Sprintf("cannot update [%s] pool status", pool.Name))
 		return ctrl.Result{}, err
 	}
 
