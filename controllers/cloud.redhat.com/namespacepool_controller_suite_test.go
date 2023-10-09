@@ -24,19 +24,13 @@ var _ = Describe("Pool controller basic functionality", func() {
 
 	Context("When a pool is reconciled", func() {
 		It("Should reconcile the number of managed namespaces for each pool", func() {
-			By("Comparing pool status to pool size")
+			By("Checking the total number of owned namespaces")
 			ctx := context.Background()
 			pool := crd.NamespacePool{}
 
-			Eventually(func() bool {
-				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
-				Expect(err).NotTo(HaveOccurred())
-
-				return pool.Spec.Size == (pool.Status.Ready + pool.Status.Creating)
-			}, timeout, interval).Should(BeTrue())
-
-			By("Checking the total number of owned namespaces")
 			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {
 				err := k8sClient.List(ctx, &nsList)
@@ -50,9 +44,58 @@ var _ = Describe("Pool controller basic functionality", func() {
 
 				return ownedCount == pool.Spec.Size
 			}, timeout, interval).Should(BeTrue())
+		})
+	})
+})
 
-			By("Ensuring ready/creating namespace count equals the pool spec size")
-			err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+var _ = Describe("Ensure new namespaces are setup properly", func() {
+	Context("When a new namespace is created", func() {
+		It("Should contain necessary labels and annotations", func() {
+			ctx := context.Background()
+
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			for _, ns := range nsList.Items {
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						Expect(ns.Labels["operator-ns"]).To(Equal("true"))
+
+						_, ok := ns.Labels["pool"]
+						Expect(ok).To(BeTrue())
+
+						_, ok = ns.Annotations["env-status"]
+						Expect(ok).To(BeTrue())
+
+						Expect(ns.Annotations["reserved"]).To(Equal("false"))
+					}
+				}
+			}
+		})
+	})
+})
+
+var _ = Describe("Namespace creation should not exceed the pool size limit if one is defined", func() {
+	Context("If a pool has the optional size limit attribute, it should not exceed that limit", func() {
+		It("should create the number of namespaces equal to the size limit defined", func() {
+			By("Comparing pool status to pool size")
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Spec.Size == (pool.Status.Ready + pool.Status.Creating)
+			}, timeout, interval).Should(BeTrue())
+
+			By("Ensuring that if the limit is decreased, excess namespaces are deleted")
+			err = k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
 			Expect(err).NotTo(HaveOccurred())
 
 			pool.Spec.Size--
@@ -68,7 +111,7 @@ var _ = Describe("Pool controller basic functionality", func() {
 				return pool.Status.Ready + pool.Status.Creating
 			}, timeout, interval).Should(Equal(1))
 
-			By("Creating new namespaces as needed")
+			By("Ensuring that if the limit is increased, more namespaces are created")
 			pool.Spec.Size++
 
 			Eventually(func() error {
@@ -88,10 +131,15 @@ var _ = Describe("Pool controller basic functionality", func() {
 				return k8sClient.Update(ctx, &pool)
 			}, timeout, interval).Should(BeNil())
 		})
+	})
+})
 
-		It("Should delete namespaces in an error state", func() {
+var _ = Describe("Rogue namespaces should be deleted", func() {
+	Context("When a namespaces fails to be created properly", func() {
+		It("Should delete the namespace with the `env-status: error` annotation", func() {
 			By("Checking namespace annotations")
 			ctx := context.Background()
+
 			nsList := core.NamespaceList{}
 			err := k8sClient.List(ctx, &nsList)
 			Expect(err).NotTo(HaveOccurred())
@@ -116,31 +164,6 @@ var _ = Describe("Pool controller basic functionality", func() {
 				}
 				return false
 			}, timeout, interval).Should(BeTrue())
-		})
-	})
-})
-
-var _ = Describe("Ensure new namespaces are setup properly", func() {
-	Context("When a new namespace is created", func() {
-		It("Should contain necessary labels and annotations", func() {
-			ctx := context.Background()
-			nsList := core.NamespaceList{}
-			err := k8sClient.List(ctx, &nsList)
-			Expect(err).NotTo(HaveOccurred())
-
-			for _, ns := range nsList.Items {
-				for _, owner := range ns.GetOwnerReferences() {
-					if owner.Kind == "NamespacePool" {
-						Expect(ns.Labels["operator-ns"]).To(Equal("true"))
-
-						_, ok := ns.Labels["pool"]
-						Expect(ok).To(BeTrue())
-
-						_, ok = ns.Annotations["env-status"]
-						Expect(ok).To(BeTrue())
-					}
-				}
-			}
 		})
 	})
 })
