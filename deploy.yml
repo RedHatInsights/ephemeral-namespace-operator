@@ -13,7 +13,7 @@ objects:
   kind: CustomResourceDefinition
   metadata:
     annotations:
-      controller-gen.kubebuilder.io/version: v0.8.0
+      controller-gen.kubebuilder.io/version: v0.11.1
     creationTimestamp: null
     name: namespacepools.cloud.redhat.com
   spec:
@@ -83,6 +83,13 @@ objects:
                           description: Defines the Configuration for the Clowder Database
                             Provider.
                           properties:
+                            caBundleURL:
+                              description: Indicates where Clowder will fetch the
+                                database CA certificate bundle from. Currently only
+                                used in (*_app-interface_*) mode. If none is specified,
+                                the AWS RDS combined CA bundle is used.
+                              pattern: ^https?:\/\/.+$
+                              type: string
                             mode:
                               description: 'The mode of operation of the Clowder Database
                                 Provider. Valid options are: (*_app-interface_*) where
@@ -196,6 +203,9 @@ objects:
                                   description: Delete persistent volume claim if the
                                     Kafka cluster is deleted Only applies when KafkaConfig.PVC
                                     is set to 'true'
+                                  type: boolean
+                                forceTLS:
+                                  description: Force TLS
                                   type: boolean
                                 jvmOptions:
                                   description: JVM Options
@@ -322,25 +332,6 @@ objects:
                               description: EnableLegacyStrimzi disables TLS + user
                                 auth
                               type: boolean
-                            ephemManagedDeletePrefix:
-                              description: Defines a prefix whitelist value
-                              type: string
-                            ephemManagedSecretRef:
-                              description: Defines the secret reference for the Ephemeral
-                                Managed Kafka mode. Only used in (*_managed-ephem_*)
-                                mode.
-                              properties:
-                                name:
-                                  description: Name defines the Name of a resource.
-                                  type: string
-                                namespace:
-                                  description: Namespace defines the Namespace of
-                                    a resource.
-                                  type: string
-                              required:
-                              - name
-                              - namespace
-                              type: object
                             managedPrefix:
                               description: Managed topic prefix for the managed cluster.
                                 Only used in (*_managed_*) mode.
@@ -552,6 +543,30 @@ objects:
                                     the default resource requirements from the ClowdEnvironment
                                     will be used.
                                   properties:
+                                    claims:
+                                      description: "Claims lists the names of resources,\
+                                        \ defined in spec.resourceClaims, that are\
+                                        \ used by this container. \n This is an alpha\
+                                        \ field and requires enabling the DynamicResourceAllocation\
+                                        \ feature gate. \n This field is immutable."
+                                      items:
+                                        description: ResourceClaim references one
+                                          entry in PodSpec.ResourceClaims.
+                                        properties:
+                                          name:
+                                            description: Name must match the name
+                                              of one entry in pod.spec.resourceClaims
+                                              of the Pod where this field is used.
+                                              It makes that resource available inside
+                                              a container.
+                                            type: string
+                                        required:
+                                        - name
+                                        type: object
+                                      type: array
+                                      x-kubernetes-list-map-keys:
+                                      - name
+                                      x-kubernetes-list-type: map
                                     limits:
                                       additionalProperties:
                                         anyOf:
@@ -597,6 +612,31 @@ objects:
                                           description: Defines the resource requests/limits
                                             set on selenium containers
                                           properties:
+                                            claims:
+                                              description: "Claims lists the names\
+                                                \ of resources, defined in spec.resourceClaims,\
+                                                \ that are used by this container.\
+                                                \ \n This is an alpha field and requires\
+                                                \ enabling the DynamicResourceAllocation\
+                                                \ feature gate. \n This field is immutable."
+                                              items:
+                                                description: ResourceClaim references
+                                                  one entry in PodSpec.ResourceClaims.
+                                                properties:
+                                                  name:
+                                                    description: Name must match the
+                                                      name of one entry in pod.spec.resourceClaims
+                                                      of the Pod where this field
+                                                      is used. It makes that resource
+                                                      available inside a container.
+                                                    type: string
+                                                required:
+                                                - name
+                                                type: object
+                                              type: array
+                                              x-kubernetes-list-map-keys:
+                                              - name
+                                              x-kubernetes-list-type: map
                                             limits:
                                               additionalProperties:
                                                 anyOf:
@@ -727,6 +767,18 @@ objects:
                                 a ClowdApp should be served on.
                               format: int32
                               type: integer
+                            tls:
+                              description: TLS sidecar enablement
+                              properties:
+                                enabled:
+                                  type: boolean
+                                port:
+                                  format: int32
+                                  type: integer
+                                privatePort:
+                                  format: int32
+                                  type: integer
+                              type: object
                           required:
                           - mode
                           - port
@@ -742,6 +794,28 @@ objects:
                         k8s format in the event that they omitted from a PodSpec inside
                         a ClowdApp.
                       properties:
+                        claims:
+                          description: "Claims lists the names of resources, defined\
+                            \ in spec.resourceClaims, that are used by this container.\
+                            \ \n This is an alpha field and requires enabling the\
+                            \ DynamicResourceAllocation feature gate. \n This field\
+                            \ is immutable."
+                          items:
+                            description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                            properties:
+                              name:
+                                description: Name must match the name of one entry
+                                  in pod.spec.resourceClaims of the Pod where this
+                                  field is used. It makes that resource available
+                                  inside a container.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                          x-kubernetes-list-map-keys:
+                          - name
+                          x-kubernetes-list-type: map
                         limits:
                           additionalProperties:
                             anyOf:
@@ -1011,6 +1085,7 @@ objects:
                                       type: object
                                     type: array
                                 type: object
+                                x-kubernetes-map-type: atomic
                               scopes:
                                 description: A collection of filters that must match
                                   each object tracked by a quota. If not specified,
@@ -1134,17 +1209,11 @@ objects:
       storage: true
       subresources:
         status: {}
-  status:
-    acceptedNames:
-      kind: ''
-      plural: ''
-    conditions: []
-    storedVersions: []
 - apiVersion: apiextensions.k8s.io/v1
   kind: CustomResourceDefinition
   metadata:
     annotations:
-      controller-gen.kubebuilder.io/version: v0.8.0
+      controller-gen.kubebuilder.io/version: v0.11.1
     creationTimestamp: null
     name: namespacereservations.cloud.redhat.com
   spec:
@@ -1239,12 +1308,6 @@ objects:
       storage: true
       subresources:
         status: {}
-  status:
-    acceptedNames:
-      kind: ''
-      plural: ''
-    conditions: []
-    storedVersions: []
 - apiVersion: v1
   kind: ServiceAccount
   metadata:

@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -72,7 +72,7 @@ var _ = Describe("Reservation controller basic reservation", func() {
 
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
-				return errors.IsNotFound(err)
+				return k8serr.IsNotFound(err)
 			}, timeout, interval).Should(BeTrue())
 		})
 
@@ -103,7 +103,7 @@ var _ = Describe("Reservation controller basic reservation", func() {
 				err1 := k8sClient.Get(ctx, types.NamespacedName{Name: resName1}, updatedR1)
 				err2 := k8sClient.Get(ctx, types.NamespacedName{Name: resName2}, updatedR2)
 				err3 := k8sClient.Get(ctx, types.NamespacedName{Name: resName3}, updatedR3)
-				if errors.IsNotFound(err1) || err2 != nil || err3 != nil {
+				if k8serr.IsNotFound(err1) || err2 != nil || err3 != nil {
 					return false
 				}
 

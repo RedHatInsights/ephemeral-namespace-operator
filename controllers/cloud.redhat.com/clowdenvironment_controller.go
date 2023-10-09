@@ -26,6 +26,7 @@ import (
 	"github.com/RedHatInsights/rhc-osdk-utils/utils"
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -50,8 +51,12 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	env := clowder.ClowdEnvironment{}
 	if err := r.client.Get(ctx, req.NamespacedName, &env); err != nil {
-		log.Error(err, "Error retrieving clowdenv", "env-name", env.Name)
-		return ctrl.Result{}, err
+		if !k8serr.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+
+		r.log.Error(err, "there was an issue retrieving the clowdenvironment [%s]", env.Name)
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	if ready, err := helpers.VerifyClowdEnvReady(env); !ready {
@@ -96,13 +101,8 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{Requeue: true}, fmt.Errorf("could not retrieve updated namespace [%s] after updating annotations: %w", namespaceName, err)
 	}
 
-	namespace, err = helpers.GetNamespace(ctx, r.client, namespaceName)
-	if err != nil {
-		log.Error(err, "could not retrieve newly created namespace", "namespace", namespaceName)
-	}
-
-	if err := r.client.Update(ctx, &namespace); err != nil {
-		return ctrl.Result{}, err
+	if err = r.client.Update(ctx, &namespace); err != nil {
+		return ctrl.Result{Requeue: true}, err
 	}
 
 	elapsed := nsCompletionTime.Sub(namespace.CreationTimestamp.Time)
