@@ -8,8 +8,6 @@ jobs:
   checkout:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
       - name: Set up skopeo
         run: sudo apt-get install -y skopeo    
       - name: Check ubi8-minimal change
@@ -21,6 +19,8 @@ jobs:
   makeachange:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Do change if the version changed
         run: |
           git config user.name 'Update-a-Bot'
