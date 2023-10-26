@@ -33,4 +33,3 @@ jobs:
         run: gh pr create --title 'Regular docker image update' --body 'Automation \o/' --reviewer maknop
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
