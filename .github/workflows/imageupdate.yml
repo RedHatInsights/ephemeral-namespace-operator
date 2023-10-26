@@ -30,7 +30,7 @@ jobs:
           git add -A
           git commit -m "Update to ubi-minimal or go-toolset image" || echo "No changes to commit"
       - name: Create pull request
-        run: gh pr create --title 'Regular docker image update' --body 'Automation \o/' --reviewer maknop
+        run: gh pr create --title 'Regular docker image update' --body 'Automation \o/' --reviewer maknop --head=${{ github.run_id }}-${{ github.run_attempt }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
