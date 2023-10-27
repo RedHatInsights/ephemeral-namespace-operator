@@ -29,7 +29,8 @@ jobs:
           sed -i "s/registry.access.redhat.com\/ubi8\/go-toolset:[0-9.-]*/registry.access.redhat.com\/ubi8\/ubi-minimal:$gotoolsetver/" Dockerfile
           git add -A
           git commit -m "Update to ubi-minimal or go-toolset image" || echo "No changes to commit"
+          git push -u origin update || git push -f origin update
       - name: Create pull request
-        run: gh pr create --title 'Regular docker image update' --body 'Automation \o/' --reviewer maknop --base=main --head=Update-a-Bot:${{ github.run_id }}-${{ github.run_attempt }}
+        run: gh pr create --title 'Regular docker image update' --body 'Automation \o/' --reviewer maknop
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
