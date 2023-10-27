@@ -25,6 +25,7 @@ jobs:
         run: |
           git config user.name 'Update-a-Bot'
           git config user.email 'webdev-spam-list <webdev-spam-list@redhat.com>'
+          git checkout -b update
           sed -i "s/registry.access.redhat.com\/ubi8\/ubi-minimal:[0-9.-]*/registry.access.redhat.com\/ubi8\/ubi-minimal:$ubiversion/" Dockerfile
           sed -i "s/registry.access.redhat.com\/ubi8\/go-toolset:[0-9.-]*/registry.access.redhat.com\/ubi8\/ubi-minimal:$gotoolsetver/" Dockerfile
           git add -A
