@@ -12,10 +12,10 @@ jobs:
         run: sudo apt-get install -y skopeo    
       - name: Check ubi8-minimal change
         run: |
-          echo "{UBIVERSION}={$(skopeo inspect docker://registry.access.redhat.com/ubi8/ubi-minimal:latest |jq '.Labels.url' |sed 's/"//g' |awk -F/ '{print $NF}')}" >> $"GITHUB_OUTPUT"
+          echo "{UBIVERSION}={$(skopeo inspect docker://registry.access.redhat.com/ubi8/ubi-minimal:latest |jq '.Labels.url' |sed 's/"//g' |awk -F/ '{print $NF}')}" >> "$GITHUB_OUTPUT"
       - name: Check go-toolset change
         run: |
-          echo "{GOTOOLSETVER}={$(skopeo inspect docker://registry.access.redhat.com/ubi8/go-toolset:latest |jq '.Labels.url' |sed 's/"//g' |awk -F/ '{print $NF}')}" >> $"GITHUB_OUTPUT"
+          echo "{GOTOOLSETVER}={$(skopeo inspect docker://registry.access.redhat.com/ubi8/go-toolset:latest |jq '.Labels.url' |sed 's/"//g' |awk -F/ '{print $NF}')}" >> "$GITHUB_OUTPUT"
   makeachange: 
     needs: checkout
     runs-on: ubuntu-latest
