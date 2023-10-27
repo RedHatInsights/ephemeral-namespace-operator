@@ -31,6 +31,10 @@ jobs:
           git commit -m "Update to ubi-minimal or go-toolset image" || echo "No changes to commit"
           git push -u origin update || git push -f origin update
       - name: Create pull request
+<<<<<<< HEAD
         run: gh pr create --title 'Regular docker image update' --body 'Automation \o/' --reviewer maknop
+=======
+        run: gh pr create --title 'Regular docker image update' --body 'Automation \o/' --reviewer maknop --base=main --head=Update-a-Bot:${{ github.ref_name }}
+>>>>>>> 9bb2b4d (Further fixes)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
