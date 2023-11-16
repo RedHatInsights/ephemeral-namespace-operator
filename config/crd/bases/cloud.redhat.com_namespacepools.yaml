@@ -262,6 +262,10 @@ spec:
                                 description: Version. If unset, default is '2.5.0'
                                 type: string
                             type: object
+                          clusterAnnotation:
+                            description: Cluster annotation identifier for (*_msk_*)
+                              mode.
+                            type: string
                           clusterName:
                             description: (Deprecated) Defines the cluster name to
                               be used by the Kafka Provider this will be used in some
@@ -318,6 +322,10 @@ spec:
                           enableLegacyStrimzi:
                             description: EnableLegacyStrimzi disables TLS + user auth
                             type: boolean
+                          kafkaConnectReplicaCount:
+                            description: Sets the replica count for ephem-msk mode
+                              for kafka connect
+                            type: integer
                           managedPrefix:
                             description: Managed topic prefix for the managed cluster.
                               Only used in (*_managed_*) mode.
@@ -349,7 +357,7 @@ spec:
                               is created in the desired cluster namespace and configured
                               to auto-create topics.'
                             enum:
-                            - managed-ephem
+                            - ephem-msk
                             - managed
                             - operator
                             - app-interface
@@ -369,6 +377,10 @@ spec:
                             type: boolean
                           suffix:
                             description: (Deprecated) (Unused)
+                            type: string
+                          topicNamespace:
+                            description: Namespace that kafkaTopics should be written
+                              to for (*_msk_*) mode.
                             type: string
                         required:
                         - mode
@@ -531,7 +543,8 @@ spec:
                                       defined in spec.resourceClaims, that are used
                                       by this container. \n This is an alpha field
                                       and requires enabling the DynamicResourceAllocation
-                                      feature gate. \n This field is immutable."
+                                      feature gate. \n This field is immutable. It
+                                      can only be set for containers."
                                     items:
                                       description: ResourceClaim references one entry
                                         in PodSpec.ResourceClaims.
@@ -600,7 +613,8 @@ spec:
                                               that are used by this container. \n
                                               This is an alpha field and requires
                                               enabling the DynamicResourceAllocation
-                                              feature gate. \n This field is immutable."
+                                              feature gate. \n This field is immutable.
+                                              It can only be set for containers."
                                             items:
                                               description: ResourceClaim references
                                                 one entry in PodSpec.ResourceClaims.
@@ -695,6 +709,31 @@ spec:
                             description: The URL of BOP - only used in (*_none_*/*_operator_*)
                               mode.
                             type: string
+                          gatewayCert:
+                            description: Gateway cert
+                            properties:
+                              certMode:
+                                description: Determines the mode of certificate generation,
+                                  either self-signed or acme
+                                enum:
+                                - self-signed
+                                - acme
+                                - none
+                                type: string
+                              emailAddress:
+                                description: The email address used to register with
+                                  Let's Encrypt for acme mode certs
+                                type: string
+                              enabled:
+                                description: Determines whether to enable the gateway
+                                  cert, default is disabled
+                                type: boolean
+                              localCAConfigMap:
+                                description: Determines a ConfigMap in the target
+                                  namespace of the env which has ca.pem detailing
+                                  the cert to use for mTLS verification
+                                type: string
+                            type: object
                           images:
                             description: Optional images to use for web provider components
                               -- only applies when running in (*_local_*) mode.
@@ -703,6 +742,11 @@ spec:
                                 description: Caddy image -- if not defined, value
                                   from operator config is used if set, otherwise a
                                   hard-coded default is used.
+                                type: string
+                              caddyGateway:
+                                description: Caddy Gateway image -- if not defined,
+                                  value from operator config is used if set, otherwise
+                                  a hard-coded default is used.
                                 type: string
                               keycloak:
                                 description: Keycloak image -- default is 'quay.io/keycloak/keycloak:{KeycloakVersion}'
@@ -778,7 +822,8 @@ spec:
                         description: "Claims lists the names of resources, defined
                           in spec.resourceClaims, that are used by this container.
                           \n This is an alpha field and requires enabling the DynamicResourceAllocation
-                          feature gate. \n This field is immutable."
+                          feature gate. \n This field is immutable. It can only be
+                          set for containers."
                         items:
                           description: ResourceClaim references one entry in PodSpec.ResourceClaims.
                           properties:

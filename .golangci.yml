@@ -4,3 +4,19 @@ issues:
       linters:
         - gofmt
         - goimports
+    - path: controllers/cloud.redhat.com/clowdenvironment_controller_suite_test.go
+      linters: 
+      - revive
+      text: "dot-imports: should not use dot imports"
+    - path: controllers/cloud.redhat.com/namespacepool_controller_suite_test.go
+      linters: 
+      - revive
+      text: "dot-imports: should not use dot imports"
+    - path: controllers/cloud.redhat.com/namespacereservation_controller_suite_test.go
+      linters: 
+      - revive
+      text: "dot-imports: should not use dot imports"
+    - path: controllers/cloud.redhat.com/suite_test.go
+      linters: 
+      - revive
+      text: "dot-imports: should not use dot imports"
