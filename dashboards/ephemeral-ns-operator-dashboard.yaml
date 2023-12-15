@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 173984,
+      "id": 665151,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -260,111 +260,114 @@ data:
           "type": "timeseries"
         },
         {
+          "aliasColors": {
+            "Alloc Bytes": "semi-dark-purple",
+            "K8s Usage": "dark-blue"
+          },
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
+            "uid": "$datasource"
           },
           "fieldConfig": {
             "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "custom": {
-                "align": "center",
-                "displayMode": "auto",
-                "filterable": false,
-                "inspect": false,
-                "width": 300
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  }
-                ]
-              }
+              "unit": "decbytes"
             },
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Time"
-                },
-                "properties": [
-                  {
-                    "id": "custom.width",
-                    "value": 157
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Value"
-                },
-                "properties": [
-                  {
-                    "id": "custom.width",
-                    "value": 142
-                  }
-                ]
-              }
-            ]
+            "overrides": []
           },
+          "fill": 1,
+          "fillGradient": 0,
           "gridPos": {
-            "h": 15,
+            "h": 8,
             "w": 8,
             "x": 16,
             "y": 0
           },
-          "id": 37,
-          "options": {
-            "footer": {
-              "fields": "",
-              "reducer": [
-                "sum"
-              ],
-              "show": false
-            },
-            "showHeader": true,
-            "sortBy": []
+          "hiddenSeries": false,
+          "id": 44,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
           },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
           "pluginVersion": "9.3.8",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${datasource}"
+                "uid": "mOIyqZB7k"
               },
-              "dimensions": {},
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\".*smoke-test.*|.*pr-check-.*|automation-.*|.*-check-bot|.*ephemeral-base.*|edge-api.*|notifications.*\"}))",
-              "expression": "",
-              "format": "table",
-              "id": "",
-              "instant": true,
-              "label": "",
-              "legendFormat": "{{user}}",
-              "matchExact": true,
-              "metricEditorMode": 0,
-              "metricName": "",
-              "metricQueryType": 0,
-              "namespace": "",
-              "period": "",
-              "queryMode": "Metrics",
-              "range": false,
-              "refId": "A",
-              "region": "default",
-              "sqlExpression": "",
-              "statistic": "Average"
+              "exemplar": true,
+              "expr": "avg(container_memory_working_set_bytes{namespace=\"ephemeral-namespace-operator-system\", container=\"manager\"})",
+              "interval": "",
+              "legendFormat": "K8s Usage",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mOIyqZB7k"
+              },
+              "exemplar": true,
+              "expr": "avg(go_memstats_alloc_bytes{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"})",
+              "interval": "",
+              "legendFormat": "Alloc Bytes",
+              "refId": "B"
             }
           ],
-          "title": "Reservation Total By User",
-          "type": "table"
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "ENO Memory Usage",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "transparent": true,
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "$$hashKey": "object:76",
+              "format": "decbytes",
+              "logBase": 1,
+              "min": "0",
+              "show": true
+            },
+            {
+              "$$hashKey": "object:77",
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
         },
         {
           "datasource": {
@@ -596,6 +599,127 @@ data:
         {
           "datasource": {
             "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 25,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Usage"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "light-blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 8
+          },
+          "id": 46,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mOIyqZB7k"
+              },
+              "exemplar": true,
+              "expr": "avg(rate(container_cpu_usage_seconds_total{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"}[5m]))",
+              "interval": "",
+              "legendFormat": "Usage",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mOIyqZB7k"
+              },
+              "exemplar": true,
+              "expr": "avg(kube_pod_container_resource_requests_cpu_cores{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "",
+              "refId": "B"
+            }
+          ],
+          "title": "CPU Usage",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
             "uid": "PA6124D83F67FD625"
           },
           "fieldConfig": {
@@ -606,7 +730,8 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "light-blue"
+                    "color": "light-blue",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -819,116 +944,6 @@ data:
           "type": "timeseries"
         },
         {
-          "aliasColors": {
-            "Alloc Bytes": "semi-dark-purple",
-            "K8s Usage": "dark-blue"
-          },
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "unit": "decbytes"
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 15
-          },
-          "hiddenSeries": false,
-          "id": 44,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "nullPointMode": "null",
-          "options": {
-            "alertThreshold": true
-          },
-          "percentage": false,
-          "pluginVersion": "9.3.8",
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "mOIyqZB7k"
-              },
-              "exemplar": true,
-              "expr": "avg(container_memory_working_set_bytes{namespace=\"ephemeral-namespace-operator-system\", container=\"manager\"})",
-              "interval": "",
-              "legendFormat": "K8s Usage",
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "mOIyqZB7k"
-              },
-              "exemplar": true,
-              "expr": "avg(go_memstats_alloc_bytes{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"})",
-              "interval": "",
-              "legendFormat": "Alloc Bytes",
-              "refId": "B"
-            }
-          ],
-          "thresholds": [],
-          "timeRegions": [],
-          "title": "ENO Memory Usage",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "transparent": true,
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:76",
-              "format": "decbytes",
-              "logBase": 1,
-              "min": "0",
-              "show": true
-            },
-            {
-              "$$hashKey": "object:77",
-              "format": "short",
-              "logBase": 1,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false
-          }
-        },
-        {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
@@ -1010,6 +1025,99 @@ data:
           "yaxis": {
             "align": false
           }
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 16
+          },
+          "id": 52,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum(workqueue_depth{service=\"ephemeral-namespace-operator-controller-metrics-non-auth\"}) by (name)",
+              "legendFormat": "{{name}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "WorkQueue Depth",
+          "transparent": true,
+          "type": "timeseries"
         },
         {
           "datasource": {
@@ -1213,220 +1321,6 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 25,
-                "gradientMode": "opacity",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Usage"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "light-blue",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 23
-          },
-          "id": 46,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "mOIyqZB7k"
-              },
-              "exemplar": true,
-              "expr": "avg(rate(container_cpu_usage_seconds_total{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"}[5m]))",
-              "interval": "",
-              "legendFormat": "Usage",
-              "refId": "A"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "mOIyqZB7k"
-              },
-              "exemplar": true,
-              "expr": "avg(kube_pod_container_resource_requests_cpu_cores{container=\"manager\", namespace=\"ephemeral-namespace-operator-system\"})",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "",
-              "refId": "B"
-            }
-          ],
-          "title": "CPU Usage",
-          "transparent": true,
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 9,
-            "x": 7,
-            "y": 24
-          },
-          "id": 52,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "expr": "sum(workqueue_depth{service=\"ephemeral-namespace-operator-controller-metrics-non-auth\"}) by (name)",
-              "legendFormat": "{{name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "WorkQueue Depth",
-          "transparent": true,
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
             "uid": "$datasource"
           },
           "fieldConfig": {
@@ -1470,7 +1364,8 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "dark-red",
@@ -1486,7 +1381,7 @@ data:
             "h": 8,
             "w": 9,
             "x": 7,
-            "y": 32
+            "y": 24
           },
           "id": 42,
           "options": {
@@ -1529,7 +1424,7 @@ data:
         "list": [
           {
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "c-rh-c-eph-prometheus",
               "value": "c-rh-c-eph-prometheus"
             },
@@ -1593,6 +1488,6 @@ data:
       "timezone": "",
       "title": "Ephemeral Namespace Operator Metrics",
       "uid": "pFwxk9C7k",
-      "version": 1,
+      "version": 3,
       "weekStart": ""
     }
