@@ -46,5 +46,7 @@ include `ready`, `creating`, and `reserved` namespaces. Add the following to uti
 - `RoleBindings`: Access is granted to devs to edit resources in the namespace  
 - Secrets are copied from the base namespace.  
 
+== Contributing
+Check this CONTRIBUTING.md[doc] for deploying the ENO locally for local development
 ---
 Made with ❤️ @ Red Hat
