@@ -56,8 +56,8 @@ You will need to use multiple terminal windows.
 
 ### Apply Ephemeral Namespace Operator Pool Spec
 In the root directory of the Ephemeral Namespace Operator there is a pool yaml file for testing called `test-pool-spec.yaml`.  
-Ensure to edit line 56 of the file to update the name of the pull secret to the one retrieved from Quay. You will want to download that and  
-apply the file to your Minikube cluster with the following command:  
+Ensure to edit line 56 of the file to update the name of the pull secret to the one retrieved from Quay. You will want to apply the  
+file to your Minikube cluster with the following command:  
 ```
 oc apply -f ~/path/to/test-pool-spec.yaml
 ```
