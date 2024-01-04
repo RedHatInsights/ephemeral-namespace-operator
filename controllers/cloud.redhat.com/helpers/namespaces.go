@@ -109,7 +109,7 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) 
 	namespaceListOptions := &client.ListOptions{LabelSelector: validatedSelector}
 
 	if err := cl.List(ctx, &namespaceList, namespaceListOptions); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error listing namespaces for pool [%s]: %w", poolName, err)
 	}
 
 	var ready []core.Namespace
@@ -138,7 +138,7 @@ func CheckReadyStatus(pool string, namespace core.Namespace, ready []core.Namesp
 func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName string, annotations map[string]string) error {
 	namespace, err := GetNamespace(ctx, cl, namespaceName)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating annotations for namespace [%s]: %w", namespaceName, err)
 	}
 
 	utils.UpdateAnnotations(&namespace, annotations)

@@ -19,7 +19,7 @@ func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnv
 
 	ns, err := GetNamespace(ctx, cl, namespaceName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve namespace [%s] for setting the owner reference on Clowdenvironment [%s]: %w", namespaceName, env.Name, err)
 	}
 
 	env.SetOwnerReferences([]metav1.OwnerReference{
@@ -51,8 +51,11 @@ func GetClowdEnv(ctx context.Context, cl client.Client, namespaceName string) (b
 	}
 
 	ready, err := VerifyClowdEnvReady(env)
+	if err != nil {
+		return ready, &env, fmt.Errorf("could not verify that the clowdenvironment [%s] was ready: %w", env.Name, err)
+	}
 
-	return ready, &env, err
+	return ready, &env, nil
 }
 
 func VerifyClowdEnvReady(env clowder.ClowdEnvironment) (bool, error) {
