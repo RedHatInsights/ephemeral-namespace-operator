@@ -25,13 +25,13 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &namespace); err != nil {
-			return "", err
+			return namespace.Name, err
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
 		project.Name = namespace.Name
 		if err := cl.Create(ctx, &project); err != nil {
-			return "", err
+			return namespace.Name, err
 		}
 	}
 
