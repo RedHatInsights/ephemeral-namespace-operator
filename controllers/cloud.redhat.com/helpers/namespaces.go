@@ -25,13 +25,13 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &namespace); err != nil {
-			return "", err
+			return "", fmt.Errorf("could not create namespace [%s]: %w", namespace.Name, err)
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
 		project.Name = namespace.Name
 		if err := cl.Create(ctx, &project); err != nil {
-			return "", err
+			return "", fmt.Errorf("could not create project [%s]: %w", project.Name, err)
 		}
 	}
 
@@ -39,7 +39,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	// Performing annotation and ownerref change in one transaction
 	namespace, err := GetNamespace(ctx, cl, namespace.Name)
 	if err != nil {
-		return namespace.Name, err
+		return namespace.Name, fmt.Errorf("could not retrieve newly created namespace [%s]: %w", namespace.Name, err)
 	}
 
 	utils.UpdateAnnotations(&namespace, CreateInitialAnnotations())
@@ -47,7 +47,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	namespace.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
 
 	if err := cl.Update(ctx, &namespace); err != nil {
-		return namespace.Name, err
+		return namespace.Name, fmt.Errorf("could not update Project [%s]: %w", namespace.Name, err)
 	}
 
 	// Create ClowdEnvironment
