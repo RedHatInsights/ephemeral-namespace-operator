@@ -1530,8 +1530,8 @@ data:
           {
             "current": {
               "selected": true,
-              "text": "c-rh-c-eph-prometheus",
-              "value": "c-rh-c-eph-prometheus"
+              "text": "crc-eph-prometheus",
+              "value": "crc-eph-prometheus"
             },
             "hide": 0,
             "includeAll": false,
