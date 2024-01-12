@@ -157,6 +157,28 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 	return nil
 }
 
+func UpdateLabels(ctx context.Context, cl client.Client, namespaceName string, annotations map[string]string) error {
+	namespace, err := GetNamespace(ctx, cl, namespaceName)
+	if err != nil {
+		return fmt.Errorf("error updating labels for namespace [%s]: %w", namespaceName, err)
+	}
+
+	utils.UpdateLabels(&namespace, annotations)
+
+	err = retry.RetryOnConflict(
+		retry.DefaultBackoff,
+		func() error {
+			if err = cl.Update(ctx, &namespace); err != nil {
+				return fmt.Errorf("there was an issue updating labels for namespace [%s]: %w", namespaceName, err)
+			}
+
+			return nil
+		},
+	)
+
+	return nil
+}
+
 func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) error {
 	secrets := core.SecretList{}
 	if err := cl.List(ctx, &secrets, client.InNamespace(NamespaceEphemeralBase)); err != nil {
