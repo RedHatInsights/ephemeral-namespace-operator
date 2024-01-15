@@ -218,12 +218,6 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 		if err := r.client.Delete(ctx, &ns); err != nil {
 			return fmt.Errorf(fmt.Sprintf("cannot delete error namespace [%s]", nsName))
 		}
-
-		err = helpers.UpdateAnnotations(ctx, r.client, nsName, helpers.AnnotationEnvError.ToMap())
-		if err != nil {
-			r.log.Error(err, "error while updating annotations on namespace", "namespace", nsName)
-			return err
-		}
 	}
 
 	return nil
