@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 173984,
+      "id": 668763,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -596,7 +596,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PA6124D83F67FD625"
+            "uid": "P0226E6921DAF4CC1"
           },
           "fieldConfig": {
             "defaults": {
@@ -606,7 +606,8 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "light-blue"
+                    "color": "light-blue",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -646,7 +647,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PA6124D83F67FD625"
+                "uid": "P0226E6921DAF4CC1"
               },
               "exemplar": true,
               "expr": "sum(eno_version) by (version)",
@@ -1062,8 +1063,7 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   }
                 ]
               },
@@ -1255,8 +1255,7 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1376,8 +1375,7 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green",
-                    "value": null
+                    "color": "green"
                   },
                   {
                     "color": "red",
@@ -1529,7 +1527,7 @@ data:
         "list": [
           {
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "crc-eph-prometheus",
               "value": "crc-eph-prometheus"
             },
@@ -1586,7 +1584,7 @@ data:
         ]
       },
       "time": {
-        "from": "now-2d",
+        "from": "now-12h",
         "to": "now"
       },
       "timepicker": {},
