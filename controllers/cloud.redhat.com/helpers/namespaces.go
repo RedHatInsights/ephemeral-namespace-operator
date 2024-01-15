@@ -19,66 +19,70 @@ import (
 )
 
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
-	namespace := core.Namespace{}
+	ns := core.Namespace{}
 
-	namespace.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
+	ns.Name = fmt.Sprintf("ephemeral-%s", strings.ToLower(utils.RandString(6)))
 
 	if pool.Spec.Local {
-		if err := cl.Create(ctx, &namespace); err != nil {
-			return namespace.Name, fmt.Errorf("could not create namespace [%s]: %w", namespace.Name, err)
+		if err := cl.Create(ctx, &ns); err != nil {
+			return ns.Name, fmt.Errorf("could not create namespace [%s]: %w", ns.Name, err)
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
-		project.Name = namespace.Name
+		project.Name = ns.Name
 		if err := cl.Create(ctx, &project); err != nil {
-			return namespace.Name, fmt.Errorf("could not create project [%s]: %w", project.Name, err)
+			return ns.Name, fmt.Errorf("could not create project [%s]: %w", project.Name, err)
 		}
 	}
 
+	return ns.Name, nil
+}
+
+func AddNamespaceData(ctx context.Context, cl client.Client, pool *crd.NamespacePool, nsName string) (string, error) {
 	// WORKAROUND: Can't set annotations and ownerref on project request during create
 	// Performing annotation and ownerref change in one transaction
-	namespace, err := GetNamespace(ctx, cl, namespace.Name)
+	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {
-		return namespace.Name, fmt.Errorf("could not retrieve newly created namespace [%s]: %w", namespace.Name, err)
+		return nsName, fmt.Errorf("could not retrieve newly created namespace [%s]: %w", nsName, err)
 	}
 
-	utils.UpdateAnnotations(&namespace, CreateInitialAnnotations())
-	utils.UpdateLabels(&namespace, CreateInitialLabels(pool.Name))
-	namespace.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
+	utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
+	utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
+	ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
 
-	if err := cl.Update(ctx, &namespace); err != nil {
-		return namespace.Name, fmt.Errorf("could not update Project [%s]: %w", namespace.Name, err)
+	if err := cl.Update(ctx, &ns); err != nil {
+		return nsName, fmt.Errorf("could not update Project [%s]: %w", nsName, err)
 	}
 
 	// Create ClowdEnvironment
-	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, namespace.Name); err != nil {
-		return "", fmt.Errorf("error creating ClowdEnvironment for namespace [%s]: %w", namespace.Name, err)
+	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, nsName); err != nil {
+		return nsName, fmt.Errorf("error creating ClowdEnvironment for namespace [%s]: %w", nsName, err)
 	}
 
 	// Create LimitRange
 	limitRange := pool.Spec.LimitRange
-	limitRange.SetNamespace(namespace.Name)
+	limitRange.SetNamespace(nsName)
 
 	if err := cl.Create(ctx, &limitRange); err != nil {
-		return "", fmt.Errorf("error creating LimitRange for namespace [%s]: %w", namespace.Name, err)
+		return nsName, fmt.Errorf("error creating LimitRange for namespace [%s]: %w", nsName, err)
 	}
 
 	// Create ResourceQuotas
 	resourceQuotas := pool.Spec.ResourceQuotas
 	for _, quota := range resourceQuotas.Items {
 		innerQuota := quota
-		innerQuota.SetNamespace(namespace.Name)
+		innerQuota.SetNamespace(nsName)
 		if err := cl.Create(ctx, &innerQuota); err != nil {
-			return "", fmt.Errorf("error creating ResourceQuota for namespace [%s]: %w", namespace.Name, err)
+			return nsName, fmt.Errorf("error creating ResourceQuota for namespace [%s]: %w", nsName, err)
 		}
 	}
 
 	// Copy secrets
-	if err := CopySecrets(ctx, cl, namespace.Name); err != nil {
-		return "", fmt.Errorf("error copying secrets from ephemeral-base namespace to namespace [%s]: %w", namespace.Name, err)
+	if err := CopySecrets(ctx, cl, nsName); err != nil {
+		return nsName, fmt.Errorf("error copying secrets from ephemeral-base namespace to namespace [%s]: %w", nsName, err)
 	}
 
-	return namespace.Name, nil
+	return nsName, nil
 }
 
 func GetNamespace(ctx context.Context, cl client.Client, namespaceName string) (core.Namespace, error) {

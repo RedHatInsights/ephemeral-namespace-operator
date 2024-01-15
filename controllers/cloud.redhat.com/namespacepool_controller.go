@@ -204,28 +204,31 @@ func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePo
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
 	for i := 0; i < increaseSize; i++ {
 		namespaceName, err := helpers.CreateNamespace(ctx, r.client, &pool)
+		if err != nil {
+			r.log.Error(err, "namespace/project creation failed for [%s]", namespaceName)
+		}
+
+		namespaceName, err = helpers.AddNamespaceData(ctx, r.client, &pool, namespaceName)
 		if err == nil {
 			r.log.Info(fmt.Sprintf("successfully created namespace [%s] in [%s] pool", namespaceName, pool.Name))
 			continue
 		}
 
 		r.log.Error(err, fmt.Sprintf("error while creating namespace [%s]", namespaceName))
-		if namespaceName != "" {
-			namespace := core.Namespace{}
+		namespace := core.Namespace{}
 
-			if err := r.client.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace); err != nil {
-				return fmt.Errorf(fmt.Sprintf("cannot retrieve error namespace [%s]", namespaceName))
-			}
+		if err := r.client.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace); err != nil {
+			return fmt.Errorf(fmt.Sprintf("cannot retrieve error namespace [%s]", namespaceName))
+		}
 
-			if err := r.client.Delete(ctx, &namespace); err != nil {
-				return fmt.Errorf(fmt.Sprintf("cannot delete error namespace [%s]", namespaceName))
-			}
+		if err := r.client.Delete(ctx, &namespace); err != nil {
+			return fmt.Errorf(fmt.Sprintf("cannot delete error namespace [%s]", namespaceName))
+		}
 
-			err := helpers.UpdateAnnotations(ctx, r.client, namespaceName, helpers.AnnotationEnvError.ToMap())
-			if err != nil {
-				r.log.Error(err, "error while updating annotations on namespace", "namespace", namespaceName)
-				return err
-			}
+		err = helpers.UpdateAnnotations(ctx, r.client, namespaceName, helpers.AnnotationEnvError.ToMap())
+		if err != nil {
+			r.log.Error(err, "error while updating annotations on namespace", "namespace", namespaceName)
+			return err
 		}
 	}
 
