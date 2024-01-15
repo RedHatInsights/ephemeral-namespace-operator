@@ -1527,7 +1527,7 @@ data:
         "list": [
           {
             "current": {
-              "selected": false,
+              "selected": true,
               "text": "crc-eph-prometheus",
               "value": "crc-eph-prometheus"
             },
@@ -1584,7 +1584,7 @@ data:
         ]
       },
       "time": {
-        "from": "now-12h",
+        "from": "now-2d",
         "to": "now"
       },
       "timepicker": {},
