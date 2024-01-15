@@ -38,12 +38,12 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	return ns.Name, nil
 }
 
-func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.NamespacePool, nsName string) (string, error) {
+func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.NamespacePool, nsName string) (core.Namespace, error) {
 	// WORKAROUND: Can't set annotations and ownerref on project request during create
 	// Performing annotation and ownerref change in one transaction
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {
-		return nsName, fmt.Errorf("could not retrieve newly created namespace [%s]: %w", nsName, err)
+		return ns, fmt.Errorf("could not retrieve newly created namespace [%s]: %w", nsName, err)
 	}
 
 	utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
@@ -51,12 +51,12 @@ func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.N
 	ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
 
 	if err := cl.Update(ctx, &ns); err != nil {
-		return nsName, fmt.Errorf("could not update Project [%s]: %w", nsName, err)
+		return ns, fmt.Errorf("could not update Project [%s]: %w", nsName, err)
 	}
 
 	// Create ClowdEnvironment
 	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, nsName); err != nil {
-		return nsName, fmt.Errorf("error creating ClowdEnvironment for namespace [%s]: %w", nsName, err)
+		return ns, fmt.Errorf("error creating ClowdEnvironment for namespace [%s]: %w", nsName, err)
 	}
 
 	// Create LimitRange
@@ -64,7 +64,7 @@ func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.N
 	limitRange.SetNamespace(nsName)
 
 	if err := cl.Create(ctx, &limitRange); err != nil {
-		return nsName, fmt.Errorf("error creating LimitRange for namespace [%s]: %w", nsName, err)
+		return ns, fmt.Errorf("error creating LimitRange for namespace [%s]: %w", nsName, err)
 	}
 
 	// Create ResourceQuotas
@@ -73,16 +73,16 @@ func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.N
 		innerQuota := quota
 		innerQuota.SetNamespace(nsName)
 		if err := cl.Create(ctx, &innerQuota); err != nil {
-			return nsName, fmt.Errorf("error creating ResourceQuota for namespace [%s]: %w", nsName, err)
+			return ns, fmt.Errorf("error creating ResourceQuota for namespace [%s]: %w", nsName, err)
 		}
 	}
 
 	// Copy secrets
 	if err := CopySecrets(ctx, cl, nsName); err != nil {
-		return nsName, fmt.Errorf("error copying secrets from ephemeral-base namespace to namespace [%s]: %w", nsName, err)
+		return ns, fmt.Errorf("error copying secrets from ephemeral-base namespace to namespace [%s]: %w", nsName, err)
 	}
 
-	return nsName, nil
+	return ns, nil
 }
 
 func GetNamespace(ctx context.Context, cl client.Client, namespaceName string) (core.Namespace, error) {
