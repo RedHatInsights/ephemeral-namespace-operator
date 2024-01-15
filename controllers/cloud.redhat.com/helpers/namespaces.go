@@ -25,13 +25,13 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 	if pool.Spec.Local {
 		if err := cl.Create(ctx, &namespace); err != nil {
-			return "", fmt.Errorf("could not create namespace [%s]: %w", namespace.Name, err)
+			return namespace.Name, fmt.Errorf("could not create namespace [%s]: %w", namespace.Name, err)
 		}
 	} else {
 		project := projectv1.ProjectRequest{}
 		project.Name = namespace.Name
 		if err := cl.Create(ctx, &project); err != nil {
-			return "", fmt.Errorf("could not create project [%s]: %w", project.Name, err)
+			return namespace.Name, fmt.Errorf("could not create project [%s]: %w", project.Name, err)
 		}
 	}
 
