@@ -208,7 +208,7 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 			r.log.Error(err, "namespace/project creation failed for [%s]", namespaceName)
 		}
 
-		namespaceName, err = helpers.AddNamespaceData(ctx, r.client, &pool, namespaceName)
+		namespaceName, err = helpers.UpdateNamespaceResources(ctx, r.client, &pool, namespaceName)
 		if err == nil {
 			r.log.Info(fmt.Sprintf("successfully created namespace [%s] in [%s] pool", namespaceName, pool.Name))
 			continue

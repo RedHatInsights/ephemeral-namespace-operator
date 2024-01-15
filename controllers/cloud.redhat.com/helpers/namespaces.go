@@ -38,7 +38,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	return ns.Name, nil
 }
 
-func AddNamespaceData(ctx context.Context, cl client.Client, pool *crd.NamespacePool, nsName string) (string, error) {
+func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.NamespacePool, nsName string) (string, error) {
 	// WORKAROUND: Can't set annotations and ownerref on project request during create
 	// Performing annotation and ownerref change in one transaction
 	ns, err := GetNamespace(ctx, cl, nsName)
