@@ -21,7 +21,6 @@ import (
 
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -214,13 +213,14 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 		if namespaceName != "" {
 			namespace := core.Namespace{}
 
-			err := r.client.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace)
-				return fmt.Errorf(fmt.Sprintf("cannot retrieve error namespace [%s] to update ownerreference", namespaceName))
+			if err := r.client.Get(ctx, types.NamespacedName{Name: namespaceName}, &namespace); err != nil {
+				return fmt.Errorf(fmt.Sprintf("cannot retrieve error namespace [%s]", namespaceName))
 			}
 
-			// proper cleanup of error namespaces involves adding the ownerreference to these namespaces
-			namespace.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
-			
+			if err := r.client.Delete(ctx, &namespace); err != nil {
+				return fmt.Errorf(fmt.Sprintf("cannot delete error namespace [%s]", namespaceName))
+			}
+
 			err := helpers.UpdateAnnotations(ctx, r.client, namespaceName, helpers.AnnotationEnvError.ToMap())
 			if err != nil {
 				r.log.Error(err, "error while updating annotations on namespace", "namespace", namespaceName)
