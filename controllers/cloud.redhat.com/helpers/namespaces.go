@@ -39,11 +39,9 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 }
 
 func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.NamespacePool, nsName string) (core.Namespace, error) {
-	// WORKAROUND: Can't set annotations and ownerref on project request during create
-	// Performing annotation and ownerref change in one transaction
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {
-		return ns, fmt.Errorf("could not retrieve newly created namespace [%s]: %w", nsName, err)
+		return ns, fmt.Errorf("could not retrieve namespace [%s]: %w", nsName, err)
 	}
 
 	utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
