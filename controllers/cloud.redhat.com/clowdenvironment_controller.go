@@ -65,8 +65,8 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		"deployments", fmt.Sprintf("%d / %d", env.Status.Deployments.ReadyDeployments, env.Status.Deployments.ManagedDeployments),
 	)
 
-	if ready, err := helpers.VerifyClowdEnvReady(env); !ready {
-		return ctrl.Result{Requeue: true}, err
+	if ready := helpers.VerifyClowdEnvReady(env); !ready {
+		return ctrl.Result{Requeue: true}, nil
 	}
 
 	namespaceName := env.Spec.TargetNamespace

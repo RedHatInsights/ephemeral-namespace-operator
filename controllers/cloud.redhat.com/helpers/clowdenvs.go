@@ -58,10 +58,10 @@ func GetClowdEnv(ctx context.Context, cl client.Client, namespaceName string) (b
 	return ready, &env, nil
 }
 
-func VerifyClowdEnvReady(env clowder.ClowdEnvironment) (bool, error) {
+func VerifyClowdEnvReady(env clowder.ClowdEnvironment) bool {
 	// check that hostname is populated if ClowdEnvironment is operating in 'local' web mode
 	if env.Spec.Providers.Web.Mode == "local" && env.Status.Hostname == "" {
-		return false, fmt.Errorf("hostname not populated for clowdenvironment [%s]", env.Name)
+		return false
 	}
 
 	conditions := env.Status.Conditions
@@ -78,5 +78,5 @@ func VerifyClowdEnvReady(env clowder.ClowdEnvironment) (bool, error) {
 		}
 	}
 
-	return (reconciliationSuccessful && deploymentsReady), nil
+	return (reconciliationSuccessful && deploymentsReady)
 }
