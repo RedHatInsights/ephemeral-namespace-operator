@@ -203,19 +203,20 @@ func (r *NamespacePoolReconciler) getNamespaceQuantityDelta(pool crd.NamespacePo
 
 func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Context, pool crd.NamespacePool, increaseSize int) error {
 	for i := 0; i < increaseSize; i++ {
-		namespaceName, err := helpers.CreateNamespace(ctx, r.client, &pool)
+		nsName, err := helpers.CreateNamespace(ctx, r.client, &pool)
+		if err != nil {
+			r.log.Error(err, "namespace/project creation failed for [%s]", nsName)
+		}
+
+		ns, err := helpers.UpdateNamespaceResources(ctx, r.client, &pool, nsName)
 		if err == nil {
-			r.log.Info(fmt.Sprintf("successfully created namespace [%s] in [%s] pool", namespaceName, pool.Name))
+			r.log.Info(fmt.Sprintf("successfully created namespace [%s] in [%s] pool", nsName, pool.Name))
 			continue
 		}
 
-		r.log.Error(err, fmt.Sprintf("error while creating namespace [%s]", namespaceName))
-		if namespaceName != "" {
-			err := helpers.UpdateAnnotations(ctx, r.client, namespaceName, helpers.AnnotationEnvError.ToMap())
-			if err != nil {
-				r.log.Error(err, "error while updating annotations on namespace", "namespace", namespaceName)
-				return err
-			}
+		r.log.Error(err, fmt.Sprintf("error while updating namespace resources for [%s]", nsName))
+		if err := r.client.Delete(ctx, &ns); err != nil {
+			return fmt.Errorf(fmt.Sprintf("cannot delete error namespace [%s]", nsName))
 		}
 	}
 
