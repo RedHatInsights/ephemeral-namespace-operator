@@ -50,9 +50,9 @@ func GetClowdEnv(ctx context.Context, cl client.Client, namespaceName string) (b
 		return false, nil, fmt.Errorf("could not retrieve clowdenvironment [%s]: %w", env.Name, err)
 	}
 
-	ready, err := VerifyClowdEnvReady(env)
-	if err != nil {
-		return ready, &env, fmt.Errorf("could not verify that the clowdenvironment [%s] was ready: %w", env.Name, err)
+	ready := VerifyClowdEnvReady(env)
+	if !ready {
+		return ready, &env, nil
 	}
 
 	return ready, &env, nil
