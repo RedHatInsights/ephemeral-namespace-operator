@@ -396,6 +396,25 @@ spec:
         operator: in
         values:
         - "false"
+
+
+    - name: run-unit-tests
+      description: run unit tests
+      taskSpec:
+        steps:
+        - image: registry.redhat.io/openshift4/ose-cli:latest
+          env:
+          - name: SNAPSHOT
+            value: $(params.SNAPSHOT)
+          - name: NAMESPACE
+            value: $(params.NAMESPACE)
+          - name: EXPECTED_OUTPUT
+            value: $(params.EXPECTED_OUTPUT)
+          script: |
+            . ./ci/helpers.sh
+            . ./ci/unit_tests.sh
+
+
     workspaces:
     - name: workspace
     - name: git-auth
