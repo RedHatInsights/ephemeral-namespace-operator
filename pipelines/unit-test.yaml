@@ -15,7 +15,7 @@ spec:
     - description: 'Expected output'
       name: EXPECTED_OUTPUT
       default: 0
-      type: int
+      type: integer
   workspaces:
   - name: cluster-credentials
     optional: true
