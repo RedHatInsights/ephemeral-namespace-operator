@@ -147,35 +147,6 @@ spec:
         - name: kind
           value: task
         resolver: bundles
-
-    - name: unit-tests
-      params:
-      - name: url
-        value: $(params.git-url)
-      - name: revision
-        value: $(params.revision)
-      runAfter:
-      - init
-      taskRef:
-        params:
-        - name: name
-          value: unit-tests
-        - name: bundle
-          value: quay.io/redhat-appstudio-tekton-catalog/task-unit-tests:0.1@sha256:b8fddc2d36313a5cde93aba2491205f4a84e6853af6c34ede681f8339b147478
-        - name: kind
-          value: task
-        resolver: bundles
-      when:
-      - input: $(tasks.init.results.build)
-        operator: in
-        values:
-        - "true"
-      workspaces:
-      - name: output
-        workspace: workspace
-      - name: basic-auth
-        workspace: git-auth
-
     - name: clone-repository
       params:
       - name: url
