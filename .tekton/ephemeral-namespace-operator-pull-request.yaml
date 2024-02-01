@@ -396,8 +396,6 @@ spec:
         operator: in
         values:
         - "false"
-
-
     - name: run-unit-tests
       description: run unit tests
       params:
@@ -427,8 +425,6 @@ spec:
           script: |
             . ./ci/helpers.sh
             . ./ci/unit_tests.sh
-
-
     workspaces:
     - name: workspace
     - name: git-auth
