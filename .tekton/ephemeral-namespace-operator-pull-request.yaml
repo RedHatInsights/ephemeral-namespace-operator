@@ -185,6 +185,11 @@ spec:
         value: $(params.EXPECTED_OUTPUT)
       runAfter:
       - clone-repository
+      workspaces:
+      - name: output
+        workspace: workspace
+      - name: basic-auth
+        workspace: git-auth
       taskSpec:
         params:
         - name: SNAPSHOT
