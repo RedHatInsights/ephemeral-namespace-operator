@@ -215,6 +215,7 @@ spec:
 
             ENO_PATH="/workspace/output/source"
             
+            cd ${ENO_PATH}
             make test
     - name: prefetch-dependencies
       params:
