@@ -208,6 +208,7 @@ spec:
           - name: EXPECTED_OUTPUT
             value: $(params.EXPECTED_OUTPUT)
           script: |
+            ls
             . ./ci/helpers.sh
             TEST_OUTPUT=$(. ./ci/unit_tests.sh)
     - name: prefetch-dependencies
