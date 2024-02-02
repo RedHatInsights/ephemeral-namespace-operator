@@ -216,7 +216,7 @@ spec:
             ENO_PATH="/workspace/output/source"
             
             ## Location to install dependencies to
-            LOCALBIN ?= ${ENO_PATH}/bin
+            LOCALBIN=${ENO_PATH}/bin
             mkdir -p $(LOCALBIN)
 
             cd ${ENO_PATH}
