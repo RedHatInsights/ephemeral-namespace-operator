@@ -217,11 +217,10 @@ spec:
             
             ## Location to install dependencies to
             LOCALBIN ?= ${ENO_PATH}/bin
-            $(LOCALBIN):
-              mkdir -p $(LOCALBIN)
+            mkdir -p $(LOCALBIN)
 
             cd ${ENO_PATH}
-            
+
             ## Tool Binaries
             KUSTOMIZE ?= $(LOCALBIN)/kustomize
             CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
