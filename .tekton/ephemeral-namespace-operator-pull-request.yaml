@@ -211,8 +211,6 @@ spec:
             #!/bin/bash
             set -ex
 
-            go version
-
             ENO_PATH="/workspace/output/source"
             
             cd ${ENO_PATH}
