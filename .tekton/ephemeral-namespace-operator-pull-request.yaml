@@ -209,8 +209,9 @@ spec:
             value: $(params.EXPECTED_OUTPUT)
           script: |
             ENO_PATH="/workspace/output/source"
-            . ./${ENO_PATH}/ci/helpers.sh
-            TEST_OUTPUT=$(. ./${ENO_PATH}/ci/unit_tests.sh)
+            
+            cd ${ENO_PATH}
+            make test
     - name: prefetch-dependencies
       params:
       - name: input
