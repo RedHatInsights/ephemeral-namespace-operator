@@ -2,8 +2,10 @@
 
 set -exv
 
+KONFLUX_IMAGE="quay.io/redhat-user-workloads/hcc-devprod-tenant/ephemeral-namespace-operator/ephemeral-namespace-operator"
+KONFLUX_IMAGE_TAG=$(git rev-parse HEAD)
 IMAGE="quay.io/cloudservices/ephemeral-namespace-operator"
-IMAGE_TAG=$(git rev-parse --short=7 HEAD)
+IMAGE_TAG="test-$(git rev-parse --short=7 HEAD)"
 
 if [[ -z "$QUAY_USER" || -z "$QUAY_TOKEN" ]]; then
     echo "QUAY_USER and QUAY_TOKEN must be set"
@@ -27,10 +29,12 @@ if docker buildx ls | grep -q "multiarchbuilder"; then
     docker buildx use multiarchbuilder
     docker buildx build --platform linux/amd64,linux/arm64 -t "${IMAGE}:${IMAGE_TAG}" --push .
 else
-    echo "Falling back to standard build and push"
-    # Standard build and push
-    docker build -t "${IMAGE}:${IMAGE_TAG}" .
+    echo "Falling back to standard image push"
+
+    # pull from Konflux Quay repository
+    docker pull "${KONFLUX_IMAGE}:${KONFLUX_IMAGE_TAG}"
+
+    # Copy image to cloudservices Quay repository
+    docker tag "${KONFLUX_IMAGE}:${KONFLUX_IMAGE_TAG}" "${IMAGE}:${IMAGE_TAG}"
     docker push "${IMAGE}:${IMAGE_TAG}"
 fi
-
-
