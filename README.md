@@ -42,6 +42,8 @@ include `ready`, `creating`, and `reserved` namespaces. Add the following to uti
 - Secrets are copied from the base namespace.  
 
 ## Contributing
-Check this CONTRIBUTING.md[doc] for deploying the ENO locally for local development  
+
+Check this [CONTRIBUTING.md](CONTRIBUTING.md) for deploying the ENO on your local machine.
+
 ---
 Made with ❤️ @ Red Hat
