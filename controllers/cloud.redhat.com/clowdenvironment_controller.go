@@ -131,7 +131,7 @@ func poolFilter(ctx context.Context, cl client.Client) predicate.Predicate {
 			object := e.Object.(*clowder.ClowdEnvironment)
 			return isOwnedByPool(ctx, cl, object.Spec.TargetNamespace)
 		},
-		DeleteFunc: func(_ event.DeleteEvent) bool {
+		DeleteFunc: func(e event.DeleteEvent) bool {
 			return false
 		},
 	}
