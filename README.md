@@ -1,12 +1,10 @@
 # Ephemeral Namespace Operator (ENO)
-
 ![image:https://img.shields.io/github/v/release/redhatinsights/ephemeral-namespace-operator[Release]](https://img.shields.io/github/v/release/RedHatInsights/ephemeral-namespace-operator)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/RedHatInsights/ephemeral-namespace-operator)
 
 ## Purpose
 The purpose of the ephemeral namespace operator is to have namespaces queued up and ready to be utilized. These namespaces  
 will have `Clowdenvironments` deployed, and specific resources corresponding to the type of namespace pool a user requests from, ready to go.  
-
 <p align="center">
   <img width="600" height="400" src="operator_diagram.png">
 </p>
