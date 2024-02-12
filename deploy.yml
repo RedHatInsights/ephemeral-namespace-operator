@@ -1771,5 +1771,4 @@ parameters:
 - name: IMAGE_TAG
   value: latest
 - name: IMAGE
-  value: quay.io/cloudservices/ephemeral-namespace-operator
-
+  value: quay.io/redhat-services-prod/ephemeral-namespace-operator
