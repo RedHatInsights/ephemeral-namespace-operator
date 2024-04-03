@@ -28,7 +28,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
@@ -107,13 +106,13 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&crd.NamespacePool{}).
-		Watches(&source.Kind{Type: &core.Namespace{}},
+		Watches(&core.Namespace{},
 			handler.EnqueueRequestsFromMapFunc(r.EnqueueNamespace),
 		).
 		Complete(r)
 }
 
-func (r *NamespacePoolReconciler) EnqueueNamespace(a client.Object) []reconcile.Request {
+func (r *NamespacePoolReconciler) EnqueueNamespace(_ context.Context, a client.Object) []reconcile.Request {
 	labels := a.GetLabels()
 
 	if pool, ok := labels["pool"]; ok {

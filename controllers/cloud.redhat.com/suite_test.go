@@ -39,7 +39,6 @@ import (
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	utils "github.com/RedHatInsights/rhc-osdk-utils/utils"
 	core "k8s.io/api/core/v1"
-	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -73,15 +72,15 @@ func populateClowdEnvStatus(client client.Client) {
 			innerEnv := env
 			if len(innerEnv.Status.Conditions) == 0 {
 				status := clowder.ClowdEnvironmentStatus{
-					Conditions: []clusterv1.Condition{
+					Conditions: []metav1.Condition{
 						{
 							Type:               clowder.ReconciliationSuccessful,
-							Status:             core.ConditionTrue,
+							Status:             metav1.ConditionTrue,
 							LastTransitionTime: metav1.Now(),
 						},
 						{
 							Type:               clowder.DeploymentsReady,
-							Status:             core.ConditionTrue,
+							Status:             metav1.ConditionTrue,
 							LastTransitionTime: metav1.Now(),
 						},
 					},
