@@ -55,7 +55,7 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 			return ctrl.Result{}, nil
 		}
 
-		r.log.Error(err, "there was an issue retrieving the clowdenvironment [%s]", env.Name)
+		r.log.Error(err, "there was an issue retrieving the clowdenvironment", "namespace", env.Name)
 		return ctrl.Result{Requeue: true}, err
 	}
 
