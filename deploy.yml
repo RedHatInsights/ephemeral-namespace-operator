@@ -1397,6 +1397,20 @@ objects:
 - apiVersion: rbac.authorization.k8s.io/v1
   kind: ClusterRole
   metadata:
+    name: ephemeral-namespace-operator-bridge-user
+  rules:
+  - apiGroups:
+    - extensions
+    resources:
+    - statefulsets
+    verbs:
+    - get
+    - list
+    - update
+    - patch
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
     creationTimestamp: null
     labels:
       managed.openshift.io/aggregate-to-dedicated-admins: cluster
@@ -1629,6 +1643,17 @@ objects:
   - kind: ServiceAccount
     name: ephemeral-namespace-operator-controller-manager
     namespace: ephemeral-namespace-operator-system
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: ephemeral-namespace-operator-bridge-user
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: ephemeral-namespace-operator-bridge-user
+  subjects:
+  - kind: Group
+    name: ephemeral-users
 - apiVersion: rbac.authorization.k8s.io/v1
   kind: ClusterRoleBinding
   metadata:
