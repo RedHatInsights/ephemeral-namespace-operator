@@ -216,7 +216,7 @@ func (r *NamespacePoolReconciler) increaseReadyNamespacesQueue(ctx context.Conte
 
 		r.log.Error(err, fmt.Sprintf("error while updating namespace resources for [%s]", nsName))
 		if err := r.client.Delete(ctx, &ns); err != nil {
-			return fmt.Errorf(fmt.Sprintf("cannot delete error namespace [%s]", nsName))
+			return fmt.Errorf("cannot delete error namespace [%s]", nsName)
 		}
 	}
 
