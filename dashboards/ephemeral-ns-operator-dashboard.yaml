@@ -8,6 +8,16 @@ metadata:
   name: grafana-dashboard-ns-operator
 data:
   ephemeral-ns-operator.json: |-
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    grafana-folder: /grafana-dashboard-definitions/Insights
+  labels:
+    grafana_dashboard: "true"
+  name: grafana-dashboard-ns-operator
+data:
+  ephemeral-ns-operator.json: |-
     {
       "annotations": {
         "list": [
