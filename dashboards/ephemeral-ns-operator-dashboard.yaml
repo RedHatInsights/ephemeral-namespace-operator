@@ -1457,7 +1457,7 @@ data:
         "list": [
           {
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "crc-eph-prometheus",
               "value": "P0226E6921DAF4CC1"
             },
