@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 668763,
+      "id": 757546,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -81,9 +81,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "targets": [
             {
               "datasource": {
@@ -145,9 +147,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "targets": [
             {
               "datasource": {
@@ -179,6 +183,7 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
                 "axisLabel": "Number of Active Reservations",
@@ -192,6 +197,7 @@ data:
                   "tooltip": false,
                   "viz": false
                 },
+                "insertNulls": false,
                 "lineInterpolation": "linear",
                 "lineWidth": 1,
                 "pointSize": 5,
@@ -271,7 +277,9 @@ data:
               },
               "custom": {
                 "align": "center",
-                "displayMode": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
                 "filterable": false,
                 "inspect": false,
                 "width": 300
@@ -322,7 +330,9 @@ data:
           },
           "id": 37,
           "options": {
+            "cellHeight": "sm",
             "footer": {
+              "countRows": false,
               "fields": "",
               "reducer": [
                 "sum"
@@ -332,7 +342,7 @@ data:
             "showHeader": true,
             "sortBy": []
           },
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "targets": [
             {
               "datasource": {
@@ -409,9 +419,11 @@ data:
               "fields": "",
               "values": false
             },
-            "textMode": "auto"
+            "showPercentChange": false,
+            "textMode": "auto",
+            "wideLayout": true
           },
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "targets": [
             {
               "datasource": {
@@ -433,7 +445,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PD295346F7C930967"
+            "uid": "${datasource}"
           },
           "description": "",
           "fieldConfig": {
@@ -475,17 +487,19 @@ data:
               "fields": "",
               "values": false
             },
+            "showPercentChange": false,
             "text": {
               "valueSize": 40
             },
-            "textMode": "name"
+            "textMode": "name",
+            "wideLayout": true
           },
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "PD295346F7C930967"
+                "uid": "${datasource}"
               },
               "exemplar": true,
               "expr": "sum(eno_version) by (version)",
@@ -538,7 +552,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -596,7 +610,7 @@ data:
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P0226E6921DAF4CC1"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -624,7 +638,7 @@ data:
             "x": 0,
             "y": 11
           },
-          "id": 43,
+          "id": 42,
           "options": {
             "colorMode": "value",
             "graphMode": "none",
@@ -637,17 +651,19 @@ data:
               "fields": "",
               "values": false
             },
+            "showPercentChange": false,
             "text": {
               "valueSize": 40
             },
-            "textMode": "name"
+            "textMode": "name",
+            "wideLayout": true
           },
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "targets": [
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "P0226E6921DAF4CC1"
+                "uid": "${datasource}"
               },
               "exemplar": true,
               "expr": "sum(eno_version) by (version)",
@@ -672,6 +688,7 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
                 "axisLabel": "",
@@ -685,6 +702,7 @@ data:
                   "tooltip": false,
                   "viz": false
                 },
+                "insertNulls": false,
                 "lineInterpolation": "linear",
                 "lineStyle": {
                   "fill": "solid"
@@ -863,7 +881,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -963,7 +981,7 @@ data:
             "alertThreshold": true
           },
           "percentage": false,
-          "pluginVersion": "9.3.8",
+          "pluginVersion": "10.4.1",
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
@@ -1023,6 +1041,7 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
                 "axisLabel": "",
@@ -1036,6 +1055,7 @@ data:
                   "tooltip": false,
                   "viz": false
                 },
+                "insertNulls": false,
                 "lineInterpolation": "linear",
                 "lineStyle": {
                   "fill": "solid"
@@ -1063,7 +1083,8 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   }
                 ]
               },
@@ -1221,6 +1242,7 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
                 "axisLabel": "",
@@ -1234,6 +1256,7 @@ data:
                   "tooltip": false,
                   "viz": false
                 },
+                "insertNulls": false,
                 "lineInterpolation": "linear",
                 "lineWidth": 1,
                 "pointSize": 5,
@@ -1255,7 +1278,8 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1341,6 +1365,7 @@ data:
                 "mode": "palette-classic"
               },
               "custom": {
+                "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
                 "axisLabel": "",
@@ -1354,6 +1379,7 @@ data:
                   "tooltip": false,
                   "viz": false
                 },
+                "insertNulls": false,
                 "lineInterpolation": "linear",
                 "lineWidth": 1,
                 "pointSize": 5,
@@ -1375,7 +1401,8 @@ data:
                 "mode": "absolute",
                 "steps": [
                   {
-                    "color": "green"
+                    "color": "green",
+                    "value": null
                   },
                   {
                     "color": "red",
@@ -1421,107 +1448,10 @@ data:
           "title": "WorkQueue Depth",
           "transparent": true,
           "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "$datasource"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 35,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "line"
-                }
-              },
-              "mappings": [],
-              "min": 0,
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "dark-red",
-                    "value": 0.95
-                  }
-                ]
-              },
-              "unit": "percentunit"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 9,
-            "x": 7,
-            "y": 32
-          },
-          "id": 42,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "9.0.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "$datasource"
-              },
-              "editorMode": "code",
-              "expr": "sum(avg_over_time(controller_runtime_reconcile_time_seconds_bucket{controller=~\"namespacepool|namespacereservation|clowdenvironment\", le=\"4\"}[28d])) by (controller) / sum(avg_over_time(controller_runtime_reconcile_time_seconds_bucket{controller=~\"namespacepool|namespacereservation|clowdenvironment\", le=\"+Inf\"}[28d])) by (controller)",
-              "hide": false,
-              "legendFormat": "{{controller}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "ENO Reconciliation Time Per Controller SLI",
-          "transparent": true,
-          "type": "timeseries"
         }
       ],
-      "refresh": "5s",
-      "schemaVersion": 37,
-      "style": "dark",
+      "refresh": false,
+      "schemaVersion": 39,
       "tags": [],
       "templating": {
         "list": [
@@ -1529,7 +1459,7 @@ data:
             "current": {
               "selected": true,
               "text": "crc-eph-prometheus",
-              "value": "crc-eph-prometheus"
+              "value": "P0226E6921DAF4CC1"
             },
             "hide": 0,
             "includeAll": false,
@@ -1584,7 +1514,7 @@ data:
         ]
       },
       "time": {
-        "from": "now-2d",
+        "from": "now-6h",
         "to": "now"
       },
       "timepicker": {},
