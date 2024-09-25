@@ -34,7 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": 934839,
+      "id": 757546,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -1450,14 +1450,14 @@ data:
           "type": "timeseries"
         }
       ],
-      "refresh": "5s",
+      "refresh": false,
       "schemaVersion": 39,
       "tags": [],
       "templating": {
         "list": [
           {
             "current": {
-              "selected": false,
+              "selected": true,
               "text": "crc-eph-prometheus",
               "value": "P0226E6921DAF4CC1"
             },
