@@ -14,7 +14,7 @@ metadata:
     appstudio.openshift.io/component: ephemeral-namespace-operator
     pipelines.appstudio.openshift.io/type: build
   name: ephemeral-namespace-operator-on-push
-  namespace: hcc-devprod-tenant
+  namespace: hcm-eng-prod-tenant
 spec:
   params:
   - name: dockerfile
@@ -22,7 +22,7 @@ spec:
   - name: git-url
     value: '{{source_url}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/hcc-devprod-tenant/ephemeral-namespace-operator/ephemeral-namespace-operator:{{revision}}
+    value: quay.io/redhat-user-workloads/hcm-eng-prod-tenant/ephemeral-namespace-operator/ephemeral-namespace-operator:{{revision}}
   - name: path-context
     value: .
   - name: revision
