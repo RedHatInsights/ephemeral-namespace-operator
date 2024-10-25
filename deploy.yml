@@ -1771,4 +1771,4 @@ parameters:
 - name: IMAGE_TAG
   value: latest
 - name: IMAGE
-  value: quay.io/redhat-services-prod/hcc-devprod-tenant/ephemeral-namespace-operator
+  value: quay.io/redhat-services-prod/hcm-eng-prod-tenant/ephemeral-namespace-operator
