@@ -13,7 +13,7 @@ metadata:
     appstudio.openshift.io/application: ephemeral-namespace-operator
     appstudio.openshift.io/component: ephemeral-namespace-operator
     pipelines.appstudio.openshift.io/type: build
-  name: ephemeral-namespace-operator-on-push
+  name: ephemeral-namespace-operator-on-pull-request
   namespace: hcm-eng-prod-tenant
 spec:
   params:
