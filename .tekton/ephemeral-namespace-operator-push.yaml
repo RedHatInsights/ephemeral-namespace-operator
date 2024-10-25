@@ -2,18 +2,18 @@ apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   annotations:
-    build.appstudio.openshift.io/repo: https://github.com/RedHatInsights/clowder-plugin?rev={{revision}}
+    build.appstudio.openshift.io/repo: https://github.com/RedHatInsights/ephemeral-namespace-operator?rev={{revision}}
     build.appstudio.redhat.com/commit_sha: '{{revision}}'
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/max-keep-runs: "3"
     pipelinesascode.tekton.dev/on-cel-expression: event == "push" && target_branch
-      == "master"
+      == "main"
   creationTimestamp: null
   labels:
-    appstudio.openshift.io/application: clowder-plugin
-    appstudio.openshift.io/component: clowder-plugin
+    appstudio.openshift.io/application: ephemeral-namespace-operator
+    appstudio.openshift.io/component: ephemeral-namespace-operator
     pipelines.appstudio.openshift.io/type: build
-  name: clowder-plugin-on-push
+  name: ephemeral-namespace-operator-on-push
   namespace: hcm-eng-prod-tenant
 spec:
   params:
@@ -22,7 +22,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/redhat-user-workloads/hcm-eng-prod-tenant/clowder-plugin/clowder-plugin:{{revision}}
+    value: quay.io/redhat-user-workloads/hcm-eng-prod-tenant/ephemeral-namespace-operator/ephemeral-namespace-operator:{{revision}}
   - name: dockerfile
     value: Dockerfile
   pipelineSpec:
