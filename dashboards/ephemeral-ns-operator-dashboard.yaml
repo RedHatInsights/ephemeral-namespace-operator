@@ -34,11 +34,7 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-<<<<<<< HEAD
-      "id": 934839,
-=======
       "id": 757546,
->>>>>>> e9b24a9e18056038402ff8e32673ca8e1621ed80
       "links": [],
       "liveNow": false,
       "panels": [
@@ -1454,18 +1450,14 @@ data:
           "type": "timeseries"
         }
       ],
-<<<<<<< HEAD
-      "refresh": "5s",
-=======
       "refresh": false,
->>>>>>> e9b24a9e18056038402ff8e32673ca8e1621ed80
       "schemaVersion": 39,
       "tags": [],
       "templating": {
         "list": [
           {
             "current": {
-              "selected": false,
+              "selected": true,
               "text": "crc-eph-prometheus",
               "value": "P0226E6921DAF4CC1"
             },
