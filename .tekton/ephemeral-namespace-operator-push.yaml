@@ -184,37 +184,6 @@ spec:
         workspace: workspace
       - name: basic-auth
         workspace: git-auth
-    - name: run-unit-tests
-      params:
-        # New parameter to use the Trusted Artifact from the git-clone Task.
-        - name: SOURCE_ARTIFACT
-          value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
-      runAfter:
-        - clone-repository
-      taskSpec:
-        params:
-          - description: The Trusted Artifact URI pointing to the artifact with the application source code.
-            name: SOURCE_ARTIFACT
-            type: string
-        stepTemplate:
-          volumeMounts:
-            - mountPath: /var/workdir
-              name: workdir
-        steps:
-          # New step to fetch the Trusted Artifact and make it available to the next steps.
-          - name: use-trusted-artifact
-            image: quay.io/redhat-appstudio/build-trusted-artifacts:latest@sha256:bc10298bff7805d8bc98211cd4534b9720f365f35ce0ef263dd65802de7ff036
-            args:
-              - use
-              - $(params.SOURCE_ARTIFACT)=/var/workdir/source
-          - name: kustomize-build
-            image: registry.access.redhat.com/ubi8/ubi:latest
-            workingDir: /var/workdir/source
-            script: set -xe && dnf install -y go make && make test
-        volumes:
-          # New volume to store a copy of the source code accessible only to this Task.
-          - name: workdir
-            emptyDir: {}
     - name: prefetch-dependencies
       params:
       - name: input
@@ -242,6 +211,37 @@ spec:
         workspace: git-auth
       - name: netrc
         workspace: netrc
+    - name: run-unit-tests
+      params:
+        # New parameter to use the Trusted Artifact from the git-clone Task.
+        - name: SOURCE_ARTIFACT
+          value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
+      runAfter:
+        - prefetch-dependencies
+      taskSpec:
+        params:
+          - description: The Trusted Artifact URI pointing to the artifact with the application source code.
+            name: SOURCE_ARTIFACT
+            type: string
+        stepTemplate:
+          volumeMounts:
+            - mountPath: /var/workdir
+              name: workdir
+        steps:
+          # New step to fetch the Trusted Artifact and make it available to the next steps.
+          - name: use-trusted-artifact
+            image: quay.io/redhat-appstudio/build-trusted-artifacts:latest@sha256:bc10298bff7805d8bc98211cd4534b9720f365f35ce0ef263dd65802de7ff036
+            args:
+              - use
+              - $(params.SOURCE_ARTIFACT)=/var/workdir/source
+          - name: kustomize-build
+            image: registry.access.redhat.com/ubi8/ubi:latest
+            workingDir: /var/workdir/source
+            script: set -xe && dnf install -y go make && make test
+        volumes:
+          # New volume to store a copy of the source code accessible only to this Task.
+          - name: workdir
+            emptyDir: {}
     - name: build-container
       params:
       - name: IMAGE
@@ -264,7 +264,7 @@ spec:
       - name: BUILD_ARGS_FILE
         value: $(params.build-args-file)
       runAfter:
-      - prefetch-dependencies
+      - run-unit-tests
       taskRef:
         params:
         - name: name
