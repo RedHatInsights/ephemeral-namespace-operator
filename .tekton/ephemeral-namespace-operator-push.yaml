@@ -262,8 +262,10 @@ spec:
         - "true"
     - name: rpms-signature-scan
       params:
-        - name: INPUT
-          value: $(tasks.build-container.results.IMAGE_URL)@$(tasks.build-container.results.IMAGE_DIGEST)
+      - name: image-url
+        value: $(tasks.build-image-index.results.IMAGE_URL)
+      - name: image-digest
+        value: $(tasks.build-image-index.results.IMAGE_DIGEST)
       runAfter:
         - build-container
       taskRef:
