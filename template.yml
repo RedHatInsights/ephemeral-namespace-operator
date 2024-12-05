@@ -6,5 +6,5 @@ parameters:
 - name: IMAGE_TAG
   value: latest
 - name: IMAGE
-  value: quay.io/cloudservices/ephemeral-namespace-operator
+  value: quay.io/redhat-services-prod/hcm-eng-prod-tenant/ephemeral-namespace-operator
 objects: []
