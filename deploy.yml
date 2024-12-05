@@ -140,6 +140,13 @@ objects:
                               description: Defines the hostname for (*_app-interface_*)
                                 mode
                               type: string
+                            images:
+                              description: Defines images used for the feature flags
+                                provider
+                              properties:
+                                unleash:
+                                  type: string
+                              type: object
                             mode:
                               description: 'The mode of operation of the Clowder FeatureFlag
                                 Provider. Valid options are: (*_app-interface_*) where
@@ -462,6 +469,12 @@ objects:
                           description: Defines the Configuration for the Clowder ObjectStore
                             Provider.
                           properties:
+                            images:
+                              description: Override the object store images
+                              properties:
+                                minio:
+                                  type: string
+                              type: object
                             mode:
                               description: 'The mode of operation of the Clowder ObjectStore
                                 Provider. Valid options are: (*_app-interface_*) where
@@ -518,6 +531,18 @@ objects:
                         sidecars:
                           description: Defines the sidecar configuration
                           properties:
+                            otelCollector:
+                              description: Sets up OpenTelemetry collector configuration
+                              properties:
+                                enabled:
+                                  description: Enable or disable otel collector sidecar
+                                  type: boolean
+                                image:
+                                  description: Configurable image
+                                  type: string
+                              required:
+                              - enabled
+                              type: object
                             tokenRefresher:
                               description: Sets up Token Refresher configuration
                               properties:
@@ -525,6 +550,9 @@ objects:
                                   description: Enables or disables token refresher
                                     sidecars
                                   type: boolean
+                                image:
+                                  description: Configurable image
+                                  type: string
                               required:
                               - enabled
                               type: object
@@ -601,8 +629,8 @@ objects:
                                         amount of compute resources required. If Requests
                                         is omitted for a container, it defaults to
                                         Limits if that is explicitly specified, otherwise
-                                        to an implementation-defined value. More info:
-                                        https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                        to an implementation-defined value. Requests
+                                        cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                       type: object
                                   type: object
                                 ui:
@@ -675,7 +703,8 @@ objects:
                                                 a container, it defaults to Limits
                                                 if that is explicitly specified, otherwise
                                                 to an implementation-defined value.
-                                                More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                                Requests cannot exceed Limits. More
+                                                info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                               type: object
                                           type: object
                                       type: object
@@ -787,6 +816,10 @@ objects:
                               description: Ingress Class Name used only in (*_local_*)
                                 mode.
                               type: string
+                            keycloakPVC:
+                              description: Optionally use PVC storage for keycloak
+                                db
+                              type: boolean
                             keycloakVersion:
                               description: Optional keycloak version override -- used
                                 only in (*_local_*) mode -- if not set, a hard-coded
@@ -880,8 +913,8 @@ objects:
                           description: 'Requests describes the minimum amount of compute
                             resources required. If Requests is omitted for a container,
                             it defaults to Limits if that is explicitly specified,
-                            otherwise to an implementation-defined value. More info:
-                            https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                            otherwise to an implementation-defined value. Requests
+                            cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                           type: object
                       type: object
                     serviceConfig:
@@ -1771,4 +1804,5 @@ parameters:
 - name: IMAGE_TAG
   value: latest
 - name: IMAGE
-  value: quay.io/redhat-services-prod/hcm-eng-prod-tenant/ephemeral-namespace-operator
+  value: quay.io/cloudservices/ephemeral-namespace-operator
+
