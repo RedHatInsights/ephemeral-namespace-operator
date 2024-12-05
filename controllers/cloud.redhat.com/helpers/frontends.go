@@ -43,10 +43,12 @@ func CreateFrontendEnv(ctx context.Context, cl client.Client, namespaceName stri
 
 	frontendEnv = frontend.FrontendEnvironment{
 		Spec: frontend.FrontendEnvironmentSpec{
-			Hostname:        clowdEnv.Status.Hostname,
-			SSO:             ssoURL,
-			IngressClass:    clowdEnv.Spec.Providers.Web.IngressClass,
-			GenerateNavJSON: true,
+			Hostname:              clowdEnv.Status.Hostname,
+			SSO:                   ssoURL,
+			IngressClass:          clowdEnv.Spec.Providers.Web.IngressClass,
+			GenerateNavJSON:       true,
+			EnableAkamaiCacheBust: false,
+			DefaultReplicas:       func(i int32) *int32 { return &i }(1),
 		},
 	}
 
