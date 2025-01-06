@@ -2,7 +2,6 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: manager-role
 rules:
 - apiGroups:
@@ -25,6 +24,9 @@ rules:
   - cloud.redhat.com
   resources:
   - clowdenvironments
+  - frontendenvironments
+  - namespacepools
+  - namespacereservations
   verbs:
   - create
   - delete
@@ -42,62 +44,14 @@ rules:
 - apiGroups:
   - cloud.redhat.com
   resources:
-  - frontendenvironments
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - cloud.redhat.com
-  resources:
-  - namespacepools
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - cloud.redhat.com
-  resources:
   - namespacepools/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - cloud.redhat.com
-  resources:
-  - namespacepools/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - cloud.redhat.com
-  resources:
-  - namespacereservations
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - cloud.redhat.com
-  resources:
   - namespacereservations/finalizers
   verbs:
   - update
 - apiGroups:
   - cloud.redhat.com
   resources:
+  - namespacepools/status
   - namespacereservations/status
   verbs:
   - get

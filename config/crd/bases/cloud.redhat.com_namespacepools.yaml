@@ -3,8 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.16.4
   name: namespacepools.cloud.redhat.com
 spec:
   group: cloud.redhat.com
@@ -33,14 +32,19 @@ spec:
         description: NamespacePool is the Schema for the pools API
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -54,8 +58,9 @@ spec:
                     description: Disabled turns off reconciliation for this ClowdEnv
                     type: boolean
                   providers:
-                    description: A ProvidersConfig object, detailing the setup and
-                      configuration of all the providers used in this ClowdEnvironment.
+                    description: |-
+                      A ProvidersConfig object, detailing the setup and configuration of all the
+                      providers used in this ClowdEnvironment.
                     properties:
                       autoScaler:
                         description: Defines the autoscaler configuration
@@ -73,19 +78,17 @@ spec:
                           Provider.
                         properties:
                           caBundleURL:
-                            description: Indicates where Clowder will fetch the database
-                              CA certificate bundle from. Currently only used in (*_app-interface_*)
-                              mode. If none is specified, the AWS RDS combined CA
-                              bundle is used.
+                            description: |-
+                              Indicates where Clowder will fetch the database CA certificate bundle from. Currently only used in
+                              (*_app-interface_*) mode. If none is specified, the AWS RDS combined CA bundle is used.
                             pattern: ^https?:\/\/.+$
                             type: string
                           mode:
-                            description: 'The mode of operation of the Clowder Database
-                              Provider. Valid options are: (*_app-interface_*) where
-                              the provider will pass through database credentials
-                              found in the secret defined by the database name in
-                              the ClowdApp, and (*_local_*) where the provider will
-                              spin up a local instance of the database.'
+                            description: |-
+                              The mode of operation of the Clowder Database Provider. Valid options are:
+                              (*_app-interface_*) where the provider will pass through database credentials
+                              found in the secret defined by the database name in the ClowdApp, and (*_local_*)
+                              where the provider will spin up a local instance of the database.
                             enum:
                             - shared
                             - app-interface
@@ -93,9 +96,9 @@ spec:
                             - none
                             type: string
                           pvc:
-                            description: If using the (*_local_*) mode and PVC is
-                              set to true, this instructs the local Database instance
-                              to use a PVC instead of emptyDir for its volumes.
+                            description: |-
+                              If using the (*_local_*) mode and PVC is set to true, this instructs the local
+                              Database instance to use a PVC instead of emptyDir for its volumes.
                             type: boolean
                         required:
                         - mode
@@ -111,8 +114,9 @@ spec:
                           Provider.
                         properties:
                           credentialRef:
-                            description: Defines the secret containing the client
-                              access token, only used for (*_app-interface_*) mode.
+                            description: |-
+                              Defines the secret containing the client access token, only used for (*_app-interface_*)
+                              mode.
                             properties:
                               name:
                                 description: Name defines the Name of a resource.
@@ -137,11 +141,11 @@ spec:
                                 type: string
                             type: object
                           mode:
-                            description: 'The mode of operation of the Clowder FeatureFlag
-                              Provider. Valid options are: (*_app-interface_*) where
-                              the provider will pass through credentials to the app
-                              configuration, and (*_local_*) where a local Unleash
-                              instance will be created.'
+                            description: |-
+                              The mode of operation of the Clowder FeatureFlag Provider. Valid options are:
+                              (*_app-interface_*) where the provider will pass through credentials
+                              to the app configuration, and (*_local_*) where a local Unleash instance will
+                              be created.
                             enum:
                             - local
                             - app-interface
@@ -153,9 +157,9 @@ spec:
                             format: int32
                             type: integer
                           pvc:
-                            description: If using the (*_local_*) mode and PVC is
-                              set to true, this instructs the local Database instance
-                              to use a PVC instead of emptyDir for its volumes.
+                            description: |-
+                              If using the (*_local_*) mode and PVC is set to true, this instructs the local
+                              Database instance to use a PVC instead of emptyDir for its volumes.
                             type: boolean
                         type: object
                       inMemoryDb:
@@ -163,11 +167,10 @@ spec:
                           Provider.
                         properties:
                           mode:
-                            description: 'The mode of operation of the Clowder InMemory
-                              Provider. Valid options are: (*_redis_*) where a local
-                              Minio instance will be created, and (*_elasticache_*)
-                              which will search the namespace of the ClowdApp for
-                              a secret called ''elasticache'''
+                            description: |-
+                              The mode of operation of the Clowder InMemory Provider. Valid options are:
+                              (*_redis_*) where a local Minio instance will be created, and (*_elasticache_*)
+                              which will search the namespace of the ClowdApp for a secret called 'elasticache'
                             enum:
                             - redis
                             - app-interface
@@ -175,9 +178,9 @@ spec:
                             - none
                             type: string
                           pvc:
-                            description: If using the (*_local_*) mode and PVC is
-                              set to true, this instructs the local Database instance
-                              to use a PVC instead of emptyDir for its volumes.
+                            description: |-
+                              If using the (*_local_*) mode and PVC is set to true, this instructs the local
+                              Database instance to use a PVC instead of emptyDir for its volumes.
                             type: boolean
                         required:
                         - mode
@@ -196,9 +199,9 @@ spec:
                                 description: Config full options
                                 type: object
                               deleteClaim:
-                                description: Delete persistent volume claim if the
-                                  Kafka cluster is deleted Only applies when KafkaConfig.PVC
-                                  is set to 'true'
+                                description: |-
+                                  Delete persistent volume claim if the Kafka cluster is deleted
+                                  Only applies when KafkaConfig.PVC is set to 'true'
                                 type: boolean
                               forceTLS:
                                 description: Force TLS
@@ -216,13 +219,14 @@ spec:
                                     description: -Xmx option to to the JVM.
                                     type: string
                                   gcLoggingEnabled:
-                                    description: Specifies whether the Garbage Collection
-                                      logging is enabled. The default is false.
+                                    description: |-
+                                      Specifies whether the Garbage Collection logging is enabled. The default is
+                                      false.
                                     type: boolean
                                   javaSystemProperties:
-                                    description: A map of additional system properties
-                                      which will be passed using the `-D` option to
-                                      the JVM.
+                                    description: |-
+                                      A map of additional system properties which will be passed using the `-D`
+                                      option to the JVM.
                                     items:
                                       properties:
                                         name:
@@ -261,9 +265,9 @@ spec:
                                     x-kubernetes-preserve-unknown-fields: true
                                 type: object
                               storageSize:
-                                description: Persistent volume storage size. If unset,
-                                  default is '1Gi' Only applies when KafkaConfig.PVC
-                                  is set to 'true'
+                                description: |-
+                                  Persistent volume storage size. If unset, default is '1Gi'
+                                  Only applies when KafkaConfig.PVC is set to 'true'
                                 type: string
                               version:
                                 description: Version. If unset, default is '2.5.0'
@@ -274,9 +278,9 @@ spec:
                               mode.
                             type: string
                           clusterName:
-                            description: (Deprecated) Defines the cluster name to
-                              be used by the Kafka Provider this will be used in some
-                              modes to locate the Kafka instance.
+                            description: |-
+                              (Deprecated) Defines the cluster name to be used by the Kafka Provider this will
+                              be used in some modes to locate the Kafka instance.
                             type: string
                           connect:
                             description: Defines options related to the Kafka Connect
@@ -322,9 +326,9 @@ spec:
                               name that is used in this environment.
                             type: string
                           connectNamespace:
-                            description: (Deprecated) The namespace that the Kafka
-                              Connect cluster is expected to reside in. This is only
-                              used in (*_app-interface_*) and (*_operator_*) modes.
+                            description: |-
+                              (Deprecated) The namespace that the Kafka Connect cluster is expected to reside in. This is only used
+                              in (*_app-interface_*) and (*_operator_*) modes.
                             type: string
                           enableLegacyStrimzi:
                             description: EnableLegacyStrimzi disables TLS + user auth
@@ -353,16 +357,14 @@ spec:
                             - namespace
                             type: object
                           mode:
-                            description: 'The mode of operation of the Clowder Kafka
-                              Provider. Valid options are: (*_operator_*) which provisions
-                              Strimzi resources and will configure KafkaTopic CRs
-                              and place them in the Kafka cluster''s namespace described
-                              in the configuration, (*_app-interface_*) which simply
-                              passes the topic names through to the App''s cdappconfig.json
-                              and expects app-interface to have created the relevant
-                              topics, and (*_local_*) where a small instance of Kafka
-                              is created in the desired cluster namespace and configured
-                              to auto-create topics.'
+                            description: |-
+                              The mode of operation of the Clowder Kafka Provider. Valid options are:
+                              (*_operator_*) which provisions Strimzi resources and will configure
+                              KafkaTopic CRs and place them in the Kafka cluster's namespace described in the configuration,
+                              (*_app-interface_*) which simply passes the topic names through to the App's
+                              cdappconfig.json and expects app-interface to have created the relevant
+                              topics, and (*_local_*) where a small instance of Kafka is created in the desired cluster namespace
+                              and configured to auto-create topics.
                             enum:
                             - ephem-msk
                             - managed
@@ -372,15 +374,14 @@ spec:
                             - none
                             type: string
                           namespace:
-                            description: (Deprecated) The Namespace the cluster is
-                              expected to reside in. This is only used in (*_app-interface_*)
-                              and (*_operator_*) modes.
+                            description: |-
+                              (Deprecated) The Namespace the cluster is expected to reside in. This is only used
+                              in (*_app-interface_*) and (*_operator_*) modes.
                             type: string
                           pvc:
-                            description: If using the (*_local_*) or (*_operator_*)
-                              mode and PVC is set to true, this sets the provisioned
-                              Kafka instance to use a PVC instead of emptyDir for
-                              its volumes.
+                            description: |-
+                              If using the (*_local_*) or (*_operator_*) mode and PVC is set to true, this sets the provisioned
+                              Kafka instance to use a PVC instead of emptyDir for its volumes.
                             type: boolean
                           suffix:
                             description: (Deprecated) (Unused)
@@ -397,11 +398,10 @@ spec:
                           Provider.
                         properties:
                           mode:
-                            description: 'The mode of operation of the Clowder Logging
-                              Provider. Valid options are: (*_app-interface_*) where
-                              the provider will pass through cloudwatch credentials
-                              to the app configuration, and (*_none_*) where no logging
-                              will be configured.'
+                            description: |-
+                              The mode of operation of the Clowder Logging Provider. Valid options are:
+                              (*_app-interface_*) where the provider will pass through cloudwatch credentials
+                              to the app configuration, and (*_none_*) where no logging will be configured.
                             enum:
                             - app-interface
                             - "null"
@@ -415,19 +415,20 @@ spec:
                           Provider.
                         properties:
                           mode:
-                            description: The mode of operation of the Metrics provider.
-                              The allowed modes are (*_none_*), which disables metrics
-                              service generation, or (*_operator_*) where services
-                              and probes are generated. (*_app-interface_*) where
-                              services and probes are generated for app-interface.
+                            description: |-
+                              The mode of operation of the Metrics provider. The allowed modes are
+                               (*_none_*), which disables metrics service generation, or
+                              (*_operator_*) where services and probes are generated.
+                              (*_app-interface_*) where services and probes are generated for app-interface.
                             enum:
                             - none
                             - operator
                             - app-interface
                             type: string
                           path:
-                            description: A prefix path that pods will be instructed
-                              to use when setting up their metrics server.
+                            description: |-
+                              A prefix path that pods will be instructed to use when setting up their
+                              metrics server.
                             type: string
                           port:
                             description: The port that metrics services inside ClowdApp
@@ -461,20 +462,20 @@ spec:
                                 type: string
                             type: object
                           mode:
-                            description: 'The mode of operation of the Clowder ObjectStore
-                              Provider. Valid options are: (*_app-interface_*) where
-                              the provider will pass through Amazon S3 credentials
-                              to the app configuration, and (*_minio_*) where a local
-                              Minio instance will be created.'
+                            description: |-
+                              The mode of operation of the Clowder ObjectStore Provider. Valid options are:
+                              (*_app-interface_*) where the provider will pass through Amazon S3 credentials
+                              to the app configuration, and (*_minio_*) where a local Minio instance will
+                              be created.
                             enum:
                             - minio
                             - app-interface
                             - none
                             type: string
                           pvc:
-                            description: If using the (*_local_*) mode and PVC is
-                              set to true, this instructs the local Database instance
-                              to use a PVC instead of emptyDir for its volumes.
+                            description: |-
+                              If using the (*_local_*) mode and PVC is set to true, this instructs the local
+                              Database instance to use a PVC instead of emptyDir for its volumes.
                             type: boolean
                           suffix:
                             description: Currently unused.
@@ -544,11 +545,12 @@ spec:
                         description: Defines the environment for iqe/smoke testing
                         properties:
                           configAccess:
-                            description: 'The mode of operation for access to outside
-                              app configs. Valid options are: (*_none_*) -- no app
-                              config is mounted to the pod (*_app_*) -- only the ClowdApp''s
-                              config is mounted to the pod (*_environment_*) -- the
-                              config for all apps in the env are mounted'
+                            description: |-
+                              The mode of operation for access to outside app configs. Valid
+                              options are:
+                              (*_none_*) -- no app config is mounted to the pod
+                              (*_app_*) -- only the ClowdApp's config is mounted to the pod
+                              (*_environment_*) -- the config for all apps in the env are mounted
                             enum:
                             - none
                             - app
@@ -561,27 +563,29 @@ spec:
                               imageBase:
                                 type: string
                               resources:
-                                description: A pass-through of a resource requirements
-                                  in k8s ResourceRequirements format. If omitted,
-                                  the default resource requirements from the ClowdEnvironment
-                                  will be used.
+                                description: |-
+                                  A pass-through of a resource requirements in k8s ResourceRequirements
+                                  format. If omitted, the default resource requirements from the
+                                  ClowdEnvironment will be used.
                                 properties:
                                   claims:
-                                    description: "Claims lists the names of resources,
-                                      defined in spec.resourceClaims, that are used
-                                      by this container. \n This is an alpha field
-                                      and requires enabling the DynamicResourceAllocation
-                                      feature gate. \n This field is immutable. It
-                                      can only be set for containers."
+                                    description: |-
+                                      Claims lists the names of resources, defined in spec.resourceClaims,
+                                      that are used by this container.
+
+                                      This is an alpha field and requires enabling the
+                                      DynamicResourceAllocation feature gate.
+
+                                      This field is immutable. It can only be set for containers.
                                     items:
                                       description: ResourceClaim references one entry
                                         in PodSpec.ResourceClaims.
                                       properties:
                                         name:
-                                          description: Name must match the name of
-                                            one entry in pod.spec.resourceClaims of
-                                            the Pod where this field is used. It makes
-                                            that resource available inside a container.
+                                          description: |-
+                                            Name must match the name of one entry in pod.spec.resourceClaims of
+                                            the Pod where this field is used. It makes that resource available
+                                            inside a container.
                                           type: string
                                       required:
                                       - name
@@ -597,8 +601,9 @@ spec:
                                       - type: string
                                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                       x-kubernetes-int-or-string: true
-                                    description: 'Limits describes the maximum amount
-                                      of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                    description: |-
+                                      Limits describes the maximum amount of compute resources allowed.
+                                      More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                                     type: object
                                   requests:
                                     additionalProperties:
@@ -607,12 +612,11 @@ spec:
                                       - type: string
                                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                       x-kubernetes-int-or-string: true
-                                    description: 'Requests describes the minimum amount
-                                      of compute resources required. If Requests is
-                                      omitted for a container, it defaults to Limits
-                                      if that is explicitly specified, otherwise to
-                                      an implementation-defined value. Requests cannot
-                                      exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                    description: |-
+                                      Requests describes the minimum amount of compute resources required.
+                                      If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                                      otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                                      More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                                     type: object
                                 type: object
                               ui:
@@ -636,22 +640,22 @@ spec:
                                           set on selenium containers
                                         properties:
                                           claims:
-                                            description: "Claims lists the names of
-                                              resources, defined in spec.resourceClaims,
-                                              that are used by this container. \n
-                                              This is an alpha field and requires
-                                              enabling the DynamicResourceAllocation
-                                              feature gate. \n This field is immutable.
-                                              It can only be set for containers."
+                                            description: |-
+                                              Claims lists the names of resources, defined in spec.resourceClaims,
+                                              that are used by this container.
+
+                                              This is an alpha field and requires enabling the
+                                              DynamicResourceAllocation feature gate.
+
+                                              This field is immutable. It can only be set for containers.
                                             items:
                                               description: ResourceClaim references
                                                 one entry in PodSpec.ResourceClaims.
                                               properties:
                                                 name:
-                                                  description: Name must match the
-                                                    name of one entry in pod.spec.resourceClaims
-                                                    of the Pod where this field is
-                                                    used. It makes that resource available
+                                                  description: |-
+                                                    Name must match the name of one entry in pod.spec.resourceClaims of
+                                                    the Pod where this field is used. It makes that resource available
                                                     inside a container.
                                                   type: string
                                               required:
@@ -668,9 +672,9 @@ spec:
                                               - type: string
                                               pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                               x-kubernetes-int-or-string: true
-                                            description: 'Limits describes the maximum
-                                              amount of compute resources allowed.
-                                              More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                            description: |-
+                                              Limits describes the maximum amount of compute resources allowed.
+                                              More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                                             type: object
                                           requests:
                                             additionalProperties:
@@ -679,13 +683,11 @@ spec:
                                               - type: string
                                               pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                               x-kubernetes-int-or-string: true
-                                            description: 'Requests describes the minimum
-                                              amount of compute resources required.
-                                              If Requests is omitted for a container,
-                                              it defaults to Limits if that is explicitly
-                                              specified, otherwise to an implementation-defined
-                                              value. Requests cannot exceed Limits.
-                                              More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                                            description: |-
+                                              Requests describes the minimum amount of compute resources required.
+                                              If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                                              otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                                              More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                                             type: object
                                         type: object
                                     type: object
@@ -709,8 +711,9 @@ spec:
                             - imageBase
                             type: object
                           k8sAccessLevel:
-                            description: 'The mode of operation of the testing Pod.
-                              Valid options are: ''default'', ''view'' or ''edit'''
+                            description: |-
+                              The mode of operation of the testing Pod. Valid options are:
+                              'default', 'view' or 'edit'
                             enum:
                             - default
                             - view
@@ -731,8 +734,9 @@ spec:
                             format: int32
                             type: integer
                           apiPrefix:
-                            description: An api prefix path that pods will be instructed
-                              to use when setting up their web server.
+                            description: |-
+                              An api prefix path that pods will be instructed to use when setting up
+                              their web server.
                             type: string
                           bopURL:
                             description: The URL of BOP - only used in (*_none_*/*_operator_*)
@@ -805,9 +809,9 @@ spec:
                               default is used.
                             type: string
                           mode:
-                            description: The mode of operation of the Web provider.
-                              The allowed modes are (*_none_*/*_operator_*), and (*_local_*)
-                              which deploys keycloak and BOP.
+                            description: |-
+                              The mode of operation of the Web provider. The allowed modes are
+                              (*_none_*/*_operator_*), and (*_local_*) which deploys keycloak and BOP.
                             enum:
                             - none
                             - operator
@@ -846,24 +850,27 @@ spec:
                     - objectStore
                     type: object
                   resourceDefaults:
-                    description: Defines the default resource requirements in standard
-                      k8s format in the event that they omitted from a PodSpec inside
-                      a ClowdApp.
+                    description: |-
+                      Defines the default resource requirements in standard k8s format in the
+                      event that they omitted from a PodSpec inside a ClowdApp.
                     properties:
                       claims:
-                        description: "Claims lists the names of resources, defined
-                          in spec.resourceClaims, that are used by this container.
-                          \n This is an alpha field and requires enabling the DynamicResourceAllocation
-                          feature gate. \n This field is immutable. It can only be
-                          set for containers."
+                        description: |-
+                          Claims lists the names of resources, defined in spec.resourceClaims,
+                          that are used by this container.
+
+                          This is an alpha field and requires enabling the
+                          DynamicResourceAllocation feature gate.
+
+                          This field is immutable. It can only be set for containers.
                         items:
                           description: ResourceClaim references one entry in PodSpec.ResourceClaims.
                           properties:
                             name:
-                              description: Name must match the name of one entry in
-                                pod.spec.resourceClaims of the Pod where this field
-                                is used. It makes that resource available inside a
-                                container.
+                              description: |-
+                                Name must match the name of one entry in pod.spec.resourceClaims of
+                                the Pod where this field is used. It makes that resource available
+                                inside a container.
                               type: string
                           required:
                           - name
@@ -879,8 +886,9 @@ spec:
                           - type: string
                           pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                           x-kubernetes-int-or-string: true
-                        description: 'Limits describes the maximum amount of compute
-                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                        description: |-
+                          Limits describes the maximum amount of compute resources allowed.
+                          More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                         type: object
                       requests:
                         additionalProperties:
@@ -889,11 +897,11 @@ spec:
                           - type: string
                           pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                           x-kubernetes-int-or-string: true
-                        description: 'Requests describes the minimum amount of compute
-                          resources required. If Requests is omitted for a container,
-                          it defaults to Limits if that is explicitly specified, otherwise
-                          to an implementation-defined value. Requests cannot exceed
-                          Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                        description: |-
+                          Requests describes the minimum amount of compute resources required.
+                          If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                          otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                          More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
                         type: object
                     type: object
                   serviceConfig:
@@ -909,9 +917,9 @@ spec:
                     - type
                     type: object
                   targetNamespace:
-                    description: TargetNamespace describes the namespace where any
-                      generated environmental resources should end up, this is particularly
-                      important in (*_local_*) mode.
+                    description: |-
+                      TargetNamespace describes the namespace where any generated environmental
+                      resources should end up, this is particularly important in (*_local_*) mode.
                     type: string
                 required:
                 - providers
@@ -925,19 +933,24 @@ spec:
                   namespace
                 properties:
                   apiVersion:
-                    description: 'APIVersion defines the versioned schema of this
-                      representation of an object. Servers should convert recognized
-                      schemas to the latest internal value, and may reject unrecognized
-                      values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                    description: |-
+                      APIVersion defines the versioned schema of this representation of an object.
+                      Servers should convert recognized schemas to the latest internal value, and
+                      may reject unrecognized values.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
                     type: string
                   kind:
-                    description: 'Kind is a string value representing the REST resource
-                      this object represents. Servers may infer this from the endpoint
-                      the client submits requests to. Cannot be updated. In CamelCase.
-                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                    description: |-
+                      Kind is a string value representing the REST resource this object represents.
+                      Servers may infer this from the endpoint the client submits requests to.
+                      Cannot be updated.
+                      In CamelCase.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
                     type: string
                   metadata:
-                    description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata'
+                    description: |-
+                      Standard object's metadata.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
                     properties:
                       annotations:
                         additionalProperties:
@@ -957,7 +970,9 @@ spec:
                         type: string
                     type: object
                   spec:
-                    description: 'Spec defines the limits enforced. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
+                    description: |-
+                      Spec defines the limits enforced.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
                     properties:
                       limits:
                         description: Limits is the list of LimitRangeItem objects
@@ -1040,32 +1055,39 @@ spec:
                   namespace
                 properties:
                   apiVersion:
-                    description: 'APIVersion defines the versioned schema of this
-                      representation of an object. Servers should convert recognized
-                      schemas to the latest internal value, and may reject unrecognized
-                      values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                    description: |-
+                      APIVersion defines the versioned schema of this representation of an object.
+                      Servers should convert recognized schemas to the latest internal value, and
+                      may reject unrecognized values.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
                     type: string
                   items:
-                    description: 'Items is a list of ResourceQuota objects. More info:
-                      https://kubernetes.io/docs/concepts/policy/resource-quotas/'
+                    description: |-
+                      Items is a list of ResourceQuota objects.
+                      More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
                     items:
                       description: ResourceQuota sets aggregate quota restrictions
                         enforced per namespace
                       properties:
                         apiVersion:
-                          description: 'APIVersion defines the versioned schema of
-                            this representation of an object. Servers should convert
-                            recognized schemas to the latest internal value, and may
-                            reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                          description: |-
+                            APIVersion defines the versioned schema of this representation of an object.
+                            Servers should convert recognized schemas to the latest internal value, and
+                            may reject unrecognized values.
+                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
                           type: string
                         kind:
-                          description: 'Kind is a string value representing the REST
-                            resource this object represents. Servers may infer this
-                            from the endpoint the client submits requests to. Cannot
-                            be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                          description: |-
+                            Kind is a string value representing the REST resource this object represents.
+                            Servers may infer this from the endpoint the client submits requests to.
+                            Cannot be updated.
+                            In CamelCase.
+                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
                           type: string
                         metadata:
-                          description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata'
+                          description: |-
+                            Standard object's metadata.
+                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
                           properties:
                             annotations:
                               additionalProperties:
@@ -1085,7 +1107,9 @@ spec:
                               type: string
                           type: object
                         spec:
-                          description: Spec defines the desired quota. https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+                          description: |-
+                            Spec defines the desired quota.
+                            https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
                           properties:
                             hard:
                               additionalProperties:
@@ -1094,42 +1118,39 @@ spec:
                                 - type: string
                                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                 x-kubernetes-int-or-string: true
-                              description: 'hard is the set of desired hard limits
-                                for each named resource. More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/'
+                              description: |-
+                                hard is the set of desired hard limits for each named resource.
+                                More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
                               type: object
                             scopeSelector:
-                              description: scopeSelector is also a collection of filters
-                                like scopes that must match each object tracked by
-                                a quota but expressed using ScopeSelectorOperator
-                                in combination with possible values. For a resource
-                                to match, both scopes AND scopeSelector (if specified
-                                in spec), must be matched.
+                              description: |-
+                                scopeSelector is also a collection of filters like scopes that must match each object tracked by a quota
+                                but expressed using ScopeSelectorOperator in combination with possible values.
+                                For a resource to match, both scopes AND scopeSelector (if specified in spec), must be matched.
                               properties:
                                 matchExpressions:
                                   description: A list of scope selector requirements
                                     by scope of the resources.
                                   items:
-                                    description: A scoped-resource selector requirement
-                                      is a selector that contains values, a scope
-                                      name, and an operator that relates the scope
-                                      name and values.
+                                    description: |-
+                                      A scoped-resource selector requirement is a selector that contains values, a scope name, and an operator
+                                      that relates the scope name and values.
                                     properties:
                                       operator:
-                                        description: Represents a scope's relationship
-                                          to a set of values. Valid operators are
-                                          In, NotIn, Exists, DoesNotExist.
+                                        description: |-
+                                          Represents a scope's relationship to a set of values.
+                                          Valid operators are In, NotIn, Exists, DoesNotExist.
                                         type: string
                                       scopeName:
                                         description: The name of the scope that the
                                           selector applies to.
                                         type: string
                                       values:
-                                        description: An array of string values. If
-                                          the operator is In or NotIn, the values
-                                          array must be non-empty. If the operator
-                                          is Exists or DoesNotExist, the values array
-                                          must be empty. This array is replaced during
-                                          a strategic merge patch.
+                                        description: |-
+                                          An array of string values. If the operator is In or NotIn,
+                                          the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                          the values array must be empty.
+                                          This array is replaced during a strategic merge patch.
                                         items:
                                           type: string
                                         type: array
@@ -1141,9 +1162,9 @@ spec:
                               type: object
                               x-kubernetes-map-type: atomic
                             scopes:
-                              description: A collection of filters that must match
-                                each object tracked by a quota. If not specified,
-                                the quota matches all objects.
+                              description: |-
+                                A collection of filters that must match each object tracked by a quota.
+                                If not specified, the quota matches all objects.
                               items:
                                 description: A ResourceQuotaScope defines a filter
                                   that must match each object tracked by a quota
@@ -1151,8 +1172,9 @@ spec:
                               type: array
                           type: object
                         status:
-                          description: Status defines the actual enforced quota and
-                            its current usage. https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+                          description: |-
+                            Status defines the actual enforced quota and its current usage.
+                            https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
                           properties:
                             hard:
                               additionalProperties:
@@ -1161,8 +1183,9 @@ spec:
                                 - type: string
                                 pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                 x-kubernetes-int-or-string: true
-                              description: 'Hard is the set of enforced hard limits
-                                for each named resource. More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/'
+                              description: |-
+                                Hard is the set of enforced hard limits for each named resource.
+                                More info: https://kubernetes.io/docs/concepts/policy/resource-quotas/
                               type: object
                             used:
                               additionalProperties:
@@ -1178,48 +1201,49 @@ spec:
                       type: object
                     type: array
                   kind:
-                    description: 'Kind is a string value representing the REST resource
-                      this object represents. Servers may infer this from the endpoint
-                      the client submits requests to. Cannot be updated. In CamelCase.
-                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                    description: |-
+                      Kind is a string value representing the REST resource this object represents.
+                      Servers may infer this from the endpoint the client submits requests to.
+                      Cannot be updated.
+                      In CamelCase.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
                     type: string
                   metadata:
-                    description: 'Standard list metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                    description: |-
+                      Standard list metadata.
+                      More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
                     properties:
                       continue:
-                        description: continue may be set if the user set a limit on
-                          the number of items returned, and indicates that the server
-                          has more data available. The value is opaque and may be
-                          used to issue another request to the endpoint that served
-                          this list to retrieve the next set of available objects.
-                          Continuing a consistent list may not be possible if the
-                          server configuration has changed or more than a few minutes
-                          have passed. The resourceVersion field returned when using
-                          this continue value will be identical to the value in the
-                          first response, unless you have received this token from
-                          an error message.
+                        description: |-
+                          continue may be set if the user set a limit on the number of items returned, and indicates that
+                          the server has more data available. The value is opaque and may be used to issue another request
+                          to the endpoint that served this list to retrieve the next set of available objects. Continuing a
+                          consistent list may not be possible if the server configuration has changed or more than a few
+                          minutes have passed. The resourceVersion field returned when using this continue value will be
+                          identical to the value in the first response, unless you have received this token from an error
+                          message.
                         type: string
                       remainingItemCount:
-                        description: remainingItemCount is the number of subsequent
-                          items in the list which are not included in this list response.
-                          If the list request contained label or field selectors,
-                          then the number of remaining items is unknown and the field
-                          will be left unset and omitted during serialization. If
-                          the list is complete (either because it is not chunking
-                          or because this is the last chunk), then there are no more
-                          remaining items and this field will be left unset and omitted
-                          during serialization. Servers older than v1.15 do not set
-                          this field. The intended use of the remainingItemCount is
-                          *estimating* the size of a collection. Clients should not
-                          rely on the remainingItemCount to be set or to be exact.
+                        description: |-
+                          remainingItemCount is the number of subsequent items in the list which are not included in this
+                          list response. If the list request contained label or field selectors, then the number of
+                          remaining items is unknown and the field will be left unset and omitted during serialization.
+                          If the list is complete (either because it is not chunking or because this is the last chunk),
+                          then there are no more remaining items and this field will be left unset and omitted during
+                          serialization.
+                          Servers older than v1.15 do not set this field.
+                          The intended use of the remainingItemCount is *estimating* the size of a collection. Clients
+                          should not rely on the remainingItemCount to be set or to be exact.
                         format: int64
                         type: integer
                       resourceVersion:
-                        description: 'String that identifies the server''s internal
-                          version of this object that can be used by clients to determine
-                          when objects have changed. Value must be treated as opaque
-                          by clients and passed unmodified back to the server. Populated
-                          by the system. Read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
+                        description: |-
+                          String that identifies the server's internal version of this object that
+                          can be used by clients to determine when objects have changed.
+                          Value must be treated as opaque by clients and passed unmodified back to the server.
+                          Populated by the system.
+                          Read-only.
+                          More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
                         type: string
                       selfLink:
                         description: 'Deprecated: selfLink is a legacy read-only field
