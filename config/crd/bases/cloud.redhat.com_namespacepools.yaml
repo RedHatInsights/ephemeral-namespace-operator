@@ -139,6 +139,8 @@ spec:
                             properties:
                               unleash:
                                 type: string
+                              unleashEdge:
+                                type: string
                             type: object
                           mode:
                             description: |-
@@ -166,6 +168,11 @@ spec:
                         description: Defines the Configuration for the Clowder InMemoryDB
                           Provider.
                         properties:
+                          image:
+                            description: |-
+                              This image is only used in the (*_redis_*) mode, as elsewhere it will try to
+                              inspect for a secret for a hostname and credentials.
+                            type: string
                           mode:
                             description: |-
                               The mode of operation of the Clowder InMemory Provider. Valid options are:
@@ -255,6 +262,17 @@ spec:
                               resources:
                                 description: Resource Limits
                                 properties:
+                                  claims:
+                                    description: Claims corresponds to the JSON schema
+                                      field "claims".
+                                    items:
+                                      properties:
+                                        name:
+                                          description: Name corresponds to the JSON
+                                            schema field "name".
+                                          type: string
+                                      type: object
+                                    type: array
                                   limits:
                                     description: Limits corresponds to the JSON schema
                                       field "limits".
@@ -308,6 +326,17 @@ spec:
                               resources:
                                 description: Resource Limits
                                 properties:
+                                  claims:
+                                    description: Claims corresponds to the JSON schema
+                                      field "claims".
+                                    items:
+                                      properties:
+                                        name:
+                                          description: Name corresponds to the JSON
+                                            schema field "name".
+                                          type: string
+                                      type: object
+                                    type: array
                                   limits:
                                     description: Limits corresponds to the JSON schema
                                       field "limits".
@@ -587,6 +616,12 @@ spec:
                                             the Pod where this field is used. It makes that resource available
                                             inside a container.
                                           type: string
+                                        request:
+                                          description: |-
+                                            Request is the name chosen for a request in the referenced claim.
+                                            If empty, everything from the claim is made available, otherwise
+                                            only the result of this request.
+                                          type: string
                                       required:
                                       - name
                                       type: object
@@ -657,6 +692,12 @@ spec:
                                                     Name must match the name of one entry in pod.spec.resourceClaims of
                                                     the Pod where this field is used. It makes that resource available
                                                     inside a container.
+                                                  type: string
+                                                request:
+                                                  description: |-
+                                                    Request is the name chosen for a request in the referenced claim.
+                                                    If empty, everything from the claim is made available, otherwise
+                                                    only the result of this request.
                                                   type: string
                                               required:
                                               - name
@@ -872,6 +913,12 @@ spec:
                                 the Pod where this field is used. It makes that resource available
                                 inside a container.
                               type: string
+                            request:
+                              description: |-
+                                Request is the name chosen for a request in the referenced claim.
+                                If empty, everything from the claim is made available, otherwise
+                                only the result of this request.
+                              type: string
                           required:
                           - name
                           type: object
@@ -1043,6 +1090,7 @@ spec:
                           - type
                           type: object
                         type: array
+                        x-kubernetes-list-type: atomic
                     required:
                     - limits
                     type: object
@@ -1154,11 +1202,13 @@ spec:
                                         items:
                                           type: string
                                         type: array
+                                        x-kubernetes-list-type: atomic
                                     required:
                                     - operator
                                     - scopeName
                                     type: object
                                   type: array
+                                  x-kubernetes-list-type: atomic
                               type: object
                               x-kubernetes-map-type: atomic
                             scopes:
@@ -1170,6 +1220,7 @@ spec:
                                   that must match each object tracked by a quota
                                 type: string
                               type: array
+                              x-kubernetes-list-type: atomic
                           type: object
                         status:
                           description: |-
