@@ -1,11 +1,11 @@
 module github.com/RedHatInsights/ephemeral-namespace-operator
 
-go 1.22.7
+go 1.22.9
 
 require (
 	github.com/RedHatInsights/clowder v0.100.0
 	github.com/RedHatInsights/frontend-operator v0.2.0
-	github.com/RedHatInsights/rhc-osdk-utils v0.12.0
+	github.com/RedHatInsights/rhc-osdk-utils v0.13.0
 	github.com/go-logr/logr v1.4.2
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
