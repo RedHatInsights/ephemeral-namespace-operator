@@ -1,6 +1,8 @@
 module github.com/RedHatInsights/ephemeral-namespace-operator
 
-go 1.22.7
+go 1.23
+
+toolchain go1.23.8
 
 require (
 	github.com/RedHatInsights/clowder v0.100.0
@@ -75,7 +77,7 @@ require (
 	k8s.io/kube-openapi v0.0.0-20240812233141-91dab695df6f // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
 	knative.dev/pkg v0.0.0-20221123154742-05b694ec4d3a // indirect
-	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
+	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
