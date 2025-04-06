@@ -4,8 +4,8 @@ github.com/RedHatInsights/frontend-operator v0.2.0 h1:OCqlS9LQC77Z7/zGPQe3rh+XoL
 github.com/RedHatInsights/frontend-operator v0.2.0/go.mod h1:ZXbRx1EOKS4zsN2IP5sVRecxQB2xuYc6mHQAkyoz25Q=
 github.com/RedHatInsights/rhc-osdk-utils v0.12.0 h1:hjJ+U7a+/BCXQb7Y/CIpERv5Cm9wIY1VaPkQkBATWW8=
 github.com/RedHatInsights/rhc-osdk-utils v0.12.0/go.mod h1:5UYiKYXToQB1KN2Pxr27p6Y10w+XrJYzCoMcIOhQBl8=
-github.com/RedHatInsights/strimzi-client-go v0.38.0 h1:p6TMI2Cg9dkHyw4uV3hsMpBNuFn+RAlT85IJpGRgMY8=
-github.com/RedHatInsights/strimzi-client-go v0.38.0/go.mod h1:aOsHx9Lu4ZvS3KR+j6/X+uiyweX594098CYDEdg8kYM=
+github.com/RedHatInsights/strimzi-client-go v0.40.0 h1:2s2FhRpmSlZDz4AziMUoPI91lWYMRPezcR0ICvwtsus=
+github.com/RedHatInsights/strimzi-client-go v0.40.0/go.mod h1:aOsHx9Lu4ZvS3KR+j6/X+uiyweX594098CYDEdg8kYM=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
