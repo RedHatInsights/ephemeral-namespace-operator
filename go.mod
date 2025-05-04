@@ -9,7 +9,7 @@ require (
 	github.com/go-logr/logr v1.4.2
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
-	github.com/openshift/api v0.0.0-20230105153616-8ac112765edc
+	github.com/openshift/api 7152b1b11175
 	github.com/prometheus/client_golang v1.21.1
 	k8s.io/api v0.31.4
 	k8s.io/apimachinery v0.31.4
