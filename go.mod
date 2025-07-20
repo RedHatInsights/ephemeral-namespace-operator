@@ -7,7 +7,7 @@ toolchain go1.24.5
 require (
 	github.com/RedHatInsights/clowder v0.100.0
 	github.com/RedHatInsights/frontend-operator v0.2.0
-	github.com/RedHatInsights/rhc-osdk-utils v0.12.0
+	github.com/RedHatInsights/rhc-osdk-utils v0.13.0
 	github.com/go-logr/logr v1.4.3
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
@@ -75,6 +75,5 @@ require (
 	sigs.k8s.io/json v0.0.0-20241014173422-cfa47c3a1cc8 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.6.0 // indirect
-	sigs.k8s.io/structured-merge-diff/v6 v6.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
