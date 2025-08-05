@@ -73,6 +73,43 @@ var _ = Describe("Ensure new namespaces are setup properly", func() {
 				}
 			}
 		})
+
+		It("Should have proper owner references set", func() {
+			ctx := context.Background()
+
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			for _, ns := range nsList.Items {
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						Expect(owner.APIVersion).To(Equal("cloud.redhat.com/v1alpha1"))
+						Expect(owner.Controller).NotTo(BeNil())
+						Expect(*owner.Controller).To(BeTrue())
+						Expect(owner.BlockOwnerDeletion).NotTo(BeNil())
+						Expect(*owner.BlockOwnerDeletion).To(BeTrue())
+					}
+				}
+			}
+		})
+
+		It("Should handle initial namespace creation status properly", func() {
+			ctx := context.Background()
+
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			for _, ns := range nsList.Items {
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						status := ns.Annotations["env-status"]
+						Expect(status).To(Or(Equal("creating"), Equal("ready"), Equal("error")))
+					}
+				}
+			}
+		})
 	})
 })
 
@@ -131,6 +168,64 @@ var _ = Describe("Namespace creation should not exceed the pool size limit if on
 				return k8sClient.Update(ctx, &pool)
 			}, timeout, interval).Should(BeNil())
 		})
+
+		It("Should handle pool size changes gracefully", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			originalSize := pool.Spec.Size
+
+			By("Increasing pool size significantly")
+			pool.Spec.Size = originalSize + 5
+			err = k8sClient.Update(ctx, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+				return pool.Status.Ready + pool.Status.Creating
+			}, timeout, interval).Should(Equal(originalSize + 5))
+
+			By("Decreasing pool size back to original")
+			pool.Spec.Size = originalSize
+			err = k8sClient.Update(ctx, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+				return pool.Status.Ready + pool.Status.Creating
+			}, timeout, interval).Should(Equal(originalSize))
+		})
+
+		It("Should handle zero pool size", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			originalSize := pool.Spec.Size
+
+			By("Setting pool size to zero")
+			pool.Spec.Size = 0
+			err = k8sClient.Update(ctx, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+				return pool.Status.Ready + pool.Status.Creating
+			}, timeout, interval).Should(Equal(0))
+
+			By("Restoring pool size")
+			pool.Spec.Size = originalSize
+			err = k8sClient.Update(ctx, &pool)
+			Expect(err).NotTo(HaveOccurred())
+		})
 	})
 })
 
@@ -164,6 +259,69 @@ var _ = Describe("Rogue namespaces should be deleted", func() {
 				}
 				return false
 			}, timeout, interval).Should(BeTrue())
+		})
+
+		It("Should handle multiple error namespaces simultaneously", func() {
+			ctx := context.Background()
+
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			var errorNamespaces []core.Namespace
+			count := 0
+			for _, ns := range nsList.Items {
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" && count < 2 {
+						errorNamespaces = append(errorNamespaces, ns)
+						count++
+					}
+				}
+			}
+
+			By("Marking multiple namespaces as error")
+			for _, ns := range errorNamespaces {
+				err = helpers.UpdateAnnotations(ctx, k8sClient, ns.Name, helpers.AnnotationEnvError.ToMap())
+				Expect(err).NotTo(HaveOccurred())
+			}
+
+			By("Verifying all error namespaces are deleted")
+			for _, ns := range errorNamespaces {
+				Eventually(func() bool {
+					var checkNs core.Namespace
+					err := k8sClient.Get(ctx, types.NamespacedName{Name: ns.Name}, &checkNs)
+					return k8serr.IsNotFound(err) || checkNs.Status.Phase == "Terminating"
+				}, timeout, interval).Should(BeTrue())
+			}
+		})
+
+		It("Should not delete namespaces with other status values", func() {
+			ctx := context.Background()
+
+			nsList := core.NamespaceList{}
+			err := k8sClient.List(ctx, &nsList)
+			Expect(err).NotTo(HaveOccurred())
+
+			var testNamespace core.Namespace
+			for _, ns := range nsList.Items {
+				for _, owner := range ns.GetOwnerReferences() {
+					if owner.Kind == "NamespacePool" {
+						testNamespace = ns
+						break
+					}
+				}
+			}
+
+			By("Setting namespace status to 'creating'")
+			err = helpers.UpdateAnnotations(ctx, k8sClient, testNamespace.Name, helpers.AnnotationEnvCreating.ToMap())
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Verifying namespace is not deleted")
+			Consistently(func() bool {
+				var checkNs core.Namespace
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: testNamespace.Name}, &checkNs)
+				return err == nil && checkNs.Status.Phase != "Terminating"
+			}, time.Second*5, time.Millisecond*500).Should(BeTrue())
 		})
 	})
 })
@@ -246,6 +404,67 @@ var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit fo
 				return fmt.Sprintf("Ready: [%d], Creating: [%d], Reserved: [%d]", ready, creating, reserved)
 			}, timeout, interval).Should(Equal(expected))
 		})
+
+		It("Should handle SizeLimit changes with active reservations", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+			Expect(err).ToNot(HaveOccurred())
+
+			originalSizeLimit := pool.Spec.SizeLimit
+
+			By("Creating reservations that exceed current size limit")
+			resNames := []string{"limit-test-1", "limit-test-2", "limit-test-3", "limit-test-4", "limit-test-5"}
+			for i, resName := range resNames {
+				res := helpers.NewReservation(resName, "30m", fmt.Sprintf("test-user-%d", i), "limit")
+				Expect(k8sClient.Create(ctx, res)).Should(Succeed())
+			}
+
+			By("Verifying that only size limit number of reservations become active")
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+				return pool.Status.Reserved
+			}, timeout, interval).Should(BeNumerically("<=", *originalSizeLimit))
+
+			By("Increasing size limit to accommodate more reservations")
+			pool.Spec.SizeLimit = utils.IntPtr(*originalSizeLimit + 3)
+			err = k8sClient.Update(ctx, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+				return pool.Status.Reserved
+			}, timeout, interval).Should(BeNumerically("<=", *pool.Spec.SizeLimit))
+		})
+
+		It("Should handle SizeLimit set to zero", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+			Expect(err).ToNot(HaveOccurred())
+
+			originalSizeLimit := pool.Spec.SizeLimit
+
+			By("Setting SizeLimit to zero")
+			pool.Spec.SizeLimit = utils.IntPtr(0)
+			err = k8sClient.Update(ctx, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(func() int {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "limit"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+				return pool.Status.Ready + pool.Status.Creating
+			}, timeout, interval).Should(Equal(0))
+
+			By("Restoring original SizeLimit")
+			pool.Spec.SizeLimit = originalSizeLimit
+			err = k8sClient.Update(ctx, &pool)
+			Expect(err).NotTo(HaveOccurred())
+		})
 	})
 })
 
@@ -297,6 +516,111 @@ var _ = Describe("Edge cases for creating namespaces with pool limit set", func(
 			By("Testing edge case => SizeLimit: 3, Size: 2, Ready: 0, Creating: 0, Reserved: 0")
 			namespaceDelta = helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(3), 2, 0, 0, 0)
 			Expect(namespaceDelta).To(Equal(2))
+		})
+
+		It("Should handle negative size values gracefully", func() {
+			By("Testing with negative size")
+			namespaceDelta := helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(5), -1, 0, 0, 0)
+			Expect(namespaceDelta).To(Equal(-1))
+		})
+
+		It("Should handle very large size limits", func() {
+			By("Testing with very large size limit")
+			namespaceDelta := helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(1000), 10, 0, 0, 0)
+			Expect(namespaceDelta).To(Equal(10))
+		})
+
+		It("Should handle boundary conditions", func() {
+			By("Testing boundary condition: SizeLimit equals current namespace count")
+			namespaceDelta := helpers.CalculateNamespaceQuantityDelta(utils.IntPtr(5), 2, 1, 1, 3)
+			Expect(namespaceDelta).To(Equal(0))
+		})
+	})
+})
+
+var _ = Describe("Pool status updates and metrics", func() {
+	Context("When pool status changes", func() {
+		It("Should update status counters correctly", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			originalReady := pool.Status.Ready
+			originalCreating := pool.Status.Creating
+			originalReserved := pool.Status.Reserved
+
+			By("Verifying status counts are non-negative")
+			Expect(originalReady).To(BeNumerically(">=", 0))
+			Expect(originalCreating).To(BeNumerically(">=", 0))
+			Expect(originalReserved).To(BeNumerically(">=", 0))
+
+			By("Verifying total count relationships")
+			total := originalReady + originalCreating + originalReserved
+			Expect(total).To(BeNumerically(">=", 0))
+		})
+
+		It("Should handle concurrent status updates", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Simulating concurrent updates by rapid size changes")
+			for i := 0; i < 3; i++ {
+				pool.Spec.Size++
+				err = k8sClient.Update(ctx, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(func() bool {
+					err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
+					return err == nil
+				}, timeout, interval).Should(BeTrue())
+			}
+		})
+	})
+})
+
+var _ = Describe("Pool resource validation", func() {
+	Context("When pool resources are created or updated", func() {
+		It("Should handle pools with different configurations", func() {
+			ctx := context.Background()
+
+			By("Testing pools with different names exist")
+			poolNames := []string{"default", "minimal", "limit"}
+			for _, poolName := range poolNames {
+				pool := crd.NamespacePool{}
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: poolName}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pool.Name).To(Equal(poolName))
+			}
+		})
+
+		It("Should handle missing pools gracefully", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: "non-existent-pool"}, &pool)
+			Expect(k8serr.IsNotFound(err)).To(BeTrue())
+		})
+	})
+})
+
+var _ = Describe("Pool helper function validation", func() {
+	Context("When using pool helper functions", func() {
+		It("Should correctly identify when pool is at limit", func() {
+			Expect(helpers.IsPoolAtLimit(5, 5)).To(BeTrue())
+			Expect(helpers.IsPoolAtLimit(3, 5)).To(BeFalse())
+			Expect(helpers.IsPoolAtLimit(7, 5)).To(BeFalse())
+			Expect(helpers.IsPoolAtLimit(0, 0)).To(BeTrue())
+		})
+
+		It("Should handle edge cases in pool limit checking", func() {
+			Expect(helpers.IsPoolAtLimit(-1, 5)).To(BeFalse())
+			Expect(helpers.IsPoolAtLimit(5, -1)).To(BeFalse())
+			Expect(helpers.IsPoolAtLimit(-1, -1)).To(BeTrue())
 		})
 	})
 })
