@@ -11,8 +11,8 @@ require (
 	github.com/go-logr/logr v1.4.3
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.38.0
-	github.com/openshift/api v0.0.0-20250812222054-88b2b21555f3
-	github.com/prometheus/client_golang v1.22.0
+	github.com/openshift/api v0.0.0-20250808142411-c974eeafe3f1
+	github.com/prometheus/client_golang v1.23.0
 	k8s.io/api v0.33.4
 	k8s.io/apimachinery v0.33.4
 	k8s.io/client-go v0.33.4
@@ -78,5 +78,5 @@ require (
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.6.0 // indirect
-	sigs.k8s.io/yaml v1.5.0 // indirect
+	sigs.k8s.io/yaml v1.6.0 // indirect
 )
