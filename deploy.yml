@@ -264,8 +264,10 @@ objects:
                                   description: JVM Options
                                   properties:
                                     -XX:
+                                      additionalProperties:
+                                        type: string
                                       description: A map of -XX options to the JVM.
-                                      x-kubernetes-preserve-unknown-fields: true
+                                      type: object
                                     -Xms:
                                       description: -Xms option to to the JVM.
                                       type: string
@@ -1597,6 +1599,9 @@ objects:
       - jsonPath: .spec.requester
         name: Requester
         type: string
+      - jsonPath: .spec.team
+        name: Team
+        type: string
       - jsonPath: .status.state
         name: State
         type: string
@@ -1653,6 +1658,10 @@ objects:
                 requester:
                   description: Requester is the entity (bot or human) requesting the
                     namespace
+                  type: string
+                team:
+                  description: Team is the name of the team the requester belongs
+                    to
                   type: string
               required:
               - requester

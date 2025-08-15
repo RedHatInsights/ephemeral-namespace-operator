@@ -31,7 +31,7 @@ type NamespacePoolSpec struct {
 	// Determine whether the project uses a project or a namespace
 	Local bool `json:"local"`
 	// Clowdenvironment template for the namespace
-	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment"`
+	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment,omitempty"`
 	// Resource limits for containers and pods for the deployed namespace
 	LimitRange core.LimitRange `json:"limitrange"`
 	// Defined resource quotas for specific states for the deployed namespace
