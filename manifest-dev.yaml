@@ -28,6 +28,9 @@ spec:
     - jsonPath: .spec.requester
       name: Requester
       type: string
+    - jsonPath: .spec.team
+      name: Requester
+      type: string
     - jsonPath: .status.state
       name: State
       type: string

@@ -26,6 +26,8 @@ type NamespaceReservationSpec struct {
 	Duration *string `json:"duration,omitempty"`
 	// Requester is the entity (bot or human) requesting the namespace
 	Requester string `json:"requester"`
+	// Team is the name of the team the requester belongs to
+	Team string `json:"team,omitempty"`
 	// PoolType is the pool resource specified to reserve a namespace from
 	// +kubebuilder:default:=default
 	Pool string `json:"pool,omitempty"`
