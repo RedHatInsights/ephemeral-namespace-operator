@@ -7,7 +7,7 @@ import (
 )
 
 // NewReservation creates a mock reservation for testing
-func NewReservation(resName string, duration string, requester string, pool string) *crd.NamespaceReservation {
+func NewReservation(resName string, duration string, requester string, team string, pool string) *crd.NamespaceReservation {
 	return &crd.NamespaceReservation{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "cloud.redhat.com/",
@@ -19,6 +19,7 @@ func NewReservation(resName string, duration string, requester string, pool stri
 		Spec: crd.NamespaceReservationSpec{
 			Duration:  utils.StringPtr(duration),
 			Requester: requester,
+			Team:      team,
 			Pool:      pool,
 		},
 	}
