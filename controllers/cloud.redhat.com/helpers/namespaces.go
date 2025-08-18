@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
 	"github.com/RedHatInsights/rhc-osdk-utils/utils"
@@ -160,25 +162,87 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 }
 
 func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) error {
+	// Extract logger from context or create a default one
+	var log logr.Logger
+	if logPtr := ctx.Value(ErrType("log")); logPtr != nil {
+		if l, ok := logPtr.(*logr.Logger); ok {
+			log = *l
+		} else {
+			log = ctrl.Log.WithName("secret-copy")
+		}
+	} else {
+		log = ctrl.Log.WithName("secret-copy")
+	}
+
 	secrets := core.SecretList{}
 	if err := cl.List(ctx, &secrets, client.InNamespace(NamespaceEphemeralBase)); err != nil {
+		log.Error(err, "SECRET_COPY_OPS: Failed to list secrets from source namespace",
+			"operation", "list_secrets",
+			"source_namespace", NamespaceEphemeralBase,
+			"target_namespace", namespaceName,
+		)
 		return fmt.Errorf("could not list secrets in [%s]: %w", NamespaceEphemeralBase, err)
 	}
+
+	totalSecrets := len(secrets.Items)
+	secretsToProcess := 0
+	secretsSkipped := 0
+	secretsProcessed := 0
+	secretsFailed := 0
+
+	log.Info("SECRET_COPY_OPS: Starting secret copy operation",
+		"operation", "copy_secrets_start",
+		"source_namespace", NamespaceEphemeralBase,
+		"target_namespace", namespaceName,
+		"total_secrets_found", totalSecrets,
+	)
 
 	for _, secret := range secrets.Items {
 		// Filter which secrets should be copied
 		// All secrets with the "qontract" annotations are defined in app-interface
 		if val, ok := secret.Annotations[QontractIntegrationAnnotation]; !ok {
+			secretsSkipped++
+			log.Info("SECRET_COPY_OPS: Skipping secret - missing qontract annotation",
+				"operation", "skip_secret",
+				"secret_name", secret.Name,
+				"source_namespace", secret.Namespace,
+				"target_namespace", namespaceName,
+				"reason", "missing_qontract_annotation",
+				"annotation_key", QontractIntegrationAnnotation,
+			)
 			continue
 		} else if val != OpenShiftVaultSecretsProvider && val != OpenShiftRhcsCertsProvider {
+			secretsSkipped++
+			log.Info("SECRET_COPY_OPS: Skipping secret - qontract annotation value mismatch",
+				"operation", "skip_secret",
+				"secret_name", secret.Name,
+				"source_namespace", secret.Namespace,
+				"target_namespace", namespaceName,
+				"reason", "qontract_annotation_value_mismatch",
+				"annotation_key", QontractIntegrationAnnotation,
+				"annotation_value", val,
+				"expected_value", OpenShiftVaultSecretsProvider+" or "+OpenShiftRhcsCertsProvider,
+			)
 			continue
 		}
 
 		if val, ok := secret.Annotations[BonfireIgnoreAnnotation]; ok {
 			if val == "true" {
+				secretsSkipped++
+				log.Info("SECRET_COPY_OPS: Skipping secret - bonfire ignore annotation set",
+					"operation", "skip_secret",
+					"secret_name", secret.Name,
+					"source_namespace", secret.Namespace,
+					"target_namespace", namespaceName,
+					"reason", "bonfire_ignore_annotation",
+					"annotation_key", BonfireIgnoreAnnotation,
+					"annotation_value", val,
+				)
 				continue
 			}
 		}
+
+		secretsToProcess++
 
 		sourceNamespaceName := types.NamespacedName{
 			Name:      secret.Name,
@@ -190,16 +254,60 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 			Namespace: namespaceName,
 		}
 
+		log.Info("SECRET_COPY_OPS: Starting secret copy",
+			"operation", "copy_secret_start",
+			"secret_name", secret.Name,
+			"source_namespace", secret.Namespace,
+			"target_namespace", namespaceName,
+			"secret_type", string(secret.Type),
+			"data_keys_count", len(secret.Data),
+		)
+
 		newNamespaceSecret, err := utils.CopySecret(ctx, cl, sourceNamespaceName, destinationNamespace)
 		if err != nil {
+			secretsFailed++
+			log.Error(err, "SECRET_COPY_OPS: Failed to copy secret",
+				"operation", "copy_secret_failed",
+				"secret_name", secret.Name,
+				"source_namespace", secret.Namespace,
+				"target_namespace", namespaceName,
+				"error_stage", "utils.CopySecret",
+			)
 			return fmt.Errorf("could not copy secrets into newly created namespace [%s]: %w", namespaceName, err)
 		}
 
 		if err := cl.Create(ctx, newNamespaceSecret); err != nil {
+			secretsFailed++
+			log.Error(err, "SECRET_COPY_OPS: Failed to create secret in target namespace",
+				"operation", "create_secret_failed",
+				"secret_name", secret.Name,
+				"source_namespace", secret.Namespace,
+				"target_namespace", namespaceName,
+				"error_stage", "cl.Create",
+			)
 			return fmt.Errorf("could not create new secret for namespace [%s]: %w", namespaceName, err)
 		}
 
+		secretsProcessed++
+		log.Info("SECRET_COPY_OPS: Successfully copied secret",
+			"operation", "copy_secret_success",
+			"secret_name", secret.Name,
+			"source_namespace", secret.Namespace,
+			"target_namespace", namespaceName,
+		)
 	}
+
+	log.Info("SECRET_COPY_OPS: Secret copy operation completed",
+		"operation", "copy_secrets_complete",
+		"source_namespace", NamespaceEphemeralBase,
+		"target_namespace", namespaceName,
+		"total_secrets_found", totalSecrets,
+		"secrets_skipped", secretsSkipped,
+		"secrets_to_process", secretsToProcess,
+		"secrets_processed", secretsProcessed,
+		"secrets_failed", secretsFailed,
+	)
+
 	return nil
 }
 
