@@ -1551,8 +1551,22 @@ objects:
                 sizeLimit:
                   description: Optional max number of namespaces for a pool
                   type: integer
+                teams:
+                  description: Contains a list of teams and corresponding secrets
+                  items:
+                    properties:
+                      name:
+                        type: string
+                      secrets:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - name
+                    - secrets
+                    type: object
+                  type: array
               required:
-              - clowdenvironment
               - limitrange
               - local
               - resourcequotas
@@ -1598,9 +1612,6 @@ objects:
     - additionalPrinterColumns:
       - jsonPath: .spec.requester
         name: Requester
-        type: string
-      - jsonPath: .spec.team
-        name: Team
         type: string
       - jsonPath: .status.state
         name: State
@@ -1660,8 +1671,7 @@ objects:
                     namespace
                   type: string
                 team:
-                  description: Team is the name of the team the requester belongs
-                    to
+                  description: contains a list of teams and corresponding secrets
                   type: string
               required:
               - requester
