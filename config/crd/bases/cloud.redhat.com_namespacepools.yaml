@@ -1312,6 +1312,21 @@ spec:
               sizeLimit:
                 description: Optional max number of namespaces for a pool
                 type: integer
+              teams:
+                description: Contains a list of teams and corresponding secrets
+                items:
+                  properties:
+                    name:
+                      type: string
+                    secrets:
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - name
+                  - secrets
+                  type: object
+                type: array
             required:
             - limitrange
             - local

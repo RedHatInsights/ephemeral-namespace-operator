@@ -70,7 +70,7 @@ spec:
                   namespace
                 type: string
               team:
-                description: Team is the name of the team the requester belongs to
+                description: contains a list of teams and corresponding secrets
                 type: string
             required:
             - requester
