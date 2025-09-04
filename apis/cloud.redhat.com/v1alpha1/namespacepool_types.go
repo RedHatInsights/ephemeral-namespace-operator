@@ -38,6 +38,13 @@ type NamespacePoolSpec struct {
 	ResourceQuotas core.ResourceQuotaList `json:"resourcequotas"`
 	// Description for the namespace pool
 	Description string `json:"description,omitempty"`
+	// Contains a list of teams and corresponding secrets
+	Teams []Teams `json:"teams,omitempty"`
+}
+
+type Teams struct {
+	Name    string   `json:"name"`
+	Secrets []string `json:"secrets"`
 }
 
 // NamespacePoolStatus defines the observed state of Pool
