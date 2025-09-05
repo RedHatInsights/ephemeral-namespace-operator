@@ -217,8 +217,10 @@ spec:
                                 description: JVM Options
                                 properties:
                                   -XX:
+                                    additionalProperties:
+                                      type: string
                                     description: A map of -XX options to the JVM.
-                                    x-kubernetes-preserve-unknown-fields: true
+                                    type: object
                                   -Xms:
                                     description: -Xms option to to the JVM.
                                     type: string
@@ -1310,8 +1312,22 @@ spec:
               sizeLimit:
                 description: Optional max number of namespaces for a pool
                 type: integer
+              teams:
+                description: Contains a list of teams and corresponding secrets
+                items:
+                  properties:
+                    name:
+                      type: string
+                    secrets:
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - name
+                  - secrets
+                  type: object
+                type: array
             required:
-            - clowdenvironment
             - limitrange
             - local
             - resourcequotas

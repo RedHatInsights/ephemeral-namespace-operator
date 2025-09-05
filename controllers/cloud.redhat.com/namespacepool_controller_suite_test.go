@@ -181,8 +181,8 @@ var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit fo
 			resName6 := "limit-res-1"
 			resName7 := "limit-res-2"
 
-			res6 := helpers.NewReservation(resName6, "30m", "test-user-12", "limit")
-			res7 := helpers.NewReservation(resName7, "30m", "test-user-13", "limit")
+			res6 := helpers.NewReservation(resName6, "30m", "test-user-12", "", "limit")
+			res7 := helpers.NewReservation(resName7, "30m", "test-user-13", "", "limit")
 
 			Expect(k8sClient.Create(ctx, res6)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, res7)).Should(Succeed())
