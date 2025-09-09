@@ -9,8 +9,8 @@ require (
 	github.com/RedHatInsights/frontend-operator v0.2.0
 	github.com/RedHatInsights/rhc-osdk-utils v0.12.0
 	github.com/go-logr/logr v1.4.3
-	github.com/onsi/ginkgo/v2 v2.23.4
-	github.com/onsi/gomega v1.38.0
+	github.com/onsi/ginkgo/v2 v2.25.1
+	github.com/onsi/gomega v1.38.2
 	github.com/openshift/api v0.0.0-20250826155724-4a165b214722
 	github.com/prometheus/client_golang v1.22.0
 	k8s.io/api v0.33.4
@@ -21,6 +21,7 @@ require (
 )
 
 require (
+	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/RedHatInsights/strimzi-client-go v0.40.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -57,6 +58,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
