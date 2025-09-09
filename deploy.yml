@@ -1559,7 +1559,14 @@ objects:
                         type: string
                       secrets:
                         items:
-                          type: string
+                          properties:
+                            destName:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - name
+                          type: object
                         type: array
                     required:
                     - name
