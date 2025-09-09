@@ -31,7 +31,7 @@ type NamespacePoolSpec struct {
 	// Determine whether the project uses a project or a namespace
 	Local bool `json:"local"`
 	// Clowdenvironment template for the namespace
-	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment,omitempty"`
+	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment"`
 	// Resource limits for containers and pods for the deployed namespace
 	LimitRange core.LimitRange `json:"limitrange"`
 	// Defined resource quotas for specific states for the deployed namespace
@@ -43,8 +43,13 @@ type NamespacePoolSpec struct {
 }
 
 type Teams struct {
-	Name    string   `json:"name"`
-	Secrets []string `json:"secrets"`
+	Name    string        `json:"name"`
+	Secrets []SecretsData `json:"secrets"`
+}
+
+type SecretsData struct {
+	Name     string `json:"name"`
+	DestName string `json:"destName,omitempty"`
 }
 
 // NamespacePoolStatus defines the observed state of Pool
