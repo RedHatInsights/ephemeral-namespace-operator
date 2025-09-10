@@ -77,8 +77,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{Requeue: true}, err
 	}
 
-	r.log.Info(fmt.Sprintf("--------- HERE IS MY RES: [%v] ----------", res))
-
 	if res.Status.Pool == "" {
 		if res.Spec.Pool == "" {
 			res.Status.Pool = "default"

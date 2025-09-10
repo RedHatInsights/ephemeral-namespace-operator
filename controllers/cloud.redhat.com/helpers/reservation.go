@@ -33,34 +33,78 @@ func CopyReservationSecrets(ctx context.Context, cl client.Client, namespaceName
 	teamName := res.Spec.Team
 	allTeams := nsPoolObject.Spec.Teams
 
-	for _, team := range allTeams {
+	// Find the team configuration
+	team := findTeamByName(allTeams, teamName)
+	if team == nil {
+		log.Info(fmt.Sprintf("Team [%s] not found in namespace pool configuration", teamName))
+		return nil
+	}
+
+	// Copy secrets for the team
+	return copyTeamSecrets(ctx, cl, secrets.Items, team.Secrets, namespaceName, log)
+}
+
+// findTeamByName searches for a team by name in the teams slice
+func findTeamByName(teams []crd.Teams, teamName string) *crd.Teams {
+	for _, team := range teams {
 		if team.Name == teamName {
-			for _, secret := range secrets.Items {
-
-				for _, teamSecret := range team.Secrets {
-					if secret.Name == teamSecret {
-						sourceNamespaceName := types.NamespacedName{
-							Name:      secret.Name,
-							Namespace: secret.Namespace,
-						}
-
-						destinationNamespace := types.NamespacedName{
-							Name:      secret.Name,
-							Namespace: namespaceName,
-						}
-
-						newNamespaceSecret, err := utils.CopySecret(ctx, cl, sourceNamespaceName, destinationNamespace)
-						if err != nil {
-							return fmt.Errorf("could not copy secrets into newly created namespace [%s]: %w", namespaceName, err)
-						}
-
-						if err := cl.Create(ctx, newNamespaceSecret); err != nil {
-							return fmt.Errorf("could not create new secret for namespace [%s]: %w", namespaceName, err)
-						}
-					}
-				}
-			}
+			return &team
 		}
+	}
+	return nil
+}
+
+// copyTeamSecrets copies all secrets configured for a team to the target namespace
+func copyTeamSecrets(ctx context.Context, cl client.Client, availableSecrets []core.Secret, teamSecrets []crd.SecretsData, targetNamespace string, log logr.Logger) error {
+	for _, teamSecret := range teamSecrets {
+		secret := findSecretByName(availableSecrets, teamSecret.Name)
+		if secret == nil {
+			log.Info(fmt.Sprintf("Secret [%s] not found in source namespace", teamSecret.Name))
+			continue
+		}
+
+		if err := copySecretToNamespace(ctx, cl, secret, teamSecret, targetNamespace); err != nil {
+			return fmt.Errorf("failed to copy secret [%s] to namespace [%s]: %w", teamSecret.Name, targetNamespace, err)
+		}
+	}
+	return nil
+}
+
+// findSecretByName searches for a secret by name in the secrets slice
+func findSecretByName(secrets []core.Secret, secretName string) *core.Secret {
+	for _, secret := range secrets {
+		if secret.Name == secretName {
+			return &secret
+		}
+	}
+	return nil
+}
+
+// copySecretToNamespace copies a single secret to the target namespace with proper naming
+func copySecretToNamespace(ctx context.Context, cl client.Client, secret *core.Secret, teamSecret crd.SecretsData, targetNamespace string) error {
+	sourceNamespaceName := types.NamespacedName{
+		Name:      secret.Name,
+		Namespace: secret.Namespace,
+	}
+
+	// Determine the destination secret name
+	destinationSecretName := teamSecret.Name
+	if teamSecret.DestName != "" {
+		destinationSecretName = teamSecret.DestName
+	}
+
+	destinationNamespaceName := types.NamespacedName{
+		Name:      destinationSecretName,
+		Namespace: targetNamespace,
+	}
+
+	newNamespaceSecret, err := utils.CopySecret(ctx, cl, sourceNamespaceName, destinationNamespaceName)
+	if err != nil {
+		return fmt.Errorf("could not copy secret: %w", err)
+	}
+
+	if err := cl.Create(ctx, newNamespaceSecret); err != nil {
+		return fmt.Errorf("could not create secret: %w", err)
 	}
 
 	return nil

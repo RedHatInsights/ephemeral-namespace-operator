@@ -1335,6 +1335,7 @@ spec:
                   type: object
                 type: array
             required:
+            - clowdenvironment
             - limitrange
             - local
             - resourcequotas
