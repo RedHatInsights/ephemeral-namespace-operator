@@ -39,10 +39,11 @@ type NamespacePoolSpec struct {
 	// Description for the namespace pool
 	Description string `json:"description,omitempty"`
 	// Contains a list of teams and corresponding secrets
-	Teams []Teams `json:"teams,omitempty"`
+	Teams []Team `json:"teams,omitempty"`
 }
 
-type Teams struct {
+// Team defines options that alter ENO behavior depending on name of team making the reservation
+type Team struct {
 	Name    string        `json:"name"`
 	Secrets []SecretsData `json:"secrets"`
 }

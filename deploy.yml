@@ -1554,6 +1554,8 @@ objects:
                 teams:
                   description: Contains a list of teams and corresponding secrets
                   items:
+                    description: Team defines options that alter ENO behavior depending
+                      on name of team making the reservation
                     properties:
                       name:
                         type: string
@@ -1574,6 +1576,7 @@ objects:
                     type: object
                   type: array
               required:
+              - clowdenvironment
               - limitrange
               - local
               - resourcequotas
