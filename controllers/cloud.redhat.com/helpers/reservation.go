@@ -45,7 +45,7 @@ func CopyReservationSecrets(ctx context.Context, cl client.Client, namespaceName
 }
 
 // findTeamByName searches for a team by name in the teams slice
-func findTeamByName(teams []crd.Teams, teamName string) *crd.Teams {
+func findTeamByName(teams []crd.Team, teamName string) *crd.Team {
 	for _, team := range teams {
 		if team.Name == teamName {
 			return &team
