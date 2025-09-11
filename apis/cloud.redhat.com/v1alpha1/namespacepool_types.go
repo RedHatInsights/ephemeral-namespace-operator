@@ -38,6 +38,19 @@ type NamespacePoolSpec struct {
 	ResourceQuotas core.ResourceQuotaList `json:"resourcequotas"`
 	// Description for the namespace pool
 	Description string `json:"description,omitempty"`
+	// Contains a list of teams and corresponding secrets
+	Teams []Team `json:"teams,omitempty"`
+}
+
+// Team defines options that alter ENO behavior depending on name of team making the reservation
+type Team struct {
+	Name    string        `json:"name"`
+	Secrets []SecretsData `json:"secrets"`
+}
+
+type SecretsData struct {
+	Name     string `json:"name"`
+	DestName string `json:"destName,omitempty"`
 }
 
 // NamespacePoolStatus defines the observed state of Pool

@@ -17,6 +17,9 @@ const (
 	LabelPool       = "pool"
 
 	NamespaceEphemeralBase = "ephemeral-base"
+	NamespaceHcmAi         = "ephemeral-hcm-ai"
+
+	PoolAiDevelopment = "ai-development"
 
 	BonfireGinoreSecret         = "bonfire.ignore"
 	OpenShiftVaultSecretsSecret = "openshift-vault-secrets"
