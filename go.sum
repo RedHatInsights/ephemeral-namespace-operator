@@ -4,8 +4,8 @@ github.com/RedHatInsights/clowder v0.100.0 h1:TeIlQCOExW6BsT/o6Jv6J1IUY+vfi01d+s
 github.com/RedHatInsights/clowder v0.100.0/go.mod h1:1+IbEa+/NYum1RKnBm1UqKlvBZ8FhO20UhP295Y9ChM=
 github.com/RedHatInsights/frontend-operator v0.2.0 h1:OCqlS9LQC77Z7/zGPQe3rh+XoLjQ91W0OR6yT2oklSY=
 github.com/RedHatInsights/frontend-operator v0.2.0/go.mod h1:ZXbRx1EOKS4zsN2IP5sVRecxQB2xuYc6mHQAkyoz25Q=
-github.com/RedHatInsights/rhc-osdk-utils v0.12.0 h1:hjJ+U7a+/BCXQb7Y/CIpERv5Cm9wIY1VaPkQkBATWW8=
-github.com/RedHatInsights/rhc-osdk-utils v0.12.0/go.mod h1:5UYiKYXToQB1KN2Pxr27p6Y10w+XrJYzCoMcIOhQBl8=
+github.com/RedHatInsights/rhc-osdk-utils v0.13.0 h1:K1245gkBF4sbHzW3JphC3Rr4B1Wav9FgZLOFjpSg2f0=
+github.com/RedHatInsights/rhc-osdk-utils v0.13.0/go.mod h1:RnCyA/gKtSlDy4Aie/2snMLxKS8qI0+FJcZYFXSwkrc=
 github.com/RedHatInsights/strimzi-client-go v0.40.0 h1:2s2FhRpmSlZDz4AziMUoPI91lWYMRPezcR0ICvwtsus=
 github.com/RedHatInsights/strimzi-client-go v0.40.0/go.mod h1:aOsHx9Lu4ZvS3KR+j6/X+uiyweX594098CYDEdg8kYM=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
