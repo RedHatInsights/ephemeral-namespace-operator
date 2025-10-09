@@ -240,8 +240,8 @@ k8s.io/kube-openapi v0.0.0-20250710124328-f3f2b991d03b h1:MloQ9/bdJyIu9lb1PzujOP
 k8s.io/kube-openapi v0.0.0-20250710124328-f3f2b991d03b/go.mod h1:UZ2yyWbFTpuhSbFhv24aGNOdoRdJZgsIObGBUaYVsts=
 k8s.io/utils v0.0.0-20250820121507-0af2bda4dd1d h1:wAhiDyZ4Tdtt7e46e9M5ZSAJ/MnPGPs+Ki1gHw4w1R0=
 k8s.io/utils v0.0.0-20250820121507-0af2bda4dd1d/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
-knative.dev/pkg v0.0.0-20250728131637-f6a99aca71fd h1:fKjUteb+Z/jm90velUUB3aeHnCkOYKFSjbx3yNdDYJc=
-knative.dev/pkg v0.0.0-20250728131637-f6a99aca71fd/go.mod h1:pht8jNn2VJyz4uFJauCJG4faJEgjFpFvzkJ6cWW3SpM=
+knative.dev/pkg v0.0.0-20251007184713-a624c759bede h1:ADQEXMQlfbjBjicJdou8R5WjPHm0/5FyyV58RQ9eYPU=
+knative.dev/pkg v0.0.0-20251007184713-a624c759bede/go.mod h1:pNETfvzYq5MmPTi+XGGIjjgvQSYvu4pxxLF1muKunhs=
 sigs.k8s.io/cluster-api v1.7.2 h1:bRE8zoao7ajuLC0HijqfZVcubKQCPlZ04HMgcA53FGE=
 sigs.k8s.io/cluster-api v1.7.2/go.mod h1:V9ZhKLvQtsDODwjXOKgbitjyCmC71yMBwDcMyNNIov0=
 sigs.k8s.io/controller-runtime v0.19.7 h1:DLABZfMr20A+AwCZOHhcbcu+TqBXnJZaVBri9K3EO48=
