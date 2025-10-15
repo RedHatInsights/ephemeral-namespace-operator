@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-logr/logr"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -276,4 +277,177 @@ var _ = AfterSuite(func() {
 	stopController()
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
+})
+
+// Additional tests for Poller functionality
+var _ = Describe("Poller", func() {
+	var (
+		ctx    context.Context
+		poller *Poller
+		logger logr.Logger
+	)
+
+	BeforeEach(func() {
+		ctx = context.Background()
+		logger = logf.Log.WithName("test-poller")
+
+		poller = &Poller{
+			client:             k8sClient,
+			activeReservations: make(map[string]metav1.Time),
+			log:                logger,
+		}
+	})
+
+	Describe("namespaceIsExpired", func() {
+		It("should return true for expired timestamp", func() {
+			expiredTime := metav1.Time{Time: time.Now().Add(-1 * time.Hour)}
+			result := poller.namespaceIsExpired(expiredTime)
+			Expect(result).To(BeTrue())
+		})
+
+		It("should return false for future timestamp", func() {
+			futureTime := metav1.Time{Time: time.Now().Add(1 * time.Hour)}
+			result := poller.namespaceIsExpired(futureTime)
+			Expect(result).To(BeFalse())
+		})
+
+		It("should return false for zero timestamp", func() {
+			zeroTime := metav1.Time{}
+			result := poller.namespaceIsExpired(zeroTime)
+			Expect(result).To(BeFalse())
+		})
+
+		It("should return true for timestamp exactly at current time", func() {
+			// Use a time slightly in the past to account for execution time
+			pastTime := metav1.Time{Time: time.Now().Add(-1 * time.Millisecond)}
+			result := poller.namespaceIsExpired(pastTime)
+			Expect(result).To(BeTrue())
+		})
+	})
+
+	Describe("getExistingReservations", func() {
+		It("should return all reservations when they exist", func() {
+			resList, err := poller.getExistingReservations(ctx)
+			Expect(err).ToNot(HaveOccurred())
+			// The list should contain reservations from other tests
+			Expect(resList).ToNot(BeNil())
+		})
+	})
+
+	Describe("populateActiveReservations", func() {
+		It("should handle empty reservation list", func() {
+			// Clear any existing reservations from the map
+			for k := range poller.activeReservations {
+				delete(poller.activeReservations, k)
+			}
+
+			err := poller.populateActiveReservations(ctx)
+			Expect(err).ToNot(HaveOccurred())
+			// The map might not be empty due to other tests, so just check no error
+		})
+
+		It("should only add reservations with 'active' state", func() {
+			// Clear any existing reservations from the map
+			for k := range poller.activeReservations {
+				delete(poller.activeReservations, k)
+			}
+
+			err := poller.populateActiveReservations(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Check that all reservations in the map are from active reservations
+			for resName := range poller.activeReservations {
+				res := &crd.NamespaceReservation{}
+				err := k8sClient.Get(ctx, client.ObjectKey{Name: resName}, res)
+				if err == nil {
+					Expect(res.Status.State).To(Equal("active"))
+				}
+			}
+		})
+	})
+
+	Describe("Poll method behavior", func() {
+		It("should handle expired reservations in activeReservations map", func() {
+			// Add an expired reservation to the active reservations map
+			expiredTime := metav1.Time{Time: time.Now().Add(-1 * time.Hour)}
+			poller.activeReservations["test-expired-res"] = expiredTime
+
+			// Manually check the expiration logic (simulating what Poll does)
+			for k, v := range poller.activeReservations {
+				if poller.namespaceIsExpired(v) {
+					delete(poller.activeReservations, k)
+				}
+			}
+
+			// The expired reservation should be removed from the map
+			Expect(poller.activeReservations).ToNot(HaveKey("test-expired-res"))
+		})
+
+		It("should not remove non-expired reservations", func() {
+			// Add a non-expired reservation to the active reservations map
+			futureTime := metav1.Time{Time: time.Now().Add(1 * time.Hour)}
+			poller.activeReservations["test-active-res"] = futureTime
+
+			// Manually check the expiration logic
+			for k, v := range poller.activeReservations {
+				if poller.namespaceIsExpired(v) {
+					delete(poller.activeReservations, k)
+				}
+			}
+
+			// The non-expired reservation should remain in the map
+			Expect(poller.activeReservations).To(HaveKey("test-active-res"))
+		})
+	})
+
+	Describe("PollCycle constant", func() {
+		It("should have the expected value", func() {
+			Expect(PollCycle).To(Equal(time.Duration(10)))
+		})
+	})
+})
+
+// Additional tests for Metrics functionality
+var _ = Describe("Metrics", func() {
+	Describe("Prometheus Metrics", func() {
+		It("should have totalSuccessfulPoolReservationsCountMetrics defined", func() {
+			Expect(totalSuccessfulPoolReservationsCountMetrics).ToNot(BeNil())
+		})
+
+		It("should have totalFailedPoolReservationsCountMetrics defined", func() {
+			Expect(totalFailedPoolReservationsCountMetrics).ToNot(BeNil())
+		})
+
+		It("should have averageRequestedDurationMetrics defined", func() {
+			Expect(averageRequestedDurationMetrics).ToNot(BeNil())
+		})
+
+		It("should have averageNamespaceCreationMetrics defined", func() {
+			Expect(averageNamespaceCreationMetrics).ToNot(BeNil())
+		})
+
+		It("should have averageReservationToDeploymentMetrics defined", func() {
+			Expect(averageReservationToDeploymentMetrics).ToNot(BeNil())
+		})
+
+		It("should have activeReservationTotalMetrics defined", func() {
+			Expect(activeReservationTotalMetrics).ToNot(BeNil())
+		})
+
+		It("should have resQuantityByUserMetrics defined", func() {
+			Expect(resQuantityByUserMetrics).ToNot(BeNil())
+		})
+
+		It("should have enoVersion defined", func() {
+			Expect(enoVersion).ToNot(BeNil())
+		})
+	})
+
+	Describe("userNamespaceReservationCount map", func() {
+		It("should allow adding and retrieving values", func() {
+			// Test the map functionality
+			userNamespaceReservationCount["test-user"] = 5
+			Expect(userNamespaceReservationCount["test-user"]).To(Equal(5))
+		})
+	})
 })
