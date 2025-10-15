@@ -51,11 +51,13 @@ func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	env := clowder.ClowdEnvironment{}
 	if err := r.client.Get(ctx, req.NamespacedName, &env); err != nil {
-		if !k8serr.IsNotFound(err) {
+		if k8serr.IsNotFound(err) {
+			// ClowdEnvironment was deleted, nothing to reconcile
+			log.Info("ClowdEnvironment not found, likely deleted", "name", req.Name, "namespace", req.Namespace)
 			return ctrl.Result{}, nil
 		}
 
-		r.log.Error(err, "there was an issue retrieving the clowdenvironment", "namespace", env.Name)
+		r.log.Error(err, "there was an issue retrieving the clowdenvironment", "name", req.Name, "namespace", req.Namespace)
 		return ctrl.Result{Requeue: true}, err
 	}
 
