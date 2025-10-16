@@ -21,6 +21,7 @@ import (
 
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -52,7 +53,12 @@ func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 	pool := crd.NamespacePool{}
 
 	if err := r.client.Get(ctx, req.NamespacedName, &pool); err != nil {
-		log.Error(err, fmt.Sprintf("cannot retrieve [%s] pool resource", pool.Name))
+		if k8serr.IsNotFound(err) {
+			// NamespacePool was deleted, nothing to reconcile
+			log.Info("NamespacePool not found, likely deleted", "name", req.Name, "namespace", req.Namespace)
+			return ctrl.Result{}, nil
+		}
+		log.Error(err, fmt.Sprintf("cannot retrieve [%s] pool resource", req.Name))
 		return ctrl.Result{Requeue: true}, err
 	}
 
