@@ -128,8 +128,8 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) 
 }
 
 func CheckReadyStatus(pool string, namespace core.Namespace, ready []core.Namespace) []core.Namespace {
-	if val := namespace.ObjectMeta.Labels[LabelPool]; val == pool {
-		if val, ok := namespace.ObjectMeta.Annotations[AnnotationEnvStatus]; ok && val == EnvStatusReady {
+	if val := namespace.Labels[LabelPool]; val == pool {
+		if val, ok := namespace.Annotations[AnnotationEnvStatus]; ok && val == EnvStatusReady {
 			ready = append(ready, namespace)
 		}
 	}

@@ -1,6 +1,8 @@
 module github.com/RedHatInsights/ephemeral-namespace-operator
 
-go 1.25.1
+go 1.25
+
+toolchain go1.25.4
 
 require (
 	github.com/RedHatInsights/clowder v0.100.0
