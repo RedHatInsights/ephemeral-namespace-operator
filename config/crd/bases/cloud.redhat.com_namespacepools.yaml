@@ -217,8 +217,10 @@ spec:
                                 description: JVM Options
                                 properties:
                                   -XX:
+                                    additionalProperties:
+                                      type: string
                                     description: A map of -XX options to the JVM.
-                                    x-kubernetes-preserve-unknown-fields: true
+                                    type: object
                                   -Xms:
                                     description: -Xms option to to the JVM.
                                     type: string
@@ -602,7 +604,7 @@ spec:
                                       Claims lists the names of resources, defined in spec.resourceClaims,
                                       that are used by this container.
 
-                                      This is an alpha field and requires enabling the
+                                      This field depends on the
                                       DynamicResourceAllocation feature gate.
 
                                       This field is immutable. It can only be set for containers.
@@ -679,7 +681,7 @@ spec:
                                               Claims lists the names of resources, defined in spec.resourceClaims,
                                               that are used by this container.
 
-                                              This is an alpha field and requires enabling the
+                                              This field depends on the
                                               DynamicResourceAllocation feature gate.
 
                                               This field is immutable. It can only be set for containers.
@@ -900,7 +902,7 @@ spec:
                           Claims lists the names of resources, defined in spec.resourceClaims,
                           that are used by this container.
 
-                          This is an alpha field and requires enabling the
+                          This field depends on the
                           DynamicResourceAllocation feature gate.
 
                           This field is immutable. It can only be set for containers.
@@ -1310,6 +1312,30 @@ spec:
               sizeLimit:
                 description: Optional max number of namespaces for a pool
                 type: integer
+              teams:
+                description: Contains a list of teams and corresponding secrets
+                items:
+                  description: Team defines options that alter ENO behavior depending
+                    on name of team making the reservation
+                  properties:
+                    name:
+                      type: string
+                    secrets:
+                      items:
+                        properties:
+                          destName:
+                            type: string
+                          name:
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      type: array
+                  required:
+                  - name
+                  - secrets
+                  type: object
+                type: array
             required:
             - clowdenvironment
             - limitrange

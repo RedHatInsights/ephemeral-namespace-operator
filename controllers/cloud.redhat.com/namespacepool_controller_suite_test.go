@@ -137,24 +137,30 @@ var _ = Describe("Namespace creation should not exceed the pool size limit if on
 var _ = Describe("Rogue namespaces should be deleted", func() {
 	Context("When a namespaces fails to be created properly", func() {
 		It("Should delete the namespace with the `env-status: error` annotation", func() {
-			By("Checking namespace annotations")
+			By("Waiting for a namespace to be created by the pool")
 			ctx := context.Background()
 
-			nsList := core.NamespaceList{}
-			err := k8sClient.List(ctx, &nsList)
-			Expect(err).NotTo(HaveOccurred())
+			var ownedNs core.Namespace
+			Eventually(func() bool {
+				nsList := core.NamespaceList{}
+				err := k8sClient.List(ctx, &nsList)
+				if err != nil {
+					return false
+				}
 
-			ownedNs := core.Namespace{}
-			for _, ns := range nsList.Items {
-				for _, owner := range ns.GetOwnerReferences() {
-					if owner.Kind == "NamespacePool" {
-						ownedNs = ns
-						break
+				for _, ns := range nsList.Items {
+					for _, owner := range ns.GetOwnerReferences() {
+						if owner.Kind == "NamespacePool" {
+							ownedNs = ns
+							return true
+						}
 					}
 				}
-			}
+				return false
+			}, timeout, interval).Should(BeTrue())
 
-			err = helpers.UpdateAnnotations(ctx, k8sClient, ownedNs.Name, helpers.AnnotationEnvError.ToMap())
+			By("Setting error annotation on the namespace")
+			err := helpers.UpdateAnnotations(ctx, k8sClient, ownedNs.Name, helpers.AnnotationEnvError.ToMap())
 			Expect(err).NotTo(HaveOccurred())
 
 			Eventually(func() bool {
@@ -181,8 +187,8 @@ var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit fo
 			resName6 := "limit-res-1"
 			resName7 := "limit-res-2"
 
-			res6 := helpers.NewReservation(resName6, "30m", "test-user-12", "limit")
-			res7 := helpers.NewReservation(resName7, "30m", "test-user-13", "limit")
+			res6 := helpers.NewReservation(resName6, "30m", "test-user-12", "", "limit")
+			res7 := helpers.NewReservation(resName7, "30m", "test-user-13", "", "limit")
 
 			Expect(k8sClient.Create(ctx, res6)).Should(Succeed())
 			Expect(k8sClient.Create(ctx, res7)).Should(Succeed())

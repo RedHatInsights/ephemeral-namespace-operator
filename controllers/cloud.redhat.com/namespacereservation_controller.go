@@ -23,7 +23,7 @@ import (
 	"time"
 
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
-	"github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
+	helpers "github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	"github.com/RedHatInsights/rhc-osdk-utils/utils"
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
@@ -247,6 +247,18 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 	// Set namespace reserved
 	// TODO: update bonfire to only ready "status" annotation
 	nsObject.Annotations["reserved"] = "true"
+
+	teamName := res.Spec.Team
+
+	// Specific pool(s) asks the user for a team name
+	if teamName != "" {
+		r.log.Info("team name [%s] has been set on namespacereservation; copying required secrets into namespace [%s]", teamName, res.Status.Namespace)
+		err = helpers.CopyReservationSecrets(ctx, r.client, readyNsName, res, r.log)
+		if err != nil {
+			r.log.Error(err, "could not copy reservation secrets", "namespace", readyNsName)
+			return err
+		}
+	}
 
 	err = r.client.Update(ctx, &nsObject)
 	if err != nil {
