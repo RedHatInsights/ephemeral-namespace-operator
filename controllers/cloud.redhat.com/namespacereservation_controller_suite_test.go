@@ -109,11 +109,12 @@ var _ = Describe("Reservation controller basic reservation", func() {
 
 				err := k8sClient.List(ctx, &nsList)
 				for _, ns := range nsList.Items {
-					if ns.Name == updatedR1.Status.Namespace {
+					switch ns.Name {
+					case updatedR1.Status.Namespace:
 						nsCount++
-					} else if ns.Name == updatedR2.Status.Namespace {
+					case updatedR2.Status.Namespace:
 						nsCount++
-					} else if ns.Name == updatedR3.Status.Namespace {
+					case updatedR3.Status.Namespace:
 						nsCount++
 					}
 				}
