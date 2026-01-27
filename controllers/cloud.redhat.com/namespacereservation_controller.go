@@ -305,7 +305,7 @@ func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Co
 
 func (r *NamespaceReservationReconciler) addRoleBindings(ctx context.Context, ns *core.Namespace, client client.Client) error {
 	// TODO: hard-coded list of users for now, but will want to do graphql queries later
-	roleNames := []string{"admin"}
+	roleNames := []string{"edit"}
 
 	for _, roleName := range roleNames {
 		binding := rbac.RoleBinding{
