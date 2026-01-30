@@ -21,9 +21,10 @@ const (
 
 	PoolAiDevelopment = "ai-development"
 
-	BonfireGinoreSecret         = "bonfire.ignore"
-	OpenShiftVaultSecretsSecret = "openshift-vault-secrets"
-	QontractIntegrationSecret   = "qontract.integration"
+	BonfireIgnoreAnnotation       = "bonfire.ignore"
+	OpenShiftVaultSecretsProvider = "openshift-vault-secrets"
+	OpenShiftRhcsCertsProvider    = "openshift-rhcs-certs"
+	QontractIntegrationAnnotation = "qontract.integration"
 
 	TrueValue  = "true"
 	FalseValue = "false"

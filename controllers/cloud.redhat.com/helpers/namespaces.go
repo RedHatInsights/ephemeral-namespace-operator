@@ -168,13 +168,13 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 	for _, secret := range secrets.Items {
 		// Filter which secrets should be copied
 		// All secrets with the "qontract" annotations are defined in app-interface
-		if val, ok := secret.Annotations[QontractIntegrationSecret]; !ok {
+		if val, ok := secret.Annotations[QontractIntegrationAnnotation]; !ok {
 			continue
-		} else if val != OpenShiftVaultSecretsSecret {
+		} else if val != OpenShiftVaultSecretsProvider && val != OpenShiftRhcsCertsProvider {
 			continue
 		}
 
-		if val, ok := secret.Annotations[BonfireGinoreSecret]; ok {
+		if val, ok := secret.Annotations[BonfireIgnoreAnnotation]; ok {
 			if val == "true" {
 				continue
 			}
