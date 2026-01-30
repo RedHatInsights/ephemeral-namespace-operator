@@ -273,7 +273,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 				"target_namespace", namespaceName,
 				"error_stage", "utils.CopySecret",
 			)
-			return fmt.Errorf("could not copy secrets into newly created namespace [%s]: %w", namespaceName, err)
+			continue
 		}
 
 		if err := cl.Create(ctx, newNamespaceSecret); err != nil {
@@ -285,7 +285,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 				"target_namespace", namespaceName,
 				"error_stage", "cl.Create",
 			)
-			return fmt.Errorf("could not create new secret for namespace [%s]: %w", namespaceName, err)
+			continue
 		}
 
 		secretsProcessed++
@@ -307,6 +307,10 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 		"secrets_processed", secretsProcessed,
 		"secrets_failed", secretsFailed,
 	)
+
+	if secretsFailed > 0 {
+		return fmt.Errorf("failed to copy %d of %d secrets to namespace [%s]", secretsFailed, secretsToProcess, namespaceName)
+	}
 
 	return nil
 }
