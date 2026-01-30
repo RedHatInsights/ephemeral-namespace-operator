@@ -188,7 +188,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 	var secretsFailed []string
 
 	log.Info("SECRET_COPY_OPS: Starting secret copy operation",
-		"operation", "copy_secrets_start",
+		"operation", "copy_secrets",
 		"source_namespace", NamespaceEphemeralBase,
 		"target_namespace", namespaceName,
 		"total_secrets_found", totalSecrets,
@@ -218,11 +218,10 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 		if err != nil {
 			secretsFailed = append(secretsFailed, secret.Name)
 			log.Error(err, "SECRET_COPY_OPS: Failed to copy secret",
-				"operation", "copy_secret_failed",
+				"operation", "copy_secret",
 				"secret_name", secret.Name,
 				"source_namespace", secret.Namespace,
 				"target_namespace", namespaceName,
-				"error_stage", "utils.CopySecret",
 			)
 			continue
 		}
@@ -230,11 +229,10 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 		if err := cl.Create(ctx, newNamespaceSecret); err != nil {
 			secretsFailed = append(secretsFailed, secret.Name)
 			log.Error(err, "SECRET_COPY_OPS: Failed to create secret in target namespace",
-				"operation", "create_secret_failed",
+				"operation", "create_secret",
 				"secret_name", secret.Name,
 				"source_namespace", secret.Namespace,
 				"target_namespace", namespaceName,
-				"error_stage", "cl.Create",
 			)
 			continue
 		}
@@ -244,63 +242,47 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 
 	totalAttempted := len(secretsSuccessful) + len(secretsFailed)
 
-	log.Info("SECRET_COPY_OPS: Secret copy operation completed",
-		"operation", "copy_secrets_complete",
-		"source_namespace", NamespaceEphemeralBase,
-		"target_namespace", namespaceName,
-		"total_secrets_found", totalSecrets,
-	)
-
 	if len(secretsSuccessful) > 0 {
-		log.Info(fmt.Sprintf("SECRET_COPY_OPS: %d (of %d) secrets were successful: %v", len(secretsSuccessful), totalAttempted, secretsSuccessful),
+		log.Info(fmt.Sprintf("SECRET_COPY_OPS: %d (of %d) secrets were successfully copied", len(secretsSuccessful), totalAttempted),
 			"operation", "copy_summary",
 			"source_namespace", NamespaceEphemeralBase,
 			"target_namespace", namespaceName,
-			"count", len(secretsSuccessful),
-			"total_attempted", totalAttempted,
 			"secret_names", secretsSuccessful,
 		)
 	}
 
 	if len(secretsFailed) > 0 {
-		log.Info(fmt.Sprintf("SECRET_COPY_OPS: %d secrets failed: %v", len(secretsFailed), secretsFailed),
+		log.Info(fmt.Sprintf("SECRET_COPY_OPS: %d secrets failed", len(secretsFailed)),
 			"operation", "copy_summary",
 			"source_namespace", NamespaceEphemeralBase,
 			"target_namespace", namespaceName,
-			"count", len(secretsFailed),
 			"secret_names", secretsFailed,
 		)
 	}
 
 	if len(secretsSkippedMissingAnnotation) > 0 {
-		log.Info(fmt.Sprintf("SECRET_COPY_OPS: %d secrets w/ missing qontract annotation: %v", len(secretsSkippedMissingAnnotation), secretsSkippedMissingAnnotation),
+		log.Info(fmt.Sprintf("SECRET_COPY_OPS: %d secrets w/ missing qontract annotation", len(secretsSkippedMissingAnnotation)),
 			"operation", "copy_summary",
 			"source_namespace", NamespaceEphemeralBase,
 			"target_namespace", namespaceName,
-			"reason", "missing_qontract_annotation",
-			"count", len(secretsSkippedMissingAnnotation),
 			"secret_names", secretsSkippedMissingAnnotation,
 		)
 	}
 
 	if len(secretsSkippedAnnotationMismatch) > 0 {
-		log.Info(fmt.Sprintf("SECRET_COPY_OPS: %d secrets w/ qontract annotation value mismatch: %v", len(secretsSkippedAnnotationMismatch), secretsSkippedAnnotationMismatch),
+		log.Info(fmt.Sprintf("SECRET_COPY_OPS: %d secrets w/ qontract annotation value mismatch", len(secretsSkippedAnnotationMismatch)),
 			"operation", "copy_summary",
 			"source_namespace", NamespaceEphemeralBase,
 			"target_namespace", namespaceName,
-			"reason", "qontract_annotation_value_mismatch",
-			"count", len(secretsSkippedAnnotationMismatch),
 			"secret_names", secretsSkippedAnnotationMismatch,
 		)
 	}
 
 	if len(secretsSkippedBonfireIgnore) > 0 {
-		log.Info(fmt.Sprintf("SECRET_COPY_OPS: %d secrets w/ bonfire ignore annotation set: %v", len(secretsSkippedBonfireIgnore), secretsSkippedBonfireIgnore),
+		log.Info(fmt.Sprintf("SECRET_COPY_OPS: %d secrets w/ bonfire ignore annotation set", len(secretsSkippedBonfireIgnore)),
 			"operation", "copy_summary",
 			"source_namespace", NamespaceEphemeralBase,
 			"target_namespace", namespaceName,
-			"reason", "bonfire_ignore_annotation",
-			"count", len(secretsSkippedBonfireIgnore),
 			"secret_names", secretsSkippedBonfireIgnore,
 		)
 	}
