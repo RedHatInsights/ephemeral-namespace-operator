@@ -31,11 +31,5 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         with:
           version: v2.8.0
-
-          args: >
-            --enable=errcheck,gocritic,gofmt,goimports,gosec,gosimple,govet,ineffassign,revive,staticcheck,typecheck,unused,bodyclose
-            --fix=false
-            --max-same-issues=20
-            --timeout=5m0s
-            --uniq-by-line=false
+          # Configuration is read from .golangci.yml
           only-new-issues: false
