@@ -64,7 +64,7 @@ type NamespaceReservationReconciler struct {
 // Reconcile assigns a ready namespace from the pool to a NamespaceReservation request
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("rid", utils.RandString(5))
-	ctx = context.WithValue(ctx, helpers.ErrType("log"), &log)
+	ctx = context.WithValue(ctx, helpers.ContextKey("log"), &log)
 
 	// Fetch the reservation
 	res := crd.NamespaceReservation{}

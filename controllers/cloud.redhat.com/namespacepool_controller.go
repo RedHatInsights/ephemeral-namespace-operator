@@ -49,7 +49,7 @@ type NamespacePoolReconciler struct {
 // Reconcile manages the NamespacePool by maintaining the desired number of ready namespaces
 func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("rid", utils.RandString(5))
-	ctx = context.WithValue(ctx, helpers.ErrType("log"), &log)
+	ctx = context.WithValue(ctx, helpers.ContextKey("log"), &log)
 
 	pool := crd.NamespacePool{}
 

@@ -61,3 +61,6 @@ var LabelOperatorNamespaceTrue = CustomLabel{Label: LabelOperatorNS, Value: True
 
 // ErrType is used as a key for storing typed values in context
 type ErrType string
+
+// ContextKey is used as a key for storing typed values in context
+type ContextKey string

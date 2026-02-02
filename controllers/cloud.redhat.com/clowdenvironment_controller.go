@@ -49,7 +49,7 @@ type ClowdenvironmentReconciler struct {
 // Reconcile reconciles ClowdEnvironment resources within ephemeral namespaces and sets up FrontendEnvironments
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("rid", utils.RandString(5))
-	ctx = context.WithValue(ctx, helpers.ErrType("log"), &log)
+	ctx = context.WithValue(ctx, helpers.ContextKey("log"), &log)
 
 	env := clowder.ClowdEnvironment{}
 	if err := r.client.Get(ctx, req.NamespacedName, &env); err != nil {
