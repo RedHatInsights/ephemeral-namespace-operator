@@ -1,12 +1,10 @@
 # golangci-lint v2 configuration
-version: 2
+version: "2"
 
 run:
   timeout: 5m0s
   allow-parallel-runners: true
   go: "1.25.5"
-  skip-dirs:
-    - vendor
 
 # Linters configuration
 linters:
