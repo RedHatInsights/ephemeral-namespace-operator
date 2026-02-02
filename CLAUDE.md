@@ -218,15 +218,56 @@ When there are 15+ open konflux PRs, combine them into a single PR:
    - Example: If `go.mod` has `go 1.25.0`, `Dockerfile` should use `registry.access.redhat.com/ubi8/go-toolset:1.25.x-*`
    - Check available images at https://catalog.redhat.com/software/containers/ubi8/go-toolset
    - Use tags with format `<go version>-<timestamp>` (e.g., `1.25.5-1769026830`)
+   - **IMPORTANT**: Update go.mod to match the exact minor version in Dockerfile (e.g., if Dockerfile has 1.25.5, update go.mod from 1.25.0 to 1.25.5)
 
-7. **Push and create PR**:
+7. **CRITICAL: Verify the merge is clean before pushing**:
+   ```bash
+   # Check for any remaining merge conflict markers in go.mod
+   grep -E "^(<<<<<<<|=======|>>>>>>>)" go.mod && echo "ERROR: Merge conflicts still present!" || echo "✓ No conflicts"
+
+   # Verify go mod tidy works without errors
+   go mod tidy
+   if [ $? -eq 0 ]; then
+     echo "✓ go mod tidy succeeded"
+   else
+     echo "ERROR: go mod tidy failed - check for incompatible dependencies"
+     # Common issue: cluster-api v1.12.2+ is incompatible with clowder v0.100.0
+     # Revert cluster-api to v1.7.2 if needed
+     exit 1
+   fi
+
+   # Update lint GitHub Action to match go.mod version
+   GO_VERSION=$(grep "^go " go.mod | awk '{print $2}')
+   echo "Go version in go.mod: $GO_VERSION"
+
+   # Check if .github/workflows/lint.yml needs updating
+   if [ -f .github/workflows/lint.yml ]; then
+     LINT_GO_VERSION=$(grep "go-version:" .github/workflows/lint.yml | head -1 | awk '{print $2}' | tr -d "'\"")
+     if [ "$GO_VERSION" != "$LINT_GO_VERSION" ]; then
+       echo "WARNING: Lint workflow uses Go $LINT_GO_VERSION but go.mod specifies $GO_VERSION"
+       echo "Update .github/workflows/lint.yml to use go-version: '$GO_VERSION'"
+       # Update the file
+       sed -i "s/go-version: .*/go-version: '$GO_VERSION'/" .github/workflows/lint.yml
+       git add .github/workflows/lint.yml
+       echo "✓ Updated lint.yml to Go $GO_VERSION"
+     else
+       echo "✓ Lint workflow Go version matches go.mod"
+     fi
+   fi
+
+   # Commit the go mod tidy changes and lint.yml update if any
+   git add go.mod go.sum
+   git commit -m "Run go mod tidy and verify dependencies" || echo "No changes from go mod tidy"
+   ```
+
+8. **Push and create PR**:
    ```bash
    git push -u origin combined-konflux-dependency-updates
    gh pr create --title "chore(deps): Combined dependency updates from red-hat-konflux" \
      --body "<detailed summary of all updates>"
    ```
 
-8. **Wait for individual PRs to auto-close**:
+9. **Wait for individual PRs to auto-close**:
    - After the combined PR is merged, wait ~1 minute
    - GitHub will automatically close most/all of the individual konflux PRs since their changes are now in main
    - Check if any PRs remain open: `gh pr list --author "app/red-hat-konflux" --state open`
@@ -302,14 +343,29 @@ done
 
 ### Important Considerations
 
+- **CRITICAL: Always verify clean merge before pushing**:
+  - Check for remaining merge conflict markers: `grep -E "^(<<<<<<<|=======|>>>>>>>)" go.mod`
+  - Run `go mod tidy` to verify all dependencies are compatible and go.sum is correct
+  - Update `.github/workflows/lint.yml` to match the Go version in go.mod
+  - Commit any changes from `go mod tidy` before pushing
+
 - **go.mod version**: The Konflux bot may try to update the go version before a Docker image is available. Always verify:
-  - Version in `go.mod` matches the image version in `Dockerfile`
+  - Version in `go.mod` matches the exact minor version in `Dockerfile` (e.g., 1.25.5, not just 1.25.0)
   - Check for newer images at https://catalog.redhat.com/software/containers/ubi8/go-toolset
   - Use tags with format `<go version>-<timestamp>` (e.g., `1.25.5-1769026830`)
   - If no compatible image exists, reject the go version update
-- **rhc-osdk-utils**: Never allow this to be downgraded - always verify it stays at the latest version
-- **Go module tidying**: Don't run `go mod tidy` locally if you lack the correct Go version - let CI handle it
-- **Conflict resolution strategy**: When in doubt, choose the newer version of dependencies
-- **Testing**: Konflux PRs are dependency updates and typically don't require local testing
+
+- **Dependency compatibility issues**:
+  - **sigs.k8s.io/cluster-api**: Versions 1.12.0+ are incompatible with `clowder v0.100.0`
+  - If `go mod tidy` fails with "does not contain package sigs.k8s.io/cluster-api/api/v1beta1", revert cluster-api to v1.7.2
+  - Always test that `go mod tidy` runs successfully before pushing
+
+- **rhc-osdk-utils**: Never allow this to be downgraded - always verify it stays at the latest version (currently v0.14.0)
+
+- **Conflict resolution strategy**: When in doubt, choose the newer version of dependencies, but verify compatibility with `go mod tidy`
+
+- **Testing**: Konflux PRs are dependency updates and typically don't require local testing beyond verifying `go mod tidy` works
+
 - **Admin flag**: The `--admin` flag bypasses branch protection rules - use only for automated dependency updates
+
 - **Timing**: Some PRs need a few seconds after pushing before GitHub recognizes them as mergeable
