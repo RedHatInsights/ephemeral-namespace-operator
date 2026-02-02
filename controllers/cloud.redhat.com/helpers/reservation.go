@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// This function handles copying AI secrets
+// CopyReservationSecrets copies team-specific secrets from the source namespace to the reserved namespace
 func CopyReservationSecrets(ctx context.Context, cl client.Client, namespaceName string, res *crd.NamespaceReservation, log logr.Logger) error {
 	secrets := core.SecretList{}
 

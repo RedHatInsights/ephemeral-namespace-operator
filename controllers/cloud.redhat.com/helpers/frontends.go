@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// CreateFrontendEnv creates a FrontendEnvironment resource and associated service shims in the specified namespace
 func CreateFrontendEnv(ctx context.Context, cl client.Client, namespaceName string, clowdEnv clowder.ClowdEnvironment) error {
 	frontendEnv := frontend.FrontendEnvironment{}
 	err := cl.Get(ctx, types.NamespacedName{Name: fmt.Sprintf("env-%s", namespaceName)}, &frontendEnv)

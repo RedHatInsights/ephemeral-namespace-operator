@@ -1,3 +1,4 @@
+// Package helpers provides utility functions for managing namespace resources, ClowdEnvironments, and FrontendEnvironments
 package helpers
 
 import (
@@ -10,6 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// CreateClowdEnv creates a ClowdEnvironment resource in the specified namespace
 func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnvironmentSpec, namespaceName string) error {
 	env := clowder.ClowdEnvironment{
 		Spec: spec,
@@ -38,6 +40,7 @@ func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnv
 	return nil
 }
 
+// GetClowdEnv retrieves a ClowdEnvironment resource and checks if it's ready
 func GetClowdEnv(ctx context.Context, cl client.Client, namespaceName string) (bool, *clowder.ClowdEnvironment, error) {
 	env := clowder.ClowdEnvironment{}
 	nn := types.NamespacedName{
@@ -58,6 +61,7 @@ func GetClowdEnv(ctx context.Context, cl client.Client, namespaceName string) (b
 	return ready, &env, nil
 }
 
+// VerifyClowdEnvReady checks if a ClowdEnvironment has completed reconciliation and all deployments are ready
 func VerifyClowdEnvReady(env clowder.ClowdEnvironment) bool {
 	// check that hostname is populated if ClowdEnvironment is operating in 'local' web mode
 	if env.Spec.Providers.Web.Mode == "local" && env.Status.Hostname == "" {

@@ -20,6 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// CreateNamespace creates a new ephemeral namespace or project with a random suffix
 func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespacePool) (string, error) {
 	ns := core.Namespace{}
 
@@ -40,6 +41,7 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 	return ns.Name, nil
 }
 
+// UpdateNamespaceResources configures a namespace with pool-defined resources including ClowdEnvironment, LimitRange, ResourceQuotas, and secrets
 func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.NamespacePool, nsName string) (core.Namespace, error) {
 	ns, err := GetNamespace(ctx, cl, nsName)
 	if err != nil {
@@ -85,6 +87,7 @@ func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.N
 	return ns, nil
 }
 
+// GetNamespace retrieves a namespace by name with retry logic
 func GetNamespace(ctx context.Context, cl client.Client, namespaceName string) (core.Namespace, error) {
 	namespace := core.Namespace{}
 
@@ -104,6 +107,7 @@ func GetNamespace(ctx context.Context, cl client.Client, namespaceName string) (
 	return namespace, nil
 }
 
+// GetReadyNamespaces returns all ready namespaces for a given pool
 func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) ([]core.Namespace, error) {
 	namespaceList := core.NamespaceList{}
 
@@ -129,9 +133,10 @@ func GetReadyNamespaces(ctx context.Context, cl client.Client, poolName string) 
 	return ready, nil
 }
 
+// CheckReadyStatus appends a namespace to the ready list if it has the ready status annotation
 func CheckReadyStatus(pool string, namespace core.Namespace, ready []core.Namespace) []core.Namespace {
-	if val := namespace.ObjectMeta.Labels[LabelPool]; val == pool {
-		if val, ok := namespace.ObjectMeta.Annotations[AnnotationEnvStatus]; ok && val == EnvStatusReady {
+	if val := namespace.Labels[LabelPool]; val == pool {
+		if val, ok := namespace.Annotations[AnnotationEnvStatus]; ok && val == EnvStatusReady {
 			ready = append(ready, namespace)
 		}
 	}
@@ -139,6 +144,7 @@ func CheckReadyStatus(pool string, namespace core.Namespace, ready []core.Namesp
 	return ready
 }
 
+// UpdateAnnotations updates annotations on a namespace with retry logic
 func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName string, annotations map[string]string) error {
 	namespace, err := GetNamespace(ctx, cl, namespaceName)
 	if err != nil {
@@ -170,6 +176,7 @@ func logSecretCopyOperation(log logr.Logger, message string, targetNamespace str
 	)
 }
 
+// CopySecrets copies Quay pull secrets and other required secrets from ephemeral-base namespace to the target namespace
 func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) error {
 	// Extract logger from context or create a default one
 	log := ctrl.Log.WithName("secret-copy")
@@ -298,6 +305,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 	return nil
 }
 
+// DeleteNamespace marks a namespace for deletion and removes it from the cluster
 func DeleteNamespace(ctx context.Context, cl client.Client, namespaceName string) error {
 	if err := UpdateAnnotations(ctx, cl, namespaceName, AnnotationEnvDeleting.ToMap()); err != nil {
 		return fmt.Errorf("error updating annotations for [%s]: %w", namespaceName, err)

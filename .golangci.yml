@@ -1,9 +1,43 @@
+# golangci-lint v2 configuration
+version: "2"
+
+run:
+  timeout: 5m0s
+  allow-parallel-runners: true
+  go: "1.25.5"
+
+# Linters configuration
+linters:
+  default: none  # Disable all linters by default
+  enable:
+    - errcheck
+    - gocritic
+    - gosec
+    - govet
+    - ineffassign
+    - revive
+    - staticcheck  # Includes gosimple in v2
+    - unused
+    - bodyclose
+
+  # Exclusions (was issues.exclude-rules in v1)
+  exclusions:
+    rules:
+      - path: apis/cloud.redhat.com/v1alpha1/groupversion_info.go
+        linters:
+          - gofmt
+          - goimports
+      - text: "dot-imports"
+        linters:
+          - revive
+
+# Formatters configuration
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+# Issue output configuration
 issues:
-  exclude-rules:
-    - path: apis/cloud.redhat.com/v1alpha1/groupversion_info.go
-      linters:
-        - gofmt
-        - goimports
-    - text: "dot-imports"
-      linters:
-        - revive
+  max-same-issues: 20
+  uniq-by-line: false

@@ -38,8 +38,11 @@ func init() {
 }
 
 //go:embed version.txt
+
+// Version is the current version of the operator, embedded from version.txt
 var Version string
 
+// Run initializes and starts the controller manager with all reconcilers
 func Run(metricsAddr string, probeAddr string, enableLeaderElection bool) {
 	enoVersion.With(prometheus.Labels{"version": Version}).Inc()
 
