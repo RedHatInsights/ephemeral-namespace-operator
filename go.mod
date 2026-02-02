@@ -1,14 +1,13 @@
 module github.com/RedHatInsights/ephemeral-namespace-operator
 
-go 1.24.0
-
-toolchain go1.24.6
+go 1.25.0
 
 require (
 	github.com/RedHatInsights/clowder v0.100.0
 	github.com/RedHatInsights/frontend-operator v0.2.0
 	github.com/RedHatInsights/rhc-osdk-utils v0.14.0
 	github.com/go-logr/logr v1.4.3
+<<<<<<< HEAD
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.0
 	github.com/openshift/api v0.0.0-20260130140113-71e91db96ffc
@@ -16,6 +15,15 @@ require (
 	k8s.io/api v0.34.3
 	k8s.io/apimachinery v0.34.3
 	k8s.io/client-go v0.34.3
+=======
+	github.com/onsi/ginkgo/v2 v2.27.2
+	github.com/onsi/gomega v1.38.2
+	github.com/openshift/api v0.0.0-20251023193535-8691c3014652
+	github.com/prometheus/client_golang v1.23.2
+	k8s.io/api v0.35.0
+	k8s.io/apimachinery v0.35.0
+	k8s.io/client-go v0.35.0
+>>>>>>> origin/konflux/mintmaker/main/kubernetes-go
 	sigs.k8s.io/cluster-api v1.7.2
 	sigs.k8s.io/controller-runtime v0.19.7
 )
@@ -84,6 +92,7 @@ require (
 =======
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
 <<<<<<< HEAD
+<<<<<<< HEAD
 	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/oauth2 v0.32.0 // indirect
@@ -104,6 +113,15 @@ require (
 >>>>>>> origin/konflux/mintmaker/main/golang.org-x-term-0.x
 	golang.org/x/text v0.30.0 // indirect
 >>>>>>> origin/konflux/mintmaker/main/golang.org-x-sync-0.x
+=======
+	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/oauth2 v0.32.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/term v0.37.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
+>>>>>>> origin/konflux/mintmaker/main/kubernetes-go
 	golang.org/x/time v0.13.0 // indirect
 	golang.org/x/tools v0.41.0 // indirect
 =======
@@ -128,6 +146,7 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 =======
@@ -144,6 +163,16 @@ require (
 	k8s.io/kube-openapi v0.0.0-20250710124328-f3f2b991d03b // indirect
 	k8s.io/utils v0.0.0-20250820121507-0af2bda4dd1d // indirect
 	knative.dev/pkg v0.0.0-20260120122510-4a022ed9999a // indirect
+=======
+	google.golang.org/protobuf v1.36.10 // indirect
+	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
+	gopkg.in/inf.v0 v0.9.1 // indirect
+	k8s.io/apiextensions-apiserver v0.35.0 // indirect
+	k8s.io/klog/v2 v2.130.1 // indirect
+	k8s.io/kube-openapi v0.0.0-20250910181357-589584f1c912 // indirect
+	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4 // indirect
+	knative.dev/pkg v0.0.0-20251022122445-b988e0b4526c // indirect
+>>>>>>> origin/konflux/mintmaker/main/kubernetes-go
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
