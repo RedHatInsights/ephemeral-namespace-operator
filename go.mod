@@ -7,7 +7,7 @@ toolchain go1.24.6
 require (
 	github.com/RedHatInsights/clowder v0.100.0
 	github.com/RedHatInsights/frontend-operator v0.2.0
-	github.com/RedHatInsights/rhc-osdk-utils v0.13.0
+	github.com/RedHatInsights/rhc-osdk-utils v0.14.0
 	github.com/go-logr/logr v1.4.3
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.0
