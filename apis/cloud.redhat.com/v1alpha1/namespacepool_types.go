@@ -48,6 +48,7 @@ type Team struct {
 	Secrets []SecretsData `json:"secrets"`
 }
 
+// SecretsData defines secret name mapping for team-specific secrets
 type SecretsData struct {
 	Name     string `json:"name"`
 	DestName string `json:"destName,omitempty"`
@@ -78,7 +79,7 @@ type NamespacePool struct {
 
 //+kubebuilder:object:root=true
 
-// PoolList contains a list of Pool
+// NamespacePoolList contains a list of NamespacePool
 type NamespacePoolList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -94,8 +95,8 @@ func (i *NamespacePool) MakeOwnerReference() metav1.OwnerReference {
 	return metav1.OwnerReference{
 		APIVersion: i.APIVersion,
 		Kind:       i.Kind,
-		Name:       i.ObjectMeta.Name,
-		UID:        i.ObjectMeta.UID,
+		Name:       i.Name,
+		UID:        i.UID,
 		Controller: TruePtr(),
 	}
 }

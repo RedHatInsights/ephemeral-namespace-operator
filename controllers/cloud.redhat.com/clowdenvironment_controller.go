@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Package controllers implements Kubernetes controllers for managing ephemeral namespace pools
 package controllers
 
 import (
@@ -45,6 +46,7 @@ type ClowdenvironmentReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments/status,verbs=get
 
+// Reconcile reconciles ClowdEnvironment resources within ephemeral namespaces and sets up FrontendEnvironments
 func (r *ClowdenvironmentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("rid", utils.RandString(5))
 	ctx = context.WithValue(ctx, helpers.ErrType("log"), &log)

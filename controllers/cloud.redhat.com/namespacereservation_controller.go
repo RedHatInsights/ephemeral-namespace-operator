@@ -61,6 +61,7 @@ type NamespaceReservationReconciler struct {
 //+kubebuilder:rbac:groups="config.openshift.io",resources=ingresses,verbs=get;list;watch
 //+kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings;roles,verbs=get;list;watch;create;update;patch;delete
 
+// Reconcile assigns a ready namespace from the pool to a NamespaceReservation request
 func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("rid", utils.RandString(5))
 	ctx = context.WithValue(ctx, helpers.ErrType("log"), &log)
@@ -73,7 +74,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, nil
 		}
 
-		r.log.Error(err, fmt.Sprintf("there was an issue retrieving the reservation object for namespace [%s]", req.NamespacedName.Namespace))
+		r.log.Error(err, fmt.Sprintf("there was an issue retrieving the reservation object for namespace [%s]", req.Namespace))
 		return ctrl.Result{Requeue: true}, err
 	}
 
@@ -188,8 +189,8 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		log.Info("updating NamespaceReservation status")
 		log.Info("reservation details",
 			"res-name", res.Name,
-			"res-uuid", res.ObjectMeta.UID,
-			"created", res.ObjectMeta.CreationTimestamp,
+			"res-uuid", res.UID,
+			"created", res.CreationTimestamp,
 			"spec", res.Spec,
 			"status", res.Status,
 		)
@@ -288,7 +289,7 @@ func getExpirationTime(res *crd.NamespaceReservation) (metav1.Time, error) {
 		return metav1.Time{Time: time.Now()}, err // If these are not error states, we want to return nil
 	}
 
-	return metav1.Time{Time: res.CreationTimestamp.Time.Add(duration)}, err // Same here
+	return metav1.Time{Time: res.CreationTimestamp.Add(duration)}, err // Same here
 }
 
 func (r *NamespaceReservationReconciler) verifyClowdEnvForReadyNs(ctx context.Context, readyNsName string) error {

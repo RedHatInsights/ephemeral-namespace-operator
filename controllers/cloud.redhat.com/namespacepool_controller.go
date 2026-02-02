@@ -46,6 +46,7 @@ type NamespacePoolReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacepools/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacepools/finalizers,verbs=update
 
+// Reconcile manages the NamespacePool by maintaining the desired number of ready namespaces
 func (r *NamespacePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.log.WithValues("rid", utils.RandString(5))
 	ctx = context.WithValue(ctx, helpers.ErrType("log"), &log)
@@ -118,6 +119,7 @@ func (r *NamespacePoolReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
+// EnqueueNamespace maps namespace events to NamespacePool reconciliation requests based on the pool label
 func (r *NamespacePoolReconciler) EnqueueNamespace(_ context.Context, a client.Object) []reconcile.Request {
 	labels := a.GetLabels()
 

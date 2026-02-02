@@ -12,14 +12,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// Poller periodically checks for expired namespace reservations and removes them
 type Poller struct {
 	client             client.Client
 	activeReservations map[string]metav1.Time
 	log                logr.Logger
 }
 
+// PollCycle defines the interval in seconds between checks for expired reservations
 const PollCycle time.Duration = 10
 
+// Poll runs continuously checking for and deleting expired namespace reservations
 func (p *Poller) Poll() {
 	ctx := context.Background()
 	p.log.Info("Starting poller...")
