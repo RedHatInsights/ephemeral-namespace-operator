@@ -257,6 +257,15 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 	// TODO: update bonfire to only ready "status" annotation
 	nsObject.Annotations["reserved"] = "true"
 
+	// If the reservation specifies a secret source namespace, copy secrets from it
+	if res.Spec.SecretSourceNamespace != "" {
+		r.log.Info(fmt.Sprintf("copying secrets from [%s] into namespace [%s] per reservation spec", res.Spec.SecretSourceNamespace, readyNsName))
+		if err := helpers.CopySecretsFrom(ctx, r.client, res.Spec.SecretSourceNamespace, readyNsName); err != nil {
+			r.log.Error(err, "could not copy secrets from reservation secret source namespace", "source", res.Spec.SecretSourceNamespace, "namespace", readyNsName)
+			return err
+		}
+	}
+
 	teamName := res.Spec.Team
 
 	// Specific pool(s) asks the user for a team name

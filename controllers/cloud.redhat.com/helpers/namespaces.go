@@ -81,10 +81,10 @@ func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.N
 		}
 	}
 
-	// Copy secrets from the configured source namespace
+	// Copy secrets from the pool's configured default source namespace
 	srcNs := NamespaceEphemeralBase
-	if pool.Spec.SecretSourceNamespace != "" {
-		srcNs = pool.Spec.SecretSourceNamespace
+	if pool.Spec.DefaultSecretSourceNamespace != "" {
+		srcNs = pool.Spec.DefaultSecretSourceNamespace
 	}
 	if err := CopySecretsFrom(ctx, cl, srcNs, nsName); err != nil {
 		return ns, fmt.Errorf("error copying secrets from [%s] to namespace [%s]: %w", srcNs, nsName, err)

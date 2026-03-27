@@ -112,6 +112,11 @@ func copySecretToNamespace(ctx context.Context, cl client.Client, secret *core.S
 
 // NewReservation creates a mock reservation for testing
 func NewReservation(resName string, duration string, requester string, team string, pool string) *crd.NamespaceReservation {
+	return NewReservationWithSecretSrc(resName, duration, requester, team, pool, "")
+}
+
+// NewReservationWithSecretSrc creates a mock reservation with an optional secret source namespace
+func NewReservationWithSecretSrc(resName string, duration string, requester string, team string, pool string, secretSourceNamespace string) *crd.NamespaceReservation {
 	return &crd.NamespaceReservation{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "cloud.redhat.com/",
@@ -121,10 +126,11 @@ func NewReservation(resName string, duration string, requester string, team stri
 			Name: resName,
 		},
 		Spec: crd.NamespaceReservationSpec{
-			Duration:  utils.StringPtr(duration),
-			Requester: requester,
-			Team:      team,
-			Pool:      pool,
+			Duration:              utils.StringPtr(duration),
+			Requester:             requester,
+			Team:                  team,
+			Pool:                  pool,
+			SecretSourceNamespace: secretSourceNamespace,
 		},
 	}
 }

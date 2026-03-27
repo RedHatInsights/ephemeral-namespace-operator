@@ -975,6 +975,10 @@ spec:
                 - providers
                 - resourceDefaults
                 type: object
+              defaultSecretSourceNamespace:
+                description: Default source namespace for copying secrets at pool
+                  creation time (defaults to "ephemeral-base" if empty)
+                type: string
               description:
                 description: Description for the namespace pool
                 type: string
@@ -1307,10 +1311,6 @@ spec:
                 required:
                 - items
                 type: object
-              secretSourceNamespace:
-                description: Source namespace for copying secrets (defaults to "ephemeral-base"
-                  if empty)
-                type: string
               size:
                 description: Number of namespaces to have ready in the pool
                 type: integer

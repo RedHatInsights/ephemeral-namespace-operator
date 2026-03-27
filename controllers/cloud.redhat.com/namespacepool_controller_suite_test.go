@@ -307,6 +307,112 @@ var _ = Describe("Non-Clowder pool behavior", func() {
 	})
 })
 
+var _ = Describe("Pool with DefaultSecretSourceNamespace", func() {
+	const (
+		customSrcTimeout  = time.Second * 20
+		customSrcInterval = time.Millisecond * 100
+	)
+
+	Context("When a pool has DefaultSecretSourceNamespace set", func() {
+		It("Should become ready and copy secrets from the custom source namespace", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "custom-secret-src"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Ready == pool.Spec.Size
+			}, customSrcTimeout, customSrcInterval).Should(BeTrue(), "custom-secret-src pool should reach ready state")
+
+			// Get the ready namespaces for this pool and verify the custom secret was copied
+			readyNsList, err := helpers.GetReadyNamespaces(ctx, k8sClient, "custom-secret-src")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(readyNsList).NotTo(BeEmpty())
+
+			copiedSecret := &core.Secret{}
+			err = k8sClient.Get(ctx, types.NamespacedName{
+				Name:      "custom-pool-secret",
+				Namespace: readyNsList[0].Name,
+			}, copiedSecret)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(copiedSecret.Data["pool-key"]).To(Equal([]byte("pool-value")))
+		})
+	})
+})
+
+var _ = Describe("Reservation with SecretSourceNamespace", func() {
+	const (
+		resSrcTimeout  = time.Second * 20
+		resSrcInterval = time.Millisecond * 100
+	)
+
+	Context("When a reservation specifies secretSourceNamespace", func() {
+		It("Should copy secrets from the reservation's source namespace into the reserved namespace", func() {
+			ctx := context.Background()
+			resName := "res-secret-src-01"
+
+			reservation := helpers.NewReservationWithSecretSrc(resName, "30m", "test-user-ss-01", "", "no-clowder", "res-secret-base")
+			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
+
+			updatedReservation := &crd.NamespaceReservation{}
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
+				if err != nil {
+					return false
+				}
+				return updatedReservation.Status.State == "active"
+			}, resSrcTimeout, resSrcInterval).Should(BeTrue(), "reservation with secretSourceNamespace should become active")
+
+			Expect(updatedReservation.Status.Namespace).NotTo(BeEmpty())
+
+			// Verify the reservation-level secret was copied into the reserved namespace
+			copiedSecret := &core.Secret{}
+			err := k8sClient.Get(ctx, types.NamespacedName{
+				Name:      "res-level-secret",
+				Namespace: updatedReservation.Status.Namespace,
+			}, copiedSecret)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(copiedSecret.Data["res-key"]).To(Equal([]byte("res-value")))
+		})
+
+		It("Should not copy extra secrets when secretSourceNamespace is empty", func() {
+			ctx := context.Background()
+			resName := "res-no-secret-src-01"
+
+			// Wait for pool to replenish first
+			pool := crd.NamespacePool{}
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "no-clowder"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+				return pool.Status.Ready >= 1
+			}, resSrcTimeout, resSrcInterval).Should(BeTrue())
+
+			reservation := helpers.NewReservation(resName, "30m", "test-user-ss-02", "", "no-clowder")
+			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
+
+			updatedReservation := &crd.NamespaceReservation{}
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
+				if err != nil {
+					return false
+				}
+				return updatedReservation.Status.State == "active"
+			}, resSrcTimeout, resSrcInterval).Should(BeTrue(), "reservation without secretSourceNamespace should become active")
+
+			Expect(updatedReservation.Status.Namespace).NotTo(BeEmpty())
+
+			// The reservation-level secret should NOT exist because no secretSourceNamespace was specified
+			missingSecret := &core.Secret{}
+			err := k8sClient.Get(ctx, types.NamespacedName{
+				Name:      "res-level-secret",
+				Namespace: updatedReservation.Status.Namespace,
+			}, missingSecret)
+			Expect(err).To(HaveOccurred())
+		})
+	})
+})
+
 var _ = Describe("Edge cases for creating namespaces with pool limit set", func() {
 	Context("Ensure that calculating namespace creation or deletion is handled properly", func() {
 		It("Should calculate namespace creation, deletion, or return 0 if no changes are needed", func() {

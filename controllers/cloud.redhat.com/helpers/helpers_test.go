@@ -481,6 +481,31 @@ var _ = Describe("Helper Functions", func() {
 				Expect(res.Spec.Team).To(Equal(""))
 				Expect(res.Spec.Pool).To(Equal(""))
 			})
+
+			It("should create a reservation with no secretSourceNamespace by default", func() {
+				res := NewReservation("test-res", "1h", "test-user", "", "default")
+
+				Expect(res.Spec.SecretSourceNamespace).To(Equal(""))
+			})
+		})
+
+		Describe("NewReservationWithSecretSrc", func() {
+			It("should create a reservation with secretSourceNamespace set", func() {
+				res := NewReservationWithSecretSrc("test-res", "1h", "test-user", "", "rosa-cluster", "ephemeral-base-engprod")
+
+				Expect(res.Name).To(Equal("test-res"))
+				Expect(res.Spec.Duration).To(Equal(utils.StringPtr("1h")))
+				Expect(res.Spec.Requester).To(Equal("test-user"))
+				Expect(res.Spec.Pool).To(Equal("rosa-cluster"))
+				Expect(res.Spec.SecretSourceNamespace).To(Equal("ephemeral-base-engprod"))
+				Expect(res.Kind).To(Equal("NamespaceReservation"))
+			})
+
+			It("should handle empty secretSourceNamespace", func() {
+				res := NewReservationWithSecretSrc("test-res", "1h", "test-user", "", "default", "")
+
+				Expect(res.Spec.SecretSourceNamespace).To(Equal(""))
+			})
 		})
 
 		Describe("findTeamByName", func() {
@@ -764,6 +789,148 @@ var _ = Describe("Helper Functions", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(copiedSecret.Data["key1"]).To(Equal([]byte("value1")))
 			})
+		})
+	})
+
+	Describe("CopySecretsFrom", func() {
+		It("should copy secrets from a custom source namespace", func() {
+			customSrcNs := &core.Namespace{
+				ObjectMeta: metav1.ObjectMeta{Name: "custom-base"},
+			}
+			targetNs := &core.Namespace{
+				ObjectMeta: metav1.ObjectMeta{Name: "target-ns"},
+			}
+
+			secret := &core.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "custom-secret",
+					Namespace: "custom-base",
+					Annotations: map[string]string{
+						QontractIntegrationAnnotation: OpenShiftVaultSecretsProvider,
+					},
+				},
+				Data: map[string][]byte{"key": []byte("value")},
+			}
+
+			fakeClient = fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithObjects(customSrcNs, targetNs, secret).
+				Build()
+
+			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns")
+			Expect(err).ToNot(HaveOccurred())
+
+			copiedSecret := &core.Secret{}
+			err = fakeClient.Get(ctx, types.NamespacedName{
+				Name:      "custom-secret",
+				Namespace: "target-ns",
+			}, copiedSecret)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(copiedSecret.Data["key"]).To(Equal([]byte("value")))
+		})
+
+		It("should skip secrets without the qontract annotation", func() {
+			customSrcNs := &core.Namespace{
+				ObjectMeta: metav1.ObjectMeta{Name: "custom-base"},
+			}
+			targetNs := &core.Namespace{
+				ObjectMeta: metav1.ObjectMeta{Name: "target-ns"},
+			}
+
+			// Secret without qontract annotation — should be skipped
+			secretNoAnnotation := &core.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "unannotated-secret",
+					Namespace: "custom-base",
+				},
+				Data: map[string][]byte{"key": []byte("value")},
+			}
+
+			// Secret with correct annotation — should be copied
+			secretWithAnnotation := &core.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "annotated-secret",
+					Namespace: "custom-base",
+					Annotations: map[string]string{
+						QontractIntegrationAnnotation: OpenShiftVaultSecretsProvider,
+					},
+				},
+				Data: map[string][]byte{"key": []byte("value")},
+			}
+
+			fakeClient = fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithObjects(customSrcNs, targetNs, secretNoAnnotation, secretWithAnnotation).
+				Build()
+
+			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns")
+			Expect(err).ToNot(HaveOccurred())
+
+			// Annotated secret should be copied
+			copiedSecret := &core.Secret{}
+			err = fakeClient.Get(ctx, types.NamespacedName{
+				Name:      "annotated-secret",
+				Namespace: "target-ns",
+			}, copiedSecret)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Unannotated secret should NOT be copied
+			missingSecret := &core.Secret{}
+			err = fakeClient.Get(ctx, types.NamespacedName{
+				Name:      "unannotated-secret",
+				Namespace: "target-ns",
+			}, missingSecret)
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("should skip secrets with bonfire.ignore annotation", func() {
+			customSrcNs := &core.Namespace{
+				ObjectMeta: metav1.ObjectMeta{Name: "custom-base"},
+			}
+			targetNs := &core.Namespace{
+				ObjectMeta: metav1.ObjectMeta{Name: "target-ns"},
+			}
+
+			secretIgnored := &core.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "ignored-secret",
+					Namespace: "custom-base",
+					Annotations: map[string]string{
+						QontractIntegrationAnnotation: OpenShiftVaultSecretsProvider,
+						BonfireIgnoreAnnotation:       "true",
+					},
+				},
+				Data: map[string][]byte{"key": []byte("value")},
+			}
+
+			fakeClient = fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithObjects(customSrcNs, targetNs, secretIgnored).
+				Build()
+
+			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns")
+			Expect(err).ToNot(HaveOccurred())
+
+			missingSecret := &core.Secret{}
+			err = fakeClient.Get(ctx, types.NamespacedName{
+				Name:      "ignored-secret",
+				Namespace: "target-ns",
+			}, missingSecret)
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("should return no error when source namespace has no secrets", func() {
+			customSrcNs := &core.Namespace{
+				ObjectMeta: metav1.ObjectMeta{Name: "empty-base"},
+			}
+
+			fakeClient = fake.NewClientBuilder().
+				WithScheme(scheme).
+				WithObjects(customSrcNs).
+				Build()
+
+			err := CopySecretsFrom(ctx, fakeClient, "empty-base", "target-ns")
+			Expect(err).ToNot(HaveOccurred())
 		})
 	})
 })

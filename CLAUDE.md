@@ -16,13 +16,14 @@ The operator manages two primary CRDs located in `apis/cloud.redhat.com/v1alpha1
    - Contains optional ClowdEnvironment spec, LimitRange, ResourceQuotas, and team-specific secrets
    - Tracks pool status: ready, creating, and reserved namespace counts
    - Optional `sizeLimit` field controls maximum total namespaces (ready + creating + reserved)
-   - Optional `secretSourceNamespace` field overrides the default `ephemeral-base` secret source
+   - Optional `defaultSecretSourceNamespace` field overrides the default `ephemeral-base` secret source at pool creation time
    - Optional `description` field documents the pool's purpose
    - Known pool types: `default`, `minimal`, `minimal-secure`, `managed-kafka`, `ai-development`
    - `minimal-secure` pool: uses `edit` ClusterRole instead of `admin` to prevent reserved users from reading secrets (RHCLOUD-41711)
 
 2. **NamespaceReservation** (`namespacereservation_types.go`): Represents a user's request for a namespace
    - Users request via `--name`, `--duration` (default 1 hour), and `--pool` flags
+   - Optional `secretSourceNamespace` field overrides the pool's default secret source at reservation time
    - Status includes expiration time, state (active/waiting/error), and assigned namespace
 
 ### Controllers
@@ -183,7 +184,7 @@ go test ./controllers/cloud.redhat.com/helpers/... -v
 
 - The operator uses `podman` by default, falls back to `docker` if unavailable
 - Version information is embedded from `controllers/cloud.redhat.com/version.txt`
-- The `ephemeral-base` namespace is critical - secrets are copied from here by default (overridable per pool via `secretSourceNamespace`)
+- The `ephemeral-base` namespace is critical - secrets are copied from here by default (overridable per pool via `defaultSecretSourceNamespace`, or per reservation via `secretSourceNamespace`)
 - Secret copying filters on the `qontract.integration` annotation: only secrets with value `openshift-vault-secrets` or `openshift-rhcs-certs` are copied; secrets with `bonfire.ignore=true` are skipped
 - At reservation time, if the NamespaceReservation specifies a `team`, team-specific secrets are additionally copied into the reserved namespace
 - Use `oc` or `kubectl` interchangeably for cluster operations
