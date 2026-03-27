@@ -77,6 +77,9 @@ make test
 make fmt
 make vet
 
+# Run before pushing commits (format, vet, and test)
+make pre-push
+
 # Generate manifests (CRDs, RBAC, webhooks)
 make manifests
 
