@@ -21,6 +21,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	cloud_redhat_comv1alpha1 "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -91,7 +92,11 @@ func (in *NamespacePoolSpec) DeepCopyInto(out *NamespacePoolSpec) {
 		*out = new(int)
 		**out = **in
 	}
-	in.ClowdEnvironment.DeepCopyInto(&out.ClowdEnvironment)
+	if in.ClowdEnvironment != nil {
+		in, out := &in.ClowdEnvironment, &out.ClowdEnvironment
+		*out = new(cloud_redhat_comv1alpha1.ClowdEnvironmentSpec)
+		(*in).DeepCopyInto(*out)
+	}
 	in.LimitRange.DeepCopyInto(&out.LimitRange)
 	in.ResourceQuotas.DeepCopyInto(&out.ResourceQuotas)
 	if in.Teams != nil {

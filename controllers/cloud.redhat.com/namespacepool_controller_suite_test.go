@@ -255,6 +255,58 @@ var _ = Describe("When 'SizeLimit' is specified in the pool resource, a limit fo
 	})
 })
 
+var _ = Describe("Non-Clowder pool behavior", func() {
+	const (
+		noClowderTimeout  = time.Second * 20
+		noClowderInterval = time.Millisecond * 100
+	)
+
+	Context("When a pool has no ClowdEnvironment configured", func() {
+		It("Should mark namespaces as ready immediately without waiting for a ClowdEnvironment", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "no-clowder"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Ready == pool.Spec.Size
+			}, noClowderTimeout, noClowderInterval).Should(BeTrue(), "no-clowder pool namespaces should reach ready state without a ClowdEnvironment")
+		})
+
+		It("Should assign a namespace to a reservation without verifying a ClowdEnvironment", func() {
+			ctx := context.Background()
+			resName := "no-clowder-res-01"
+
+			reservation := helpers.NewReservation(resName, "30m", "test-user-nc-01", "", "no-clowder")
+			Expect(k8sClient.Create(ctx, reservation)).Should(Succeed())
+
+			updatedReservation := &crd.NamespaceReservation{}
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: resName}, updatedReservation)
+				if err != nil {
+					return false
+				}
+				return updatedReservation.Status.State == "active"
+			}, noClowderTimeout, noClowderInterval).Should(BeTrue(), "reservation on no-clowder pool should become active")
+
+			Expect(updatedReservation.Status.Namespace).NotTo(BeEmpty())
+		})
+
+		It("Should replenish the no-clowder pool after a reservation is made", func() {
+			ctx := context.Background()
+			pool := crd.NamespacePool{}
+
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, types.NamespacedName{Name: "no-clowder"}, &pool)
+				Expect(err).NotTo(HaveOccurred())
+
+				return pool.Status.Ready == pool.Spec.Size
+			}, noClowderTimeout, noClowderInterval).Should(BeTrue(), "pool should replenish to desired size after reservation")
+		})
+	})
+})
+
 var _ = Describe("Edge cases for creating namespaces with pool limit set", func() {
 	Context("Ensure that calculating namespace creation or deletion is handled properly", func() {
 		It("Should calculate namespace creation, deletion, or return 0 if no changes are needed", func() {

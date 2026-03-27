@@ -135,7 +135,7 @@ var _ = BeforeSuite(func() {
 	testPoolSpec := crd.NamespacePoolSpec{
 		Size:  2,
 		Local: true,
-		ClowdEnvironment: clowder.ClowdEnvironmentSpec{
+		ClowdEnvironment: &clowder.ClowdEnvironmentSpec{
 			Providers: clowder.ProvidersConfig{
 				Kafka: clowder.KafkaConfig{
 					Mode: "operator",
@@ -257,9 +257,35 @@ var _ = BeforeSuite(func() {
 
 	limitPool.Spec.SizeLimit = utils.IntPtr(3)
 
+	// A pool with no ClowdEnvironment — namespaces should become ready immediately
+	noClowderPoolSpec := crd.NamespacePoolSpec{
+		Size:  2,
+		Local: true,
+		LimitRange: core.LimitRange{
+			Spec: core.LimitRangeSpec{
+				Limits: []core.LimitRangeItem{},
+			},
+		},
+		ResourceQuotas: core.ResourceQuotaList{
+			Items: []core.ResourceQuota{},
+		},
+	}
+
+	noClowderPool := &crd.NamespacePool{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "cloud.redhat.com/",
+			Kind:       "NamespacePool",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "no-clowder",
+		},
+		Spec: noClowderPoolSpec,
+	}
+
 	Expect(k8sClient.Create(ctx, defaultPool)).Should(Succeed())
 	Expect(k8sClient.Create(ctx, minimalPool)).Should(Succeed())
 	Expect(k8sClient.Create(ctx, limitPool)).Should(Succeed())
+	Expect(k8sClient.Create(ctx, noClowderPool)).Should(Succeed())
 
 	go poller.Poll()
 

@@ -30,8 +30,10 @@ type NamespacePoolSpec struct {
 	SizeLimit *int `json:"sizeLimit,omitempty"`
 	// Determine whether the project uses a project or a namespace
 	Local bool `json:"local"`
-	// Clowdenvironment template for the namespace
-	ClowdEnvironment clowder.ClowdEnvironmentSpec `json:"clowdenvironment"`
+	// Clowdenvironment template for the namespace (optional — omit for non-Clowder pools)
+	ClowdEnvironment *clowder.ClowdEnvironmentSpec `json:"clowdenvironment,omitempty"`
+	// Source namespace for copying secrets (defaults to "ephemeral-base" if empty)
+	SecretSourceNamespace string `json:"secretSourceNamespace,omitempty"`
 	// Resource limits for containers and pods for the deployed namespace
 	LimitRange core.LimitRange `json:"limitrange"`
 	// Defined resource quotas for specific states for the deployed namespace

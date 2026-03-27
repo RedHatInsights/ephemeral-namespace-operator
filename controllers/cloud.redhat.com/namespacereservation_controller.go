@@ -160,14 +160,22 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		readyNsName := nsList[0].Name
 		log.Info(fmt.Sprintf("Found namespace in '%s' pool; verifying ready status", res.Status.Pool))
 
-		// Verify that the ClowdEnv has been set up for the requested namespace
-		if err := r.verifyClowdEnvForReadyNs(ctx, readyNsName); err != nil {
-			log.Error(err, err.Error(), "namespace", readyNsName)
-			if err := helpers.UpdateAnnotations(ctx, r.client, readyNsName, helpers.AnnotationEnvError.ToMap()); err != nil {
-				log.Error(err, fmt.Sprintf("unable to update annotations for unready namespace in '%s' pool", res.Status.Pool), "namespace", readyNsName)
+		// Verify that the ClowdEnv has been set up for the requested namespace (only if pool uses Clowder)
+		pool := &crd.NamespacePool{}
+		if err := r.client.Get(ctx, types.NamespacedName{Name: res.Status.Pool}, pool); err != nil {
+			log.Error(err, "could not retrieve pool", "pool", res.Status.Pool)
+			return ctrl.Result{Requeue: true}, err
+		}
+
+		if pool.Spec.ClowdEnvironment != nil {
+			if err := r.verifyClowdEnvForReadyNs(ctx, readyNsName); err != nil {
+				log.Error(err, err.Error(), "namespace", readyNsName)
+				if err := helpers.UpdateAnnotations(ctx, r.client, readyNsName, helpers.AnnotationEnvError.ToMap()); err != nil {
+					log.Error(err, fmt.Sprintf("unable to update annotations for unready namespace in '%s' pool", res.Status.Pool), "namespace", readyNsName)
+					return ctrl.Result{Requeue: true}, err
+				}
 				return ctrl.Result{Requeue: true}, err
 			}
-			return ctrl.Result{Requeue: true}, err
 		}
 
 		// Resolve the requested namespace and remove it from the pool
