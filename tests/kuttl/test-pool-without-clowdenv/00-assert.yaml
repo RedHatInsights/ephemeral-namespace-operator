@@ -1,0 +1,7 @@
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespacePool
+metadata:
+  name: test-without-clowdenv
+status:
+  ready: 1

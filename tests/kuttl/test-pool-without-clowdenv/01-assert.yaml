@@ -1,0 +1,7 @@
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespaceReservation
+metadata:
+  name: test-reservation-no-clowdenv
+status:
+  state: active

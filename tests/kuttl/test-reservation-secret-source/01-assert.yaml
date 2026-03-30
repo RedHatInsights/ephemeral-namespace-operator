@@ -1,0 +1,7 @@
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespaceReservation
+metadata:
+  name: test-reservation-secret-source
+status:
+  state: active

@@ -1,0 +1,13 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+delete:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: NamespaceReservation
+  name: test-reservation-secret-source
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: NamespacePool
+  name: test-secret-source
+- apiVersion: v1
+  kind: Namespace
+  name: custom-secret-source

@@ -1,0 +1,10 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+delete:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: NamespaceReservation
+  name: test-reservation-no-clowdenv
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: NamespacePool
+  name: test-without-clowdenv
