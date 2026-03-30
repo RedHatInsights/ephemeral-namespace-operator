@@ -182,6 +182,7 @@ go test ./controllers/cloud.redhat.com/helpers/... -v
 
 ## Important Notes
 
+- **Always run `make pre-push` before committing code.** This runs formatting, vetting, and tests to ensure code quality. Do not commit until `make pre-push` passes.
 - The operator uses `podman` by default, falls back to `docker` if unavailable
 - Version information is embedded from `controllers/cloud.redhat.com/version.txt`
 - The `ephemeral-base` namespace is critical - secrets are copied from here by default (overridable per pool via `defaultSecretSourceNamespace`, or per reservation via `secretSourceNamespace`)
