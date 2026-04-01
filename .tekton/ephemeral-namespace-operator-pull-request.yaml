@@ -227,7 +227,15 @@ spec:
             value: '*'
           image: registry.access.redhat.com/ubi8/go-toolset:1.25.7-1774830670
           name: kustomize-build
-          script: set -xe && make test
+          script: |
+            set -xe
+            # Install build tools with direct network access since they
+            # are not part of the project's go.mod and therefore not in
+            # the Cachi2 prefetch cache.
+            GONOSUMDB= GONOSUMCHECK= GOPROXY=https://proxy.golang.org,direct \
+              make controller-gen envtest gotestsum kustomize
+            # Run tests using Cachi2-prefetched dependencies
+            make test
           securityContext:
             runAsUser: 0
           workingDir: /var/workdir/source
