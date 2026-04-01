@@ -1322,6 +1322,8 @@ spec:
                       type: string
                     secrets:
                       items:
+                        description: SecretsData defines secret name mapping for team-specific
+                          secrets
                         properties:
                           destName:
                             type: string

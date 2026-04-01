@@ -699,8 +699,7 @@ objects:
                                         that are used by this container.
 
 
-                                        This is an alpha field and requires enabling
-                                        the
+                                        This field depends on the
 
                                         DynamicResourceAllocation feature gate.
 
@@ -795,8 +794,7 @@ objects:
                                                 that are used by this container.
 
 
-                                                This is an alpha field and requires
-                                                enabling the
+                                                This field depends on the
 
                                                 DynamicResourceAllocation feature
                                                 gate.
@@ -1047,7 +1045,7 @@ objects:
                             that are used by this container.
 
 
-                            This is an alpha field and requires enabling the
+                            This field depends on the
 
                             DynamicResourceAllocation feature gate.
 
@@ -1561,6 +1559,8 @@ objects:
                         type: string
                       secrets:
                         items:
+                          description: SecretsData defines secret name mapping for
+                            team-specific secrets
                           properties:
                             destName:
                               type: string
