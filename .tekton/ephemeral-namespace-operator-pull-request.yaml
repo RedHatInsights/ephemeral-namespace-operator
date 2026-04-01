@@ -242,8 +242,10 @@ spec:
             mkdir -p "$ENVTEST_DEST"
             curl -sL "https://github.com/kubernetes-sigs/controller-tools/releases/download/envtest-v1.30.3/envtest-v1.30.3-linux-amd64.tar.gz" \
               | tar xz --strip-components=2 -C "$ENVTEST_DEST"
-            # Run tests using Cachi2-prefetched dependencies
-            make test
+            # Run tests with direct network access — the Cachi2 file://
+            # proxy causes 'go vet' to hang when resolving modules.
+            GONOSUMDB= GONOSUMCHECK= GOPROXY=https://proxy.golang.org,direct \
+              make test
           securityContext:
             runAsUser: 0
           workingDir: /var/workdir/source
