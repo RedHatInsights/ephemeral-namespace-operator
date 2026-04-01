@@ -236,8 +236,12 @@ spec:
               make controller-gen envtest gotestsum kustomize
             # Download envtest K8s binaries (etcd, kube-apiserver) while
             # we still have network access — 'make test' uses -i (installed
-            # only) so they must already be present.
-            ./bin/setup-envtest use 1.30.3 --bin-dir $HOME/.local/share/kubebuilder-envtest
+            # only) so they must already be present.  GCS is no longer
+            # publicly accessible, so fetch from the GitHub release.
+            ENVTEST_DEST="$HOME/.local/share/kubebuilder-envtest/k8s/1.30.3-linux-amd64"
+            mkdir -p "$ENVTEST_DEST"
+            curl -sL "https://github.com/kubernetes-sigs/controller-tools/releases/download/envtest-v1.30.3/envtest-v1.30.3-linux-amd64.tar.gz" \
+              | tar xz --strip-components=2 -C "$ENVTEST_DEST"
             # Run tests using Cachi2-prefetched dependencies
             make test
           securityContext:
