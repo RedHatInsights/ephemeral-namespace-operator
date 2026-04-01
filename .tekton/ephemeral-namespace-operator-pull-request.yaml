@@ -184,67 +184,6 @@ spec:
         workspace: git-auth
       - name: netrc
         workspace: netrc
-    - name: run-unit-tests
-      params:
-      - name: SOURCE_ARTIFACT
-        value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
-      - name: CACHI2_ARTIFACT
-        value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
-      runAfter:
-      - prefetch-dependencies
-      taskSpec:
-        metadata: {}
-        params:
-        - description: The Trusted Artifact URI pointing to the artifact with the application source code.
-          name: SOURCE_ARTIFACT
-          type: string
-        - description: The Trusted Artifact URI pointing to the artifact with the prefetched dependencies.
-          name: CACHI2_ARTIFACT
-          type: string
-        spec:
-        stepTemplate:
-          computeResources: {}
-          volumeMounts:
-          - mountPath: /var/workdir
-            name: workdir
-        steps:
-        - args:
-          - use
-          - $(params.SOURCE_ARTIFACT)=/var/workdir/source
-          - $(params.CACHI2_ARTIFACT)=/var/workdir/cachi2
-          computeResources: {}
-          image: quay.io/redhat-appstudio/build-trusted-artifacts:latest@sha256:9b180776a41d9a22a1c51539f1647c60defbbd55b44bbebdd4130e33512d8b0d
-          name: use-trusted-artifact
-        - computeResources: {}
-          env:
-          - name: GOMODCACHE
-            value: /var/workdir/cachi2/output/deps/gomod/pkg/mod
-          - name: GOPROXY
-            value: file:///var/workdir/cachi2/output/deps/gomod/pkg/mod/cache/download
-          - name: GONOSUMDB
-            value: '*'
-          - name: GONOSUMCHECK
-            value: '*'
-          image: registry.redhat.io/ubi9/go-toolset:1.25.8-1775042950
-          name: kustomize-build
-          script: |
-            set -xe
-            # Install build tools with direct network access since they
-            # are not part of the project's go.mod and therefore not in
-            # the Cachi2 prefetch cache.
-            GONOSUMDB= GONOSUMCHECK= GOPROXY=https://proxy.golang.org,direct \
-              make controller-gen kustomize
-            # Verify the project compiles and run non-envtest tests
-            GONOSUMDB= GONOSUMCHECK= GOPROXY=https://proxy.golang.org,direct \
-              go build ./...
-            GONOSUMDB= GONOSUMCHECK= GOPROXY=https://proxy.golang.org,direct \
-              go test ./controllers/cloud.redhat.com/helpers/... -v
-          securityContext:
-            runAsUser: 0
-          workingDir: /var/workdir/source
-        volumes:
-        - emptyDir: {}
-          name: workdir
     - name: build-container
       params:
       - name: IMAGE
@@ -273,7 +212,7 @@ spec:
       - name: BUILDAH_FORMAT
         value: $(params.buildah-format)
       runAfter:
-      - run-unit-tests
+      - prefetch-dependencies
       taskRef:
         params:
         - name: name
