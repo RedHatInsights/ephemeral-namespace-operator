@@ -234,6 +234,10 @@ spec:
             # the Cachi2 prefetch cache.
             GONOSUMDB= GONOSUMCHECK= GOPROXY=https://proxy.golang.org,direct \
               make controller-gen envtest gotestsum kustomize
+            # Download envtest K8s binaries (etcd, kube-apiserver) while
+            # we still have network access — 'make test' uses -i (installed
+            # only) so they must already be present.
+            ./bin/setup-envtest use 1.30.3 --bin-dir $HOME/.local/share/kubebuilder-envtest
             # Run tests using Cachi2-prefetched dependencies
             make test
           securityContext:
