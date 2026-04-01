@@ -202,6 +202,9 @@ spec:
           name: CACHI2_ARTIFACT
           type: string
         spec:
+        podTemplate:
+          securityContext:
+            fsGroup: 65532
         stepTemplate:
           computeResources: {}
           volumeMounts:
@@ -227,7 +230,15 @@ spec:
             value: '*'
           image: registry.access.redhat.com/ubi8/go-toolset:1.25.7-1774830670
           name: kustomize-build
-          script: set -xe && make test
+          script: set -xe && git config --global --add safe.directory /var/workdir/source && make test
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+              - ALL
           workingDir: /var/workdir/source
         volumes:
         - emptyDir: {}
