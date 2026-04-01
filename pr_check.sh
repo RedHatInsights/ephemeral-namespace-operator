@@ -5,7 +5,7 @@ set -x
 CONTAINER_ENGINE_CMD=''
 TEST_CONTAINER_NAME=''
 TEARDOWN_RAN=0
-GO_TOOLSET_IMAGE='registry.access.redhat.com/ubi9/go-toolset:1.25.7-1774830670'
+GO_TOOLSET_IMAGE='registry.access.redhat.com/ubi9/go-toolset:1.25.8-1775042950'
 
 get_N_chars_commit_hash() {
 
