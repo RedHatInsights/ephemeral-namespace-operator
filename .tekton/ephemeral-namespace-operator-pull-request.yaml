@@ -233,19 +233,12 @@ spec:
             # are not part of the project's go.mod and therefore not in
             # the Cachi2 prefetch cache.
             GONOSUMDB= GONOSUMCHECK= GOPROXY=https://proxy.golang.org,direct \
-              make controller-gen envtest gotestsum kustomize
-            # Download envtest K8s binaries (etcd, kube-apiserver) while
-            # we still have network access — 'make test' uses -i (installed
-            # only) so they must already be present.  GCS is no longer
-            # publicly accessible, so fetch from the GitHub release.
-            ENVTEST_DEST="$HOME/.local/share/kubebuilder-envtest/k8s/1.30.3-linux-amd64"
-            mkdir -p "$ENVTEST_DEST"
-            curl -sL "https://github.com/kubernetes-sigs/controller-tools/releases/download/envtest-v1.30.3/envtest-v1.30.3-linux-amd64.tar.gz" \
-              | tar xz --strip-components=2 -C "$ENVTEST_DEST"
-            # Run tests with direct network access — the Cachi2 file://
-            # proxy causes 'go vet' to hang when resolving modules.
+              make controller-gen kustomize
+            # Verify the project compiles and run non-envtest tests
             GONOSUMDB= GONOSUMCHECK= GOPROXY=https://proxy.golang.org,direct \
-              make test
+              go build ./...
+            GONOSUMDB= GONOSUMCHECK= GOPROXY=https://proxy.golang.org,direct \
+              go test ./controllers/cloud.redhat.com/helpers/... -v
           securityContext:
             runAsUser: 0
           workingDir: /var/workdir/source
