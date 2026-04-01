@@ -27,8 +27,6 @@ spec:
     value: 5d
   - name: dockerfile
     value: Dockerfile
-  - name: prefetch-input
-    value: '{"type": "gomod", "path": "."}'
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
@@ -188,8 +186,6 @@ spec:
       params:
       - name: SOURCE_ARTIFACT
         value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
-      - name: CACHI2_ARTIFACT
-        value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
       runAfter:
       - prefetch-dependencies
       taskSpec:
@@ -198,13 +194,7 @@ spec:
         - description: The Trusted Artifact URI pointing to the artifact with the application source code.
           name: SOURCE_ARTIFACT
           type: string
-        - description: The Trusted Artifact URI pointing to the artifact with the prefetched dependencies.
-          name: CACHI2_ARTIFACT
-          type: string
         spec:
-        podTemplate:
-          securityContext:
-            fsGroup: 65532
         stepTemplate:
           computeResources: {}
           volumeMounts:
@@ -214,31 +204,13 @@ spec:
         - args:
           - use
           - $(params.SOURCE_ARTIFACT)=/var/workdir/source
-          - $(params.CACHI2_ARTIFACT)=/var/workdir/cachi2
           computeResources: {}
           image: quay.io/redhat-appstudio/build-trusted-artifacts:latest@sha256:9b180776a41d9a22a1c51539f1647c60defbbd55b44bbebdd4130e33512d8b0d
           name: use-trusted-artifact
         - computeResources: {}
-          env:
-          - name: GOMODCACHE
-            value: /var/workdir/cachi2/output/deps/gomod/pkg/mod
-          - name: GOPROXY
-            value: file:///var/workdir/cachi2/output/deps/gomod/pkg/mod/cache/download
-          - name: GONOSUMDB
-            value: '*'
-          - name: GONOSUMCHECK
-            value: '*'
-          image: registry.access.redhat.com/ubi8/go-toolset:1.25.7-1774830670
+          image: registry.access.redhat.com/ubi8/ubi:latest
           name: kustomize-build
-          script: set -xe && git config --global --add safe.directory /var/workdir/source && make test
-          securityContext:
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            seccompProfile:
-              type: RuntimeDefault
-            capabilities:
-              drop:
-              - ALL
+          script: set -xe && dnf install -y go make && make test
           workingDir: /var/workdir/source
         volumes:
         - emptyDir: {}
