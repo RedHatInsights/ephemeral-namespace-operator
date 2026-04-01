@@ -278,5 +278,5 @@ $(ENVTEST): $(LOCALBIN)
 
 .PHONY: gotestsum
 gotestsum: $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
+	test -s $(LOCALBIN)/gotestsum || GOBIN=$(LOCALBIN) go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
 
