@@ -205,7 +205,7 @@ spec:
           image: quay.io/redhat-appstudio/build-trusted-artifacts:latest@sha256:9b180776a41d9a22a1c51539f1647c60defbbd55b44bbebdd4130e33512d8b0d
           name: use-trusted-artifact
         - computeResources: {}
-          image: registry.access.redhat.com/ubi8/ubi:latest
+          image: registry.access.redhat.com/ubi9/ubi:latest
           name: kustomize-build
           script: set -xe && dnf install -y go make && make test
           workingDir: /var/workdir/source

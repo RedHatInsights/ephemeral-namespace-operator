@@ -215,8 +215,8 @@ When there are 15+ open konflux PRs, combine them into a single PR:
 
 6. **Verify Go version alignment**:
    - The version in `go.mod` must match the go-toolset image in `Dockerfile`
-   - Example: If `go.mod` has `go 1.25.0`, `Dockerfile` should use `registry.access.redhat.com/ubi8/go-toolset:1.25.x-*`
-   - Check available images at https://catalog.redhat.com/software/containers/ubi8/go-toolset
+   - Example: If `go.mod` has `go 1.25.0`, `Dockerfile` should use `registry.access.redhat.com/ubi9/go-toolset:1.25.x-*`
+   - Check available images at https://catalog.redhat.com/software/containers/ubi9/go-toolset
    - Use tags with format `<go version>-<timestamp>` (e.g., `1.25.5-1769026830`)
    - **IMPORTANT**: Update go.mod to match the exact minor version in Dockerfile (e.g., if Dockerfile has 1.25.5, update go.mod from 1.25.0 to 1.25.5)
 
@@ -351,7 +351,7 @@ done
 
 - **go.mod version**: The Konflux bot may try to update the go version before a Docker image is available. Always verify:
   - Version in `go.mod` matches the exact minor version in `Dockerfile` (e.g., 1.25.5, not just 1.25.0)
-  - Check for newer images at https://catalog.redhat.com/software/containers/ubi8/go-toolset
+  - Check for newer images at https://catalog.redhat.com/software/containers/ubi9/go-toolset
   - Use tags with format `<go version>-<timestamp>` (e.g., `1.25.5-1769026830`)
   - If no compatible image exists, reject the go version update
 
