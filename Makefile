@@ -136,7 +136,7 @@ deploy-minikube-quick: docker-build-no-test-quick bundle docker-push-minikube de
 
 .PHONY: test
 test: update-version manifests generate fmt vet gotestsum envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(HOME)/.local/share/kubebuilder-envtest -p path -i)" $(GOTESTSUM) --junitfile junit-eno.xml --format standard-verbose  -- -coverprofile cover.out ./...
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(HOME)/.local/share/kubebuilder-envtest -p path)" $(GOTESTSUM) --junitfile junit-eno.xml --format standard-verbose  -- -coverprofile cover.out ./...
 
 ##@ Build
 
