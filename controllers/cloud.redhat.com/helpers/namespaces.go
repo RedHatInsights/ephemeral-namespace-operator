@@ -56,11 +56,9 @@ func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.N
 		return ns, fmt.Errorf("could not update Project [%s]: %w", nsName, err)
 	}
 
-	// Create ClowdEnvironment only if the pool spec includes one
-	if pool.Spec.ClowdEnvironment != nil {
-		if err := CreateClowdEnv(ctx, cl, *pool.Spec.ClowdEnvironment, nsName); err != nil {
-			return ns, fmt.Errorf("error creating ClowdEnvironment for namespace [%s]: %w", nsName, err)
-		}
+	// Create ClowdEnvironment (no-op if pool spec doesn't include one)
+	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, nsName); err != nil {
+		return ns, fmt.Errorf("error creating ClowdEnvironment for namespace [%s]: %w", nsName, err)
 	}
 
 	// Create LimitRange

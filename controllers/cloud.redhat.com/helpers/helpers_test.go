@@ -267,7 +267,7 @@ var _ = Describe("Helper Functions", func() {
 			})
 
 			It("should create ClowdEnvironment successfully", func() {
-				err := CreateClowdEnv(ctx, fakeClient, spec, "test-namespace")
+				err := CreateClowdEnv(ctx, fakeClient, &spec, "test-namespace")
 				Expect(err).ToNot(HaveOccurred())
 
 				// Verify the ClowdEnvironment was created
@@ -285,7 +285,7 @@ var _ = Describe("Helper Functions", func() {
 			It("should return error when namespace doesn't exist", func() {
 				fakeClient = fake.NewClientBuilder().WithScheme(scheme).Build()
 
-				err := CreateClowdEnv(ctx, fakeClient, spec, "nonexistent-namespace")
+				err := CreateClowdEnv(ctx, fakeClient, &spec, "nonexistent-namespace")
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("could not retrieve namespace"))
 			})
