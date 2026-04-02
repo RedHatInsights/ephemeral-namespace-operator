@@ -56,7 +56,7 @@ RUNTIME ?= podman
 endif
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.26.0
+ENVTEST_K8S_VERSION = 1.30.3
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -136,7 +136,7 @@ deploy-minikube-quick: docker-build-no-test-quick bundle docker-push-minikube de
 
 .PHONY: test
 test: update-version manifests generate fmt vet gotestsum envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" $(GOTESTSUM) --junitfile junit-eno.xml --format standard-verbose  -- -coverprofile cover.out ./...
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(HOME)/.local/share/kubebuilder-envtest -p path -i)" $(GOTESTSUM) --junitfile junit-eno.xml --format standard-verbose  -- -coverprofile cover.out ./...
 
 ##@ Build
 
@@ -278,5 +278,5 @@ $(ENVTEST): $(LOCALBIN)
 
 .PHONY: gotestsum
 gotestsum: $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
+	test -s $(LOCALBIN)/gotestsum || GOBIN=$(LOCALBIN) go install gotest.tools/gotestsum@$(GOTESTSUM_VERSION)
 

@@ -127,14 +127,39 @@ See CONTRIBUTING.md for detailed local development setup. Quick reference:
 6. Edit `test-pool-spec.yaml` to add your Quay pull secret name
 7. Apply pool spec: `oc apply -f test-pool-spec.yaml`
 
+### How `make test` Works
+
+`make test` runs the full test suite including envtest-based controller tests. It requires `etcd` and `kube-apiserver` binaries to be pre-installed:
+
+1. **`setup-envtest`** is used with `-i` (installed only) to locate pre-downloaded binaries and set `KUBEBUILDER_ASSETS`
+2. **`gotestsum`** runs all tests with coverage output
+3. The envtest binaries (etcd, kube-apiserver) must be in `$HOME/.local/share/kubebuilder-envtest/k8s/<version>-<os>-<arch>/`
+
+**Important**: `setup-envtest` cannot download binaries from GCS (401 Unauthorized). Binaries must be downloaded manually from the GitHub release:
+```bash
+ENVTEST_DEST="$HOME/.local/share/kubebuilder-envtest/k8s/1.30.3-linux-amd64"
+mkdir -p "$ENVTEST_DEST"
+curl -sL "https://github.com/kubernetes-sigs/controller-tools/releases/download/envtest-v1.30.3/envtest-v1.30.3-linux-amd64.tar.gz" \
+  | tar xz --strip-components=2 -C "$ENVTEST_DEST"
+```
+
+There are two test suites:
+- **Controller tests** (`controllers/cloud.redhat.com/suite_test.go`): Require envtest (etcd + kube-apiserver). These test the full reconciliation loop.
+- **Helper tests** (`controllers/cloud.redhat.com/helpers/`): Pure unit tests, no envtest required.
+
+### CI Test Infrastructure
+
+- **GitHub Actions** (`.github/workflows/test.yml`): Runs the full envtest suite on PRs. Downloads envtest binaries from the GitHub release before running `make test`.
+- **Tekton pipeline** (`.tekton/`): Does NOT run unit tests. Only builds the container image and runs security scans.
+
 ### Running Single Tests
 
 ```bash
-# Run specific test
-KUBEBUILDER_ASSETS="$(bin/setup-envtest use 1.26.0 --bin-dir bin -p path)" \
+# Run specific test (requires envtest binaries to be pre-installed)
+KUBEBUILDER_ASSETS="$HOME/.local/share/kubebuilder-envtest/k8s/1.30.3-linux-amd64" \
   go test ./controllers/cloud.redhat.com -run TestNamespacePoolController -v
 
-# Run tests in a specific package
+# Run helper tests (no envtest needed)
 go test ./controllers/cloud.redhat.com/helpers/... -v
 ```
 
@@ -215,8 +240,8 @@ When there are 15+ open konflux PRs, combine them into a single PR:
 
 6. **Verify Go version alignment**:
    - The version in `go.mod` must match the go-toolset image in `Dockerfile`
-   - Example: If `go.mod` has `go 1.25.0`, `Dockerfile` should use `registry.access.redhat.com/ubi8/go-toolset:1.25.x-*`
-   - Check available images at https://catalog.redhat.com/software/containers/ubi8/go-toolset
+   - Example: If `go.mod` has `go 1.25.0`, `Dockerfile` should use `registry.access.redhat.com/ubi9/go-toolset:1.25.x-*`
+   - Check available images at https://catalog.redhat.com/software/containers/ubi9/go-toolset
    - Use tags with format `<go version>-<timestamp>` (e.g., `1.25.5-1769026830`)
    - **IMPORTANT**: Update go.mod to match the exact minor version in Dockerfile (e.g., if Dockerfile has 1.25.5, update go.mod from 1.25.0 to 1.25.5)
 
@@ -351,7 +376,7 @@ done
 
 - **go.mod version**: The Konflux bot may try to update the go version before a Docker image is available. Always verify:
   - Version in `go.mod` matches the exact minor version in `Dockerfile` (e.g., 1.25.5, not just 1.25.0)
-  - Check for newer images at https://catalog.redhat.com/software/containers/ubi8/go-toolset
+  - Check for newer images at https://catalog.redhat.com/software/containers/ubi9/go-toolset
   - Use tags with format `<go version>-<timestamp>` (e.g., `1.25.5-1769026830`)
   - If no compatible image exists, reject the go version update
 
