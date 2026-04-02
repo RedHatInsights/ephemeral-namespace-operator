@@ -23,5 +23,12 @@ jobs:
       - uses: actions/checkout@v6
         name: Checkout ENO
 
+      - name: Download envtest binaries
+        run: |
+          ENVTEST_DEST="$HOME/.local/share/kubebuilder-envtest/k8s/1.30.3-linux-amd64"
+          mkdir -p "$ENVTEST_DEST"
+          curl -sL "https://github.com/kubernetes-sigs/controller-tools/releases/download/envtest-v1.30.3/envtest-v1.30.3-linux-amd64.tar.gz" \
+            | tar xz --strip-components=2 -C "$ENVTEST_DEST"
+
       - name: Run tests
         run: make test
