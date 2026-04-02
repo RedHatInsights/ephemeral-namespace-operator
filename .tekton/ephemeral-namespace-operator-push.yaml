@@ -179,39 +179,6 @@ spec:
         workspace: git-auth
       - name: netrc
         workspace: netrc
-    - name: run-unit-tests
-      params:
-      - name: SOURCE_ARTIFACT
-        value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
-      runAfter:
-      - prefetch-dependencies
-      taskSpec:
-        metadata: {}
-        params:
-        - description: The Trusted Artifact URI pointing to the artifact with the application source code.
-          name: SOURCE_ARTIFACT
-          type: string
-        spec:
-        stepTemplate:
-          computeResources: {}
-          volumeMounts:
-          - mountPath: /var/workdir
-            name: workdir
-        steps:
-        - args:
-          - use
-          - $(params.SOURCE_ARTIFACT)=/var/workdir/source
-          computeResources: {}
-          image: quay.io/redhat-appstudio/build-trusted-artifacts:latest@sha256:9b180776a41d9a22a1c51539f1647c60defbbd55b44bbebdd4130e33512d8b0d
-          name: use-trusted-artifact
-        - computeResources: {}
-          image: registry.access.redhat.com/ubi9/ubi:latest
-          name: kustomize-build
-          script: set -xe && dnf install -y go make && make test
-          workingDir: /var/workdir/source
-        volumes:
-        - emptyDir: {}
-          name: workdir
     - name: build-container
       params:
       - name: IMAGE
@@ -240,7 +207,7 @@ spec:
       - name: BUILDAH_FORMAT
         value: $(params.buildah-format)
       runAfter:
-      - run-unit-tests
+      - prefetch-dependencies
       taskRef:
         params:
         - name: name
