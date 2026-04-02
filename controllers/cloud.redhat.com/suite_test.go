@@ -37,6 +37,7 @@ import (
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
+	helpers "github.com/RedHatInsights/ephemeral-namespace-operator/controllers/cloud.redhat.com/helpers"
 	frontend "github.com/RedHatInsights/frontend-operator/api/v1alpha1"
 	utils "github.com/RedHatInsights/rhc-osdk-utils/utils"
 	core "k8s.io/api/core/v1"
@@ -135,7 +136,7 @@ var _ = BeforeSuite(func() {
 	testPoolSpec := crd.NamespacePoolSpec{
 		Size:  2,
 		Local: true,
-		ClowdEnvironment: clowder.ClowdEnvironmentSpec{
+		ClowdEnvironment: &clowder.ClowdEnvironmentSpec{
 			Providers: clowder.ProvidersConfig{
 				Kafka: clowder.KafkaConfig{
 					Mode: "operator",
@@ -257,9 +258,102 @@ var _ = BeforeSuite(func() {
 
 	limitPool.Spec.SizeLimit = utils.IntPtr(3)
 
+	// A pool with no ClowdEnvironment — namespaces should become ready immediately
+	noClowderPoolSpec := crd.NamespacePoolSpec{
+		Size:  2,
+		Local: true,
+		LimitRange: core.LimitRange{
+			Spec: core.LimitRangeSpec{
+				Limits: []core.LimitRangeItem{},
+			},
+		},
+		ResourceQuotas: core.ResourceQuotaList{
+			Items: []core.ResourceQuota{},
+		},
+	}
+
+	noClowderPool := &crd.NamespacePool{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "cloud.redhat.com/",
+			Kind:       "NamespacePool",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "no-clowder",
+		},
+		Spec: noClowderPoolSpec,
+	}
+
+	// A pool with a custom DefaultSecretSourceNamespace
+	customSecretSrcPoolSpec := crd.NamespacePoolSpec{
+		Size:                         1,
+		Local:                        true,
+		DefaultSecretSourceNamespace: "custom-secret-base",
+		LimitRange: core.LimitRange{
+			Spec: core.LimitRangeSpec{
+				Limits: []core.LimitRangeItem{},
+			},
+		},
+		ResourceQuotas: core.ResourceQuotaList{
+			Items: []core.ResourceQuota{},
+		},
+	}
+
+	customSecretSrcPool := &crd.NamespacePool{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "cloud.redhat.com/",
+			Kind:       "NamespacePool",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "custom-secret-src",
+		},
+		Spec: customSecretSrcPoolSpec,
+	}
+
+	// Create the custom secret source namespace and a secret in it
+	customSecretBaseNs := &core.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "custom-secret-base",
+		},
+	}
+	Expect(k8sClient.Create(ctx, customSecretBaseNs)).Should(Succeed())
+
+	customSecret := &core.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "custom-pool-secret",
+			Namespace: "custom-secret-base",
+			Annotations: map[string]string{
+				helpers.QontractIntegrationAnnotation: helpers.OpenShiftVaultSecretsProvider,
+			},
+		},
+		Data: map[string][]byte{"pool-key": []byte("pool-value")},
+	}
+	Expect(k8sClient.Create(ctx, customSecret)).Should(Succeed())
+
+	// Create a reservation-level secret source namespace and a secret in it
+	resSecretBaseNs := &core.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "res-secret-base",
+		},
+	}
+	Expect(k8sClient.Create(ctx, resSecretBaseNs)).Should(Succeed())
+
+	resSecret := &core.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "res-level-secret",
+			Namespace: "res-secret-base",
+			Annotations: map[string]string{
+				helpers.QontractIntegrationAnnotation: helpers.OpenShiftVaultSecretsProvider,
+			},
+		},
+		Data: map[string][]byte{"res-key": []byte("res-value")},
+	}
+	Expect(k8sClient.Create(ctx, resSecret)).Should(Succeed())
+
 	Expect(k8sClient.Create(ctx, defaultPool)).Should(Succeed())
 	Expect(k8sClient.Create(ctx, minimalPool)).Should(Succeed())
 	Expect(k8sClient.Create(ctx, limitPool)).Should(Succeed())
+	Expect(k8sClient.Create(ctx, noClowderPool)).Should(Succeed())
+	Expect(k8sClient.Create(ctx, customSecretSrcPool)).Should(Succeed())
 
 	go poller.Poll()
 

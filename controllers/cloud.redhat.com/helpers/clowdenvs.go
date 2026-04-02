@@ -11,10 +11,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// CreateClowdEnv creates a ClowdEnvironment resource in the specified namespace
-func CreateClowdEnv(ctx context.Context, cl client.Client, spec clowder.ClowdEnvironmentSpec, namespaceName string) error {
+// CreateClowdEnv creates a ClowdEnvironment resource in the specified namespace.
+// If spec is nil, this is a no-op.
+func CreateClowdEnv(ctx context.Context, cl client.Client, spec *clowder.ClowdEnvironmentSpec, namespaceName string) error {
+	if spec == nil {
+		return nil
+	}
 	env := clowder.ClowdEnvironment{
-		Spec: spec,
+		Spec: *spec,
 	}
 	env.SetName(fmt.Sprintf("env-%s", namespaceName))
 	env.Spec.TargetNamespace = namespaceName

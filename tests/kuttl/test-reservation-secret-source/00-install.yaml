@@ -1,0 +1,86 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ephemeral-base
+---
+# Custom secret source namespace with secrets that should be copied at reservation time
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: custom-secret-source
+---
+# Secret WITH the correct qontract annotation -- should be copied
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-managed-secret
+  namespace: custom-secret-source
+  annotations:
+    qontract.integration: openshift-vault-secrets
+type: Opaque
+data:
+  api-key: dGVzdC1hcGkta2V5  # "test-api-key"
+  password: dGVzdC1wYXNzd29yZA==  # "test-password"
+---
+# Secret WITH the rhcs-certs annotation -- should also be copied
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rhcs-cert-secret
+  namespace: custom-secret-source
+  annotations:
+    qontract.integration: openshift-rhcs-certs
+type: Opaque
+data:
+  cert.pem: dGVzdC1jZXJ0LWRhdGE=  # "test-cert-data"
+---
+# Secret WITHOUT qontract annotation -- should NOT be copied
+apiVersion: v1
+kind: Secret
+metadata:
+  name: unmanaged-secret
+  namespace: custom-secret-source
+type: Opaque
+data:
+  key: c2hvdWxkLW5vdC1iZS1jb3BpZWQ=  # "should-not-be-copied"
+---
+# Secret WITH bonfire.ignore=true -- should NOT be copied
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ignored-secret
+  namespace: custom-secret-source
+  annotations:
+    qontract.integration: openshift-vault-secrets
+    bonfire.ignore: "true"
+type: Opaque
+data:
+  key: c2hvdWxkLWJlLWlnbm9yZWQ=  # "should-be-ignored"
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespacePool
+metadata:
+  name: test-secret-source
+spec:
+  size: 1
+  local: true
+  limitrange:
+    metadata:
+      name: resource-limits
+    spec:
+      limits:
+      - type: Container
+        default:
+          cpu: 200m
+          memory: 512Mi
+        defaultRequest:
+          cpu: 100m
+          memory: 384Mi
+  resourcequotas:
+    items:
+    - metadata:
+        name: compute-resources
+      spec:
+        hard:
+          pods: "10"

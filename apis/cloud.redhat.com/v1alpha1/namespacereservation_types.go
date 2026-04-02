@@ -31,6 +31,9 @@ type NamespaceReservationSpec struct {
 	// PoolType is the pool resource specified to reserve a namespace from
 	// +kubebuilder:default:=default
 	Pool string `json:"pool,omitempty"`
+	// SecretSourceNamespace overrides the pool's default secret source namespace at reservation time.
+	// If set, secrets from this namespace are copied into the reserved namespace.
+	SecretSourceNamespace string `json:"secretSourceNamespace,omitempty"`
 }
 
 // NamespaceReservationStatus defines the observed state of NamespaceReservation

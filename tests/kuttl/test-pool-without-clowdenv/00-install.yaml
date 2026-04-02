@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ephemeral-base
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespacePool
+metadata:
+  name: test-without-clowdenv
+spec:
+  size: 1
+  local: true
+  limitrange:
+    metadata:
+      name: resource-limits
+    spec:
+      limits:
+      - type: Container
+        default:
+          cpu: 200m
+          memory: 512Mi
+        defaultRequest:
+          cpu: 100m
+          memory: 384Mi
+  resourcequotas:
+    items:
+    - metadata:
+        name: compute-resources
+      spec:
+        hard:
+          pods: "10"

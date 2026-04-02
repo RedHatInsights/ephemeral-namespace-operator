@@ -1,0 +1,10 @@
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespaceReservation
+metadata:
+  name: test-reservation-secret-source
+spec:
+  requester: kuttl-test
+  duration: "1h"
+  pool: test-secret-source
+  secretSourceNamespace: custom-secret-source

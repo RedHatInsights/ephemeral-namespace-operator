@@ -13,13 +13,17 @@ The Ephemeral Namespace Operator (ENO) is a Kubernetes operator built using Kube
 The operator manages two primary CRDs located in `apis/cloud.redhat.com/v1alpha1/`:
 
 1. **NamespacePool** (`namespacepool_types.go`): Defines pools of ready namespaces
-   - Contains ClowdEnvironment spec, LimitRange, ResourceQuotas, and team-specific secrets
+   - Contains optional ClowdEnvironment spec, LimitRange, ResourceQuotas, and team-specific secrets
    - Tracks pool status: ready, creating, and reserved namespace counts
    - Optional `sizeLimit` field controls maximum total namespaces (ready + creating + reserved)
-   - Pool types: `default`, `minimal`, `managed-kafka`
+   - Optional `defaultSecretSourceNamespace` field overrides the default `ephemeral-base` secret source at pool creation time
+   - Optional `description` field documents the pool's purpose
+   - Known pool types: `default`, `minimal`, `minimal-secure`, `managed-kafka`, `ai-development`
+   - `minimal-secure` pool: uses `edit` ClusterRole instead of `admin` to prevent reserved users from reading secrets (RHCLOUD-41711)
 
 2. **NamespaceReservation** (`namespacereservation_types.go`): Represents a user's request for a namespace
    - Users request via `--name`, `--duration` (default 1 hour), and `--pool` flags
+   - Optional `secretSourceNamespace` field overrides the pool's default secret source at reservation time
    - Status includes expiration time, state (active/waiting/error), and assigned namespace
 
 ### Controllers
@@ -28,8 +32,9 @@ Three reconcilers in `controllers/cloud.redhat.com/`:
 
 1. **NamespacePoolReconciler** (`namespacepool_controller.go`): Maintains desired pool size
    - Creates namespaces with random 6-character suffixes (`ephemeral-XXXXXX`)
-   - Deploys ClowdEnvironment, FrontendEnvironment, RoleBindings per namespace
-   - Copies secrets from `ephemeral-base` namespace (including Quay pull secrets)
+   - Deploys ClowdEnvironment (if configured), FrontendEnvironment, RoleBindings per namespace
+   - Copies secrets from `ephemeral-base` (or `secretSourceNamespace`) to each namespace
+   - Namespaces in pools without a ClowdEnvironment are marked ready immediately after provisioning
    - Respects pool `sizeLimit` when creating new namespaces
    - Helper logic in `controllers/cloud.redhat.com/helpers/pool.go` calculates namespace quantity deltas
 
@@ -72,6 +77,9 @@ make test
 # Format and vet code
 make fmt
 make vet
+
+# Run before pushing commits (format, vet, and test)
+make pre-push
 
 # Generate manifests (CRDs, RBAC, webhooks)
 make manifests
@@ -174,10 +182,12 @@ go test ./controllers/cloud.redhat.com/helpers/... -v
 
 ## Important Notes
 
+- **Always run `make pre-push` before committing code.** This runs formatting, vetting, and tests to ensure code quality. Do not commit until `make pre-push` passes.
 - The operator uses `podman` by default, falls back to `docker` if unavailable
 - Version information is embedded from `controllers/cloud.redhat.com/version.txt`
-- The `ephemeral-base` namespace is critical - secrets are copied from here to all ephemeral namespaces
-- Secrets with type `rhcs-certs` are automatically copied to ephemeral namespaces
+- The `ephemeral-base` namespace is critical - secrets are copied from here by default (overridable per pool via `defaultSecretSourceNamespace`, or per reservation via `secretSourceNamespace`)
+- Secret copying filters on the `qontract.integration` annotation: only secrets with value `openshift-vault-secrets` or `openshift-rhcs-certs` are copied; secrets with `bonfire.ignore=true` are skipped
+- At reservation time, if the NamespaceReservation specifies a `team`, team-specific secrets are additionally copied into the reserved namespace
 - Use `oc` or `kubectl` interchangeably for cluster operations
 - Pool calculations in `helpers/pool.go` handle `sizeLimit` constraints to prevent over-provisioning
 

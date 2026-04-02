@@ -71,7 +71,8 @@ objects:
               description: NamespacePoolSpec defines the desired state of Pool
               properties:
                 clowdenvironment:
-                  description: Clowdenvironment template for the namespace
+                  description: "Clowdenvironment template for the namespace (optional\
+                    \ \u2014 omit for non-Clowder pools)"
                   properties:
                     disabled:
                       description: Disabled turns off reconciliation for this ClowdEnv
@@ -1134,6 +1135,10 @@ objects:
                   - providers
                   - resourceDefaults
                   type: object
+                defaultSecretSourceNamespace:
+                  description: Default source namespace for copying secrets at pool
+                    creation time (defaults to "ephemeral-base" if empty)
+                  type: string
                 description:
                   description: Description for the namespace pool
                   type: string
@@ -1576,7 +1581,6 @@ objects:
                     type: object
                   type: array
               required:
-              - clowdenvironment
               - limitrange
               - local
               - resourcequotas
@@ -1679,6 +1683,13 @@ objects:
                 requester:
                   description: Requester is the entity (bot or human) requesting the
                     namespace
+                  type: string
+                secretSourceNamespace:
+                  description: 'SecretSourceNamespace overrides the pool''s default
+                    secret source namespace at reservation time.
+
+                    If set, secrets from this namespace are copied into the reserved
+                    namespace.'
                   type: string
                 team:
                   description: contains a list of teams and corresponding secrets

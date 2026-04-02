@@ -56,7 +56,7 @@ func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.N
 		return ns, fmt.Errorf("could not update Project [%s]: %w", nsName, err)
 	}
 
-	// Create ClowdEnvironment
+	// Create ClowdEnvironment (no-op if pool spec doesn't include one)
 	if err := CreateClowdEnv(ctx, cl, pool.Spec.ClowdEnvironment, nsName); err != nil {
 		return ns, fmt.Errorf("error creating ClowdEnvironment for namespace [%s]: %w", nsName, err)
 	}
@@ -79,9 +79,22 @@ func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.N
 		}
 	}
 
-	// Copy secrets
-	if err := CopySecrets(ctx, cl, nsName); err != nil {
-		return ns, fmt.Errorf("error copying secrets from ephemeral-base namespace to namespace [%s]: %w", nsName, err)
+	// Copy secrets from the pool's configured default source namespace
+	srcNs := NamespaceEphemeralBase
+	if pool.Spec.DefaultSecretSourceNamespace != "" {
+		srcNs = pool.Spec.DefaultSecretSourceNamespace
+	}
+	if err := CopySecretsFrom(ctx, cl, srcNs, nsName); err != nil {
+		return ns, fmt.Errorf("error copying secrets from [%s] to namespace [%s]: %w", srcNs, nsName, err)
+	}
+
+	// If no ClowdEnv, mark namespace ready immediately
+	if pool.Spec.ClowdEnvironment == nil {
+		if err := UpdateAnnotations(ctx, cl, nsName, map[string]string{
+			AnnotationEnvStatus: EnvStatusReady,
+		}); err != nil {
+			return ns, fmt.Errorf("error marking namespace [%s] as ready: %w", nsName, err)
+		}
 	}
 
 	return ns, nil
@@ -167,17 +180,17 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 	return nil
 }
 
-func logSecretCopyOperation(log logr.Logger, message string, targetNamespace string, secretNames []string) {
+func logSecretCopyOperation(log logr.Logger, message string, srcNamespace, targetNamespace string, secretNames []string) {
 	log.Info(message,
 		"operation", "copy_summary",
-		"source_namespace", NamespaceEphemeralBase,
+		"source_namespace", srcNamespace,
 		"target_namespace", targetNamespace,
 		"secret_names", secretNames,
 	)
 }
 
-// CopySecrets copies Quay pull secrets and other required secrets from ephemeral-base namespace to the target namespace
-func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) error {
+// CopySecretsFrom copies secrets from any source namespace to the target namespace
+func CopySecretsFrom(ctx context.Context, cl client.Client, srcNamespace, namespaceName string) error {
 	// Extract logger from context or create a default one
 	log := ctrl.Log.WithName("secret-copy")
 	if logPtr := ctx.Value(ContextKey("log")); logPtr != nil {
@@ -187,13 +200,13 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 	}
 
 	secrets := core.SecretList{}
-	if err := cl.List(ctx, &secrets, client.InNamespace(NamespaceEphemeralBase)); err != nil {
+	if err := cl.List(ctx, &secrets, client.InNamespace(srcNamespace)); err != nil {
 		log.Error(err, "SECRET_COPY_OPS: Failed to list secrets from source namespace",
 			"operation", "list_secrets",
-			"source_namespace", NamespaceEphemeralBase,
+			"source_namespace", srcNamespace,
 			"target_namespace", namespaceName,
 		)
-		return fmt.Errorf("could not list secrets in [%s]: %w", NamespaceEphemeralBase, err)
+		return fmt.Errorf("could not list secrets in [%s]: %w", srcNamespace, err)
 	}
 
 	totalSecrets := len(secrets.Items)
@@ -205,7 +218,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 
 	log.Info("SECRET_COPY_OPS: Starting secret copy operation",
 		"operation", "copy_secrets",
-		"source_namespace", NamespaceEphemeralBase,
+		"source_namespace", srcNamespace,
 		"target_namespace", namespaceName,
 		"total_secrets_found", totalSecrets,
 	)
@@ -261,6 +274,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 	if len(secretsSuccessful) > 0 {
 		logSecretCopyOperation(log,
 			fmt.Sprintf("SECRET_COPY_OPS: %d (of %d) secrets were successfully copied", len(secretsSuccessful), totalAttempted),
+			srcNamespace,
 			namespaceName,
 			secretsSuccessful,
 		)
@@ -269,6 +283,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 	if len(secretsFailed) > 0 {
 		logSecretCopyOperation(log,
 			fmt.Sprintf("SECRET_COPY_OPS: %d secrets failed", len(secretsFailed)),
+			srcNamespace,
 			namespaceName,
 			secretsFailed,
 		)
@@ -277,6 +292,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 	if len(secretsSkippedMissingAnnotation) > 0 {
 		logSecretCopyOperation(log,
 			fmt.Sprintf("SECRET_COPY_OPS: %d secrets w/ missing qontract annotation", len(secretsSkippedMissingAnnotation)),
+			srcNamespace,
 			namespaceName,
 			secretsSkippedMissingAnnotation,
 		)
@@ -285,6 +301,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 	if len(secretsSkippedAnnotationMismatch) > 0 {
 		logSecretCopyOperation(log,
 			fmt.Sprintf("SECRET_COPY_OPS: %d secrets w/ qontract annotation value mismatch", len(secretsSkippedAnnotationMismatch)),
+			srcNamespace,
 			namespaceName,
 			secretsSkippedAnnotationMismatch,
 		)
@@ -293,6 +310,7 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 	if len(secretsSkippedBonfireIgnore) > 0 {
 		logSecretCopyOperation(log,
 			fmt.Sprintf("SECRET_COPY_OPS: %d secrets w/ bonfire ignore annotation set", len(secretsSkippedBonfireIgnore)),
+			srcNamespace,
 			namespaceName,
 			secretsSkippedBonfireIgnore,
 		)
@@ -303,6 +321,11 @@ func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) er
 	}
 
 	return nil
+}
+
+// CopySecrets copies secrets from ephemeral-base to the target namespace (backward-compatible wrapper)
+func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) error {
+	return CopySecretsFrom(ctx, cl, NamespaceEphemeralBase, namespaceName)
 }
 
 // DeleteNamespace marks a namespace for deletion and removes it from the cluster

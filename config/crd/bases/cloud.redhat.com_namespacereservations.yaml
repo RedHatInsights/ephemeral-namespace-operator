@@ -69,6 +69,11 @@ spec:
                 description: Requester is the entity (bot or human) requesting the
                   namespace
                 type: string
+              secretSourceNamespace:
+                description: |-
+                  SecretSourceNamespace overrides the pool's default secret source namespace at reservation time.
+                  If set, secrets from this namespace are copied into the reserved namespace.
+                type: string
               team:
                 description: contains a list of teams and corresponding secrets
                 type: string

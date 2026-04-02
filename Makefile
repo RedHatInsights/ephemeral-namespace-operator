@@ -132,7 +132,7 @@ docker-push-minikube:
 	$(RUNTIME) push ${IMG} $(shell minikube ip):5000/ephemeral-namespace-operator:latest --tls-verify=false
 
 
-deploy-minikube-quick: docker-build-no-test-quick bundle docker-push-minikube deploy
+deploy-minikube-quick: docker-build-no-test-quick docker-push-minikube deploy
 
 .PHONY: test
 test: update-version manifests generate fmt vet gotestsum envtest ## Run tests.
