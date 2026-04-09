@@ -352,7 +352,7 @@ data:
               "dimensions": {},
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\".*smoke-test.*|.*pr-check-.*|automation-.*|.*-check-bot|.*ephemeral-base.*|edge-api.*|notifications.*\"}))",
+              "expr": "sort_desc(sum by(user) (label_replace(res_quantity_by_user_count{user!~\".*smoke-test.*|.*pr-check-.*|automation-.*|.*-check-bot|.*ephemeral-base.*|edge-api.*|notifications.*\"}, \"user\", \"$1\", \"user\", \"(.+)-[a-z0-9]{5}$\")))",
               "expression": "",
               "format": "table",
               "id": "",
