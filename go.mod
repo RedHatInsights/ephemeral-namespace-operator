@@ -5,7 +5,7 @@ go 1.25.7
 require (
 	github.com/RedHatInsights/clowder v0.100.0
 	github.com/RedHatInsights/frontend-operator v0.2.0
-	github.com/RedHatInsights/rhc-osdk-utils v0.14.0
+	github.com/RedHatInsights/rhc-osdk-utils v0.15.1
 	github.com/go-logr/logr v1.4.3
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.1
@@ -15,7 +15,7 @@ require (
 	k8s.io/apimachinery v0.35.3
 	k8s.io/client-go v0.35.3
 	sigs.k8s.io/cluster-api v1.7.2
-	sigs.k8s.io/controller-runtime v0.22.4
+	sigs.k8s.io/controller-runtime v0.23.1
 )
 
 require (
