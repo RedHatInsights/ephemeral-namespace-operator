@@ -159,16 +159,16 @@ func CheckReadyStatus(pool string, namespace core.Namespace, ready []core.Namesp
 
 // UpdateAnnotations updates annotations on a namespace with retry logic
 func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName string, annotations map[string]string) error {
-	namespace, err := GetNamespace(ctx, cl, namespaceName)
-	if err != nil {
-		return fmt.Errorf("error updating annotations for namespace [%s]: %w", namespaceName, err)
-	}
-
-	utils.UpdateAnnotations(&namespace, annotations)
-
-	err = retry.RetryOnConflict(
+	return retry.RetryOnConflict(
 		retry.DefaultBackoff,
 		func() error {
+			namespace, err := GetNamespace(ctx, cl, namespaceName)
+			if err != nil {
+				return fmt.Errorf("error updating annotations for namespace [%s]: %w", namespaceName, err)
+			}
+
+			utils.UpdateAnnotations(&namespace, annotations)
+
 			if err = cl.Update(ctx, &namespace); err != nil {
 				return fmt.Errorf("there was an issue updating annotations for namespace [%s]: %w", namespaceName, err)
 			}
@@ -176,8 +176,6 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 			return nil
 		},
 	)
-
-	return nil
 }
 
 func logSecretCopyOperation(log logr.Logger, message string, srcNamespace, targetNamespace string, secretNames []string) {
