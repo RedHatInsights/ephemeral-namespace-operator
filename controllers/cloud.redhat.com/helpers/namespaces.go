@@ -43,16 +43,21 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 // UpdateNamespaceResources configures a namespace with pool-defined resources including ClowdEnvironment, LimitRange, ResourceQuotas, and secrets
 func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.NamespacePool, nsName string) (core.Namespace, error) {
-	ns, err := GetNamespace(ctx, cl, nsName)
-	if err != nil {
-		return ns, fmt.Errorf("could not retrieve namespace [%s]: %w", nsName, err)
-	}
-
-	utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
-	utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
-	ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
-
-	if err := cl.Update(ctx, &ns); err != nil {
+	var ns core.Namespace
+	if err := retry.RetryOnConflict(
+		retry.DefaultBackoff,
+		func() error {
+			var err error
+			ns, err = GetNamespace(ctx, cl, nsName)
+			if err != nil {
+				return fmt.Errorf("could not retrieve namespace [%s]: %w", nsName, err)
+			}
+			utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
+			utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
+			ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
+			return cl.Update(ctx, &ns)
+		},
+	); err != nil {
 		return ns, fmt.Errorf("could not update Project [%s]: %w", nsName, err)
 	}
 
