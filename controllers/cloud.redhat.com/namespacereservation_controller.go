@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -53,6 +54,9 @@ type NamespaceReservationReconciler struct {
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters,verbs=get;list;watch;delete
+
+const capiCleanupFinalizer = "capi-cleanup.cloud.redhat.com"
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=frontendenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=secrets;events;namespaces;limitranges;resourcequotas,verbs=get;list;watch;create;update;patch;delete
@@ -76,6 +80,11 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 
 		r.log.Error(err, fmt.Sprintf("there was an issue retrieving the reservation object for namespace [%s]", req.Namespace))
 		return ctrl.Result{Requeue: true}, err
+	}
+
+	// Handle deletion: drain CAPI resources before allowing namespace GC
+	if !res.DeletionTimestamp.IsZero() {
+		return r.handleCAPICleanup(ctx, log, &res)
 	}
 
 	if res.Status.Pool == "" {
@@ -187,6 +196,15 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{Requeue: true}, err
 		}
 
+		// Add finalizer to gate namespace GC on CAPI resource cleanup
+		if !controllerutil.ContainsFinalizer(&res, capiCleanupFinalizer) {
+			controllerutil.AddFinalizer(&res, capiCleanupFinalizer)
+			if err := r.client.Update(ctx, &res); err != nil {
+				log.Error(err, "could not add CAPI cleanup finalizer", "res-name", res.Name)
+				return ctrl.Result{}, err
+			}
+		}
+
 		// Update reservation status fields
 		res.Status.Namespace = readyNsName
 		res.Status.Expiration = expirationTS
@@ -239,6 +257,44 @@ func (r *NamespaceReservationReconciler) SetupWithManager(mgr ctrl.Manager) erro
 			RateLimiter: workqueue.NewTypedItemExponentialFailureRateLimiter[reconcile.Request](time.Duration(500*time.Millisecond), time.Duration(60*time.Second)),
 		}).
 		Complete(r)
+}
+
+func (r *NamespaceReservationReconciler) handleCAPICleanup(ctx context.Context, log logr.Logger, res *crd.NamespaceReservation) (ctrl.Result, error) {
+	if !controllerutil.ContainsFinalizer(res, capiCleanupFinalizer) {
+		return ctrl.Result{}, nil
+	}
+
+	namespace := res.Status.Namespace
+	if namespace == "" {
+		controllerutil.RemoveFinalizer(res, capiCleanupFinalizer)
+		if err := r.client.Update(ctx, res); err != nil {
+			log.Error(err, "could not remove CAPI cleanup finalizer", "res-name", res.Name)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	log.Info("Deleting CAPI resources before releasing namespace", "namespace", namespace)
+
+	remaining, err := helpers.DeleteCAPIResources(ctx, r.client, namespace)
+	if err != nil {
+		log.Error(err, "error deleting CAPI resources", "namespace", namespace)
+		return ctrl.Result{}, err
+	}
+
+	if remaining {
+		log.Info("CAPI resources still present, requeueing", "namespace", namespace)
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+	}
+
+	log.Info("All CAPI resources removed, releasing finalizer", "namespace", namespace)
+	controllerutil.RemoveFinalizer(res, capiCleanupFinalizer)
+	if err := r.client.Update(ctx, res); err != nil {
+		log.Error(err, "could not remove CAPI cleanup finalizer", "res-name", res.Name)
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{}, nil
 }
 
 func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, readyNsName string, res *crd.NamespaceReservation) error {
