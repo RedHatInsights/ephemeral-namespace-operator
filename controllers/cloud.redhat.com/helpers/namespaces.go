@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -89,7 +90,7 @@ func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.N
 	if pool.Spec.DefaultSecretSourceNamespace != "" {
 		srcNs = pool.Spec.DefaultSecretSourceNamespace
 	}
-	if err := CopySecretsFrom(ctx, cl, srcNs, nsName); err != nil {
+	if err := CopySecretsFrom(ctx, cl, srcNs, nsName, false); err != nil {
 		return ns, fmt.Errorf("error copying secrets from [%s] to namespace [%s]: %w", srcNs, nsName, err)
 	}
 
@@ -192,8 +193,9 @@ func logSecretCopyOperation(log logr.Logger, message string, srcNamespace, targe
 	)
 }
 
-// CopySecretsFrom copies secrets from any source namespace to the target namespace
-func CopySecretsFrom(ctx context.Context, cl client.Client, srcNamespace, namespaceName string) error {
+// CopySecretsFrom copies secrets from any source namespace to the target namespace.
+// When overwrite is true, any secret that already exists in the target is deleted and re-copied from the source.
+func CopySecretsFrom(ctx context.Context, cl client.Client, srcNamespace, namespaceName string, overwrite bool) error {
 	// Extract logger from context or create a default one
 	log := ctrl.Log.WithName("secret-copy")
 	if logPtr := ctx.Value(ContextKey("log")); logPtr != nil {
@@ -259,6 +261,35 @@ func CopySecretsFrom(ctx context.Context, cl client.Client, srcNamespace, namesp
 		}
 
 		if err := cl.Create(ctx, newNamespaceSecret); err != nil {
+			if k8serr.IsAlreadyExists(err) {
+				if overwrite {
+					existing := &core.Secret{}
+					existing.Name = secret.Name
+					existing.Namespace = namespaceName
+					if delErr := cl.Delete(ctx, existing); delErr != nil {
+						secretsFailed = append(secretsFailed, secret.Name)
+						log.Error(delErr, "SECRET_COPY_OPS: Failed to delete existing secret for overwrite",
+							"operation", "delete_secret",
+							"source_namespace", secret.Namespace,
+							"target_namespace", namespaceName,
+							"secret_names", []string{secret.Name},
+						)
+						continue
+					}
+					if createErr := cl.Create(ctx, newNamespaceSecret); createErr != nil {
+						secretsFailed = append(secretsFailed, secret.Name)
+						log.Error(createErr, "SECRET_COPY_OPS: Failed to re-create secret after overwrite",
+							"operation", "create_secret",
+							"source_namespace", secret.Namespace,
+							"target_namespace", namespaceName,
+							"secret_names", []string{secret.Name},
+						)
+						continue
+					}
+				}
+				secretsSuccessful = append(secretsSuccessful, secret.Name)
+				continue
+			}
 			secretsFailed = append(secretsFailed, secret.Name)
 			log.Error(err, "SECRET_COPY_OPS: Failed to create secret in target namespace",
 				"operation", "create_secret",
@@ -328,7 +359,7 @@ func CopySecretsFrom(ctx context.Context, cl client.Client, srcNamespace, namesp
 
 // CopySecrets copies secrets from ephemeral-base to the target namespace (backward-compatible wrapper)
 func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) error {
-	return CopySecretsFrom(ctx, cl, NamespaceEphemeralBase, namespaceName)
+	return CopySecretsFrom(ctx, cl, NamespaceEphemeralBase, namespaceName, false)
 }
 
 // DeleteNamespace marks a namespace for deletion and removes it from the cluster

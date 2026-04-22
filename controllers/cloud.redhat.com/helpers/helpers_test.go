@@ -817,7 +817,7 @@ var _ = Describe("Helper Functions", func() {
 				WithObjects(customSrcNs, targetNs, secret).
 				Build()
 
-			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns")
+			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns", false)
 			Expect(err).ToNot(HaveOccurred())
 
 			copiedSecret := &core.Secret{}
@@ -863,7 +863,7 @@ var _ = Describe("Helper Functions", func() {
 				WithObjects(customSrcNs, targetNs, secretNoAnnotation, secretWithAnnotation).
 				Build()
 
-			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns")
+			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns", false)
 			Expect(err).ToNot(HaveOccurred())
 
 			// Annotated secret should be copied
@@ -908,7 +908,7 @@ var _ = Describe("Helper Functions", func() {
 				WithObjects(customSrcNs, targetNs, secretIgnored).
 				Build()
 
-			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns")
+			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns", false)
 			Expect(err).ToNot(HaveOccurred())
 
 			missingSecret := &core.Secret{}
@@ -929,7 +929,7 @@ var _ = Describe("Helper Functions", func() {
 				WithObjects(customSrcNs).
 				Build()
 
-			err := CopySecretsFrom(ctx, fakeClient, "empty-base", "target-ns")
+			err := CopySecretsFrom(ctx, fakeClient, "empty-base", "target-ns", false)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
