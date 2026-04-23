@@ -51,12 +51,13 @@ type NamespaceReservationReconciler struct {
 	log    logr.Logger
 }
 
+const capiCleanupFinalizer = "capi-cleanup.cloud.redhat.com"
+const capiCleanupTimeout = 1 * time.Hour
+
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/finalizers,verbs=update
 //+kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters,verbs=get;list;watch;delete
-
-const capiCleanupFinalizer = "capi-cleanup.cloud.redhat.com"
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=frontendenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=secrets;events;namespaces;limitranges;resourcequotas,verbs=get;list;watch;create;update;patch;delete
@@ -98,6 +99,13 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	switch res.Status.State {
 	case "active":
 		log.Info("Reconciling active reservation", "name", res.Name, "namespace", res.Status.Namespace)
+		if !controllerutil.ContainsFinalizer(&res, capiCleanupFinalizer) {
+			controllerutil.AddFinalizer(&res, capiCleanupFinalizer)
+			if err := r.client.Update(ctx, &res); err != nil {
+				log.Error(err, "could not add CAPI cleanup finalizer", "res-name", res.Name)
+				return ctrl.Result{}, err
+			}
+		}
 		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
 			r.log.Error(err, "Could not get expiration time for reservation", "name", res.Name)
@@ -196,15 +204,6 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{Requeue: true}, err
 		}
 
-		// Add finalizer to gate namespace GC on CAPI resource cleanup
-		if !controllerutil.ContainsFinalizer(&res, capiCleanupFinalizer) {
-			controllerutil.AddFinalizer(&res, capiCleanupFinalizer)
-			if err := r.client.Update(ctx, &res); err != nil {
-				log.Error(err, "could not add CAPI cleanup finalizer", "res-name", res.Name)
-				return ctrl.Result{}, err
-			}
-		}
-
 		// Update reservation status fields
 		res.Status.Namespace = readyNsName
 		res.Status.Expiration = expirationTS
@@ -223,6 +222,15 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		if err := r.client.Status().Update(ctx, &res); err != nil {
 			log.Error(err, "cannot update status")
 			return ctrl.Result{}, err
+		}
+
+		// Add finalizer after status is persisted so Status.Namespace is guaranteed to be set
+		if !controllerutil.ContainsFinalizer(&res, capiCleanupFinalizer) {
+			controllerutil.AddFinalizer(&res, capiCleanupFinalizer)
+			if err := r.client.Update(ctx, &res); err != nil {
+				log.Error(err, "could not add CAPI cleanup finalizer", "res-name", res.Name)
+				return ctrl.Result{}, err
+			}
 		}
 
 		duration, err := parseDurationTime(*res.Spec.Duration)
@@ -266,6 +274,16 @@ func (r *NamespaceReservationReconciler) handleCAPICleanup(ctx context.Context, 
 
 	namespace := res.Status.Namespace
 	if namespace == "" {
+		controllerutil.RemoveFinalizer(res, capiCleanupFinalizer)
+		if err := r.client.Update(ctx, res); err != nil {
+			log.Error(err, "could not remove CAPI cleanup finalizer", "res-name", res.Name)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if time.Since(res.DeletionTimestamp.Time) > capiCleanupTimeout {
+		log.Info("CAPI cleanup timed out, releasing finalizer to unblock deletion", "namespace", namespace, "timeout", capiCleanupTimeout)
 		controllerutil.RemoveFinalizer(res, capiCleanupFinalizer)
 		if err := r.client.Update(ctx, res); err != nil {
 			log.Error(err, "could not remove CAPI cleanup finalizer", "res-name", res.Name)
