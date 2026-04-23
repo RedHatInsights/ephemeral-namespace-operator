@@ -118,6 +118,7 @@ var _ = BeforeSuite(func() {
 	utilruntime.Must(clientgoscheme.AddToScheme(k8sscheme))
 	utilruntime.Must(clowder.AddToScheme(k8sscheme))
 	utilruntime.Must(frontend.AddToScheme(k8sscheme))
+	utilruntime.Must(clusterv1.AddToScheme(k8sscheme))
 
 	err = crd.AddToScheme(k8sscheme)
 	Expect(err).NotTo(HaveOccurred())
