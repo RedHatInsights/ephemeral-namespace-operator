@@ -1875,6 +1875,15 @@ objects:
     - patch
     - update
   - apiGroups:
+    - cluster.x-k8s.io
+    resources:
+    - clusters
+    verbs:
+    - delete
+    - get
+    - list
+    - watch
+  - apiGroups:
     - config.openshift.io
     resources:
     - ingresses
