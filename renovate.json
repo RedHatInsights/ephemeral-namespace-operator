@@ -1,0 +1,28 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": [
+		":disableMajorUpdates",
+		":group:kubernetesMonorepo",
+		"github>konflux-ci/mintmaker-presets:cve-automerge-all"
+	],
+	"dockerfile": {
+		"managerFilePatterns": [
+			"/Dockerfile$/",
+			"/Dockerfile-local$/"
+		]
+	},
+	"ignoreDeps": [
+		"sigs.k8s.io/controller-runtime"
+	],
+	"packageRules": [
+		{
+			"matchDatasources": [ "docker" ],
+			"matchPackageNames": [
+				"registry.access.redhat.com/ubi9/go-toolset",
+				"registry.access.redhat.com/ubi9/ubi-minimal"
+			],
+			"versioning": "redhat"
+		}
+	],
+	"postUpdateOptions": [ "gomodTidy" ]
+}
