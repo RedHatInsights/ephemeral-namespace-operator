@@ -98,9 +98,13 @@ var _ = Describe("Namespace creation should not exceed the pool size limit if on
 			err = k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool)
 			Expect(err).NotTo(HaveOccurred())
 
-			pool.Spec.Size--
+			targetSize := pool.Spec.Size - 1
 
 			Eventually(func() error {
+				if err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool); err != nil {
+					return err
+				}
+				pool.Spec.Size = targetSize
 				return k8sClient.Update(ctx, &pool)
 			}, timeout, interval).Should(BeNil())
 
@@ -112,9 +116,13 @@ var _ = Describe("Namespace creation should not exceed the pool size limit if on
 			}, timeout, interval).Should(Equal(1))
 
 			By("Ensuring that if the limit is increased, more namespaces are created")
-			pool.Spec.Size++
+			targetSize = pool.Spec.Size + 1
 
 			Eventually(func() error {
+				if err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool); err != nil {
+					return err
+				}
+				pool.Spec.Size = targetSize
 				return k8sClient.Update(ctx, &pool)
 			}, timeout, interval).Should(BeNil())
 
@@ -125,9 +133,13 @@ var _ = Describe("Namespace creation should not exceed the pool size limit if on
 				return pool.Spec.Size == pool.Status.Ready
 			}, timeout, interval).Should(BeTrue())
 
-			pool.Spec.Size--
+			targetSize = pool.Spec.Size - 1
 
 			Eventually(func() error {
+				if err := k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, &pool); err != nil {
+					return err
+				}
+				pool.Spec.Size = targetSize
 				return k8sClient.Update(ctx, &pool)
 			}, timeout, interval).Should(BeNil())
 		})

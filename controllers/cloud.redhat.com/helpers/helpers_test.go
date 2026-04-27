@@ -39,6 +39,7 @@ var _ = Describe("Helper Functions", func() {
 		Expect(core.AddToScheme(scheme)).To(Succeed())
 		Expect(clowder.AddToScheme(scheme)).To(Succeed())
 		Expect(crd.AddToScheme(scheme)).To(Succeed())
+		Expect(clusterv1.AddToScheme(scheme)).To(Succeed())
 
 		fakeClient = fake.NewClientBuilder().WithScheme(scheme).Build()
 		logger = log.Log.WithName("test-helpers")
@@ -817,7 +818,7 @@ var _ = Describe("Helper Functions", func() {
 				WithObjects(customSrcNs, targetNs, secret).
 				Build()
 
-			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns")
+			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns", false)
 			Expect(err).ToNot(HaveOccurred())
 
 			copiedSecret := &core.Secret{}
@@ -863,7 +864,7 @@ var _ = Describe("Helper Functions", func() {
 				WithObjects(customSrcNs, targetNs, secretNoAnnotation, secretWithAnnotation).
 				Build()
 
-			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns")
+			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns", false)
 			Expect(err).ToNot(HaveOccurred())
 
 			// Annotated secret should be copied
@@ -908,7 +909,7 @@ var _ = Describe("Helper Functions", func() {
 				WithObjects(customSrcNs, targetNs, secretIgnored).
 				Build()
 
-			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns")
+			err := CopySecretsFrom(ctx, fakeClient, "custom-base", "target-ns", false)
 			Expect(err).ToNot(HaveOccurred())
 
 			missingSecret := &core.Secret{}
@@ -929,8 +930,70 @@ var _ = Describe("Helper Functions", func() {
 				WithObjects(customSrcNs).
 				Build()
 
-			err := CopySecretsFrom(ctx, fakeClient, "empty-base", "target-ns")
+			err := CopySecretsFrom(ctx, fakeClient, "empty-base", "target-ns", false)
 			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
+	Describe("DeleteCAPIResources", func() {
+		BeforeEach(func() {
+			fakeClient = fake.NewClientBuilder().WithScheme(scheme).Build()
+		})
+
+		It("should return false when no Cluster resources exist in the namespace", func() {
+			remaining, err := DeleteCAPIResources(ctx, fakeClient, "test-ns")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(remaining).To(BeFalse())
+		})
+
+		It("should delete Cluster resources and return true while they still exist", func() {
+			cluster := &clusterv1.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-cluster",
+					Namespace: "test-ns",
+				},
+			}
+			fakeClient = fake.NewClientBuilder().WithScheme(scheme).WithObjects(cluster).Build()
+
+			remaining, err := DeleteCAPIResources(ctx, fakeClient, "test-ns")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(remaining).To(BeTrue())
+		})
+
+		It("should not attempt to delete Cluster resources already being deleted", func() {
+			now := metav1.Now()
+			cluster := &clusterv1.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:              "terminating-cluster",
+					Namespace:         "test-ns",
+					DeletionTimestamp: &now,
+					Finalizers:        []string{"test-finalizer"},
+				},
+			}
+			fakeClient = fake.NewClientBuilder().WithScheme(scheme).WithObjects(cluster).Build()
+
+			remaining, err := DeleteCAPIResources(ctx, fakeClient, "test-ns")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(remaining).To(BeTrue())
+
+			// Verify the cluster still exists (was not deleted again)
+			fetched := &clusterv1.Cluster{}
+			err = fakeClient.Get(ctx, types.NamespacedName{Name: "terminating-cluster", Namespace: "test-ns"}, fetched)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("should ignore Clusters in other namespaces", func() {
+			cluster := &clusterv1.Cluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "other-ns-cluster",
+					Namespace: "other-ns",
+				},
+			}
+			fakeClient = fake.NewClientBuilder().WithScheme(scheme).WithObjects(cluster).Build()
+
+			remaining, err := DeleteCAPIResources(ctx, fakeClient, "test-ns")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(remaining).To(BeFalse())
 		})
 	})
 })

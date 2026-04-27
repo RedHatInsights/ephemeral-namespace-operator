@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 	core "k8s.io/api/core/v1"
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -43,16 +44,21 @@ func CreateNamespace(ctx context.Context, cl client.Client, pool *crd.NamespaceP
 
 // UpdateNamespaceResources configures a namespace with pool-defined resources including ClowdEnvironment, LimitRange, ResourceQuotas, and secrets
 func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.NamespacePool, nsName string) (core.Namespace, error) {
-	ns, err := GetNamespace(ctx, cl, nsName)
-	if err != nil {
-		return ns, fmt.Errorf("could not retrieve namespace [%s]: %w", nsName, err)
-	}
-
-	utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
-	utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
-	ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
-
-	if err := cl.Update(ctx, &ns); err != nil {
+	var ns core.Namespace
+	if err := retry.RetryOnConflict(
+		retry.DefaultBackoff,
+		func() error {
+			var err error
+			ns, err = GetNamespace(ctx, cl, nsName)
+			if err != nil {
+				return fmt.Errorf("could not retrieve namespace [%s]: %w", nsName, err)
+			}
+			utils.UpdateAnnotations(&ns, CreateInitialAnnotations())
+			utils.UpdateLabels(&ns, CreateInitialLabels(pool.Name))
+			ns.SetOwnerReferences([]metav1.OwnerReference{pool.MakeOwnerReference()})
+			return cl.Update(ctx, &ns)
+		},
+	); err != nil {
 		return ns, fmt.Errorf("could not update Project [%s]: %w", nsName, err)
 	}
 
@@ -84,7 +90,7 @@ func UpdateNamespaceResources(ctx context.Context, cl client.Client, pool *crd.N
 	if pool.Spec.DefaultSecretSourceNamespace != "" {
 		srcNs = pool.Spec.DefaultSecretSourceNamespace
 	}
-	if err := CopySecretsFrom(ctx, cl, srcNs, nsName); err != nil {
+	if err := CopySecretsFrom(ctx, cl, srcNs, nsName, false); err != nil {
 		return ns, fmt.Errorf("error copying secrets from [%s] to namespace [%s]: %w", srcNs, nsName, err)
 	}
 
@@ -159,16 +165,16 @@ func CheckReadyStatus(pool string, namespace core.Namespace, ready []core.Namesp
 
 // UpdateAnnotations updates annotations on a namespace with retry logic
 func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName string, annotations map[string]string) error {
-	namespace, err := GetNamespace(ctx, cl, namespaceName)
-	if err != nil {
-		return fmt.Errorf("error updating annotations for namespace [%s]: %w", namespaceName, err)
-	}
-
-	utils.UpdateAnnotations(&namespace, annotations)
-
-	err = retry.RetryOnConflict(
+	return retry.RetryOnConflict(
 		retry.DefaultBackoff,
 		func() error {
+			namespace, err := GetNamespace(ctx, cl, namespaceName)
+			if err != nil {
+				return fmt.Errorf("error updating annotations for namespace [%s]: %w", namespaceName, err)
+			}
+
+			utils.UpdateAnnotations(&namespace, annotations)
+
 			if err = cl.Update(ctx, &namespace); err != nil {
 				return fmt.Errorf("there was an issue updating annotations for namespace [%s]: %w", namespaceName, err)
 			}
@@ -176,8 +182,6 @@ func UpdateAnnotations(ctx context.Context, cl client.Client, namespaceName stri
 			return nil
 		},
 	)
-
-	return nil
 }
 
 func logSecretCopyOperation(log logr.Logger, message string, srcNamespace, targetNamespace string, secretNames []string) {
@@ -189,8 +193,9 @@ func logSecretCopyOperation(log logr.Logger, message string, srcNamespace, targe
 	)
 }
 
-// CopySecretsFrom copies secrets from any source namespace to the target namespace
-func CopySecretsFrom(ctx context.Context, cl client.Client, srcNamespace, namespaceName string) error {
+// CopySecretsFrom copies secrets from any source namespace to the target namespace.
+// When overwrite is true, any secret that already exists in the target is deleted and re-copied from the source.
+func CopySecretsFrom(ctx context.Context, cl client.Client, srcNamespace, namespaceName string, overwrite bool) error {
 	// Extract logger from context or create a default one
 	log := ctrl.Log.WithName("secret-copy")
 	if logPtr := ctx.Value(ContextKey("log")); logPtr != nil {
@@ -256,6 +261,35 @@ func CopySecretsFrom(ctx context.Context, cl client.Client, srcNamespace, namesp
 		}
 
 		if err := cl.Create(ctx, newNamespaceSecret); err != nil {
+			if k8serr.IsAlreadyExists(err) {
+				if overwrite {
+					existing := &core.Secret{}
+					existing.Name = secret.Name
+					existing.Namespace = namespaceName
+					if delErr := cl.Delete(ctx, existing); delErr != nil {
+						secretsFailed = append(secretsFailed, secret.Name)
+						log.Error(delErr, "SECRET_COPY_OPS: Failed to delete existing secret for overwrite",
+							"operation", "delete_secret",
+							"source_namespace", secret.Namespace,
+							"target_namespace", namespaceName,
+							"secret_names", []string{secret.Name},
+						)
+						continue
+					}
+					if createErr := cl.Create(ctx, newNamespaceSecret); createErr != nil {
+						secretsFailed = append(secretsFailed, secret.Name)
+						log.Error(createErr, "SECRET_COPY_OPS: Failed to re-create secret after overwrite",
+							"operation", "create_secret",
+							"source_namespace", secret.Namespace,
+							"target_namespace", namespaceName,
+							"secret_names", []string{secret.Name},
+						)
+						continue
+					}
+				}
+				secretsSuccessful = append(secretsSuccessful, secret.Name)
+				continue
+			}
 			secretsFailed = append(secretsFailed, secret.Name)
 			log.Error(err, "SECRET_COPY_OPS: Failed to create secret in target namespace",
 				"operation", "create_secret",
@@ -325,7 +359,7 @@ func CopySecretsFrom(ctx context.Context, cl client.Client, srcNamespace, namesp
 
 // CopySecrets copies secrets from ephemeral-base to the target namespace (backward-compatible wrapper)
 func CopySecrets(ctx context.Context, cl client.Client, namespaceName string) error {
-	return CopySecretsFrom(ctx, cl, NamespaceEphemeralBase, namespaceName)
+	return CopySecretsFrom(ctx, cl, NamespaceEphemeralBase, namespaceName, false)
 }
 
 // DeleteNamespace marks a namespace for deletion and removes it from the cluster

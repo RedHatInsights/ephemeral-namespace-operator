@@ -32,6 +32,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -50,9 +51,13 @@ type NamespaceReservationReconciler struct {
 	log    logr.Logger
 }
 
+const capiCleanupFinalizer = "capi-cleanup.cloud.redhat.com"
+const capiCleanupTimeout = 1 * time.Hour
+
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/finalizers,verbs=update
+//+kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters,verbs=get;list;watch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=frontendenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=secrets;events;namespaces;limitranges;resourcequotas,verbs=get;list;watch;create;update;patch;delete
@@ -78,6 +83,11 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 		return ctrl.Result{Requeue: true}, err
 	}
 
+	// Handle deletion: drain CAPI resources before allowing namespace GC
+	if !res.DeletionTimestamp.IsZero() {
+		return r.handleCAPICleanup(ctx, log, &res)
+	}
+
 	if res.Status.Pool == "" {
 		if res.Spec.Pool == "" {
 			res.Status.Pool = "default"
@@ -89,6 +99,13 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 	switch res.Status.State {
 	case "active":
 		log.Info("Reconciling active reservation", "name", res.Name, "namespace", res.Status.Namespace)
+		if !controllerutil.ContainsFinalizer(&res, capiCleanupFinalizer) {
+			controllerutil.AddFinalizer(&res, capiCleanupFinalizer)
+			if err := r.client.Update(ctx, &res); err != nil {
+				log.Error(err, "could not add CAPI cleanup finalizer", "res-name", res.Name)
+				return ctrl.Result{}, err
+			}
+		}
 		expirationTS, err := getExpirationTime(&res)
 		if err != nil {
 			r.log.Error(err, "Could not get expiration time for reservation", "name", res.Name)
@@ -207,6 +224,15 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
+		// Add finalizer after status is persisted so Status.Namespace is guaranteed to be set
+		if !controllerutil.ContainsFinalizer(&res, capiCleanupFinalizer) {
+			controllerutil.AddFinalizer(&res, capiCleanupFinalizer)
+			if err := r.client.Update(ctx, &res); err != nil {
+				log.Error(err, "could not add CAPI cleanup finalizer", "res-name", res.Name)
+				return ctrl.Result{}, err
+			}
+		}
+
 		duration, err := parseDurationTime(*res.Spec.Duration)
 		if err != nil {
 			log.Error(err, "cannot parse duration")
@@ -241,6 +267,54 @@ func (r *NamespaceReservationReconciler) SetupWithManager(mgr ctrl.Manager) erro
 		Complete(r)
 }
 
+func (r *NamespaceReservationReconciler) handleCAPICleanup(ctx context.Context, log logr.Logger, res *crd.NamespaceReservation) (ctrl.Result, error) {
+	if !controllerutil.ContainsFinalizer(res, capiCleanupFinalizer) {
+		return ctrl.Result{}, nil
+	}
+
+	namespace := res.Status.Namespace
+	if namespace == "" {
+		controllerutil.RemoveFinalizer(res, capiCleanupFinalizer)
+		if err := r.client.Update(ctx, res); err != nil {
+			log.Error(err, "could not remove CAPI cleanup finalizer", "res-name", res.Name)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if time.Since(res.DeletionTimestamp.Time) > capiCleanupTimeout {
+		log.Info("CAPI cleanup timed out, releasing finalizer to unblock deletion", "namespace", namespace, "timeout", capiCleanupTimeout)
+		controllerutil.RemoveFinalizer(res, capiCleanupFinalizer)
+		if err := r.client.Update(ctx, res); err != nil {
+			log.Error(err, "could not remove CAPI cleanup finalizer", "res-name", res.Name)
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	log.Info("Deleting CAPI resources before releasing namespace", "namespace", namespace)
+
+	remaining, err := helpers.DeleteCAPIResources(ctx, r.client, namespace)
+	if err != nil {
+		log.Error(err, "error deleting CAPI resources", "namespace", namespace)
+		return ctrl.Result{}, err
+	}
+
+	if remaining {
+		log.Info("CAPI resources still present, requeueing", "namespace", namespace)
+		return ctrl.Result{RequeueAfter: 10 * time.Second}, nil
+	}
+
+	log.Info("All CAPI resources removed, releasing finalizer", "namespace", namespace)
+	controllerutil.RemoveFinalizer(res, capiCleanupFinalizer)
+	if err := r.client.Update(ctx, res); err != nil {
+		log.Error(err, "could not remove CAPI cleanup finalizer", "res-name", res.Name)
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{}, nil
+}
+
 func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, readyNsName string, res *crd.NamespaceReservation) error {
 	nsObject := core.Namespace{}
 	err := r.client.Get(ctx, types.NamespacedName{Name: readyNsName}, &nsObject)
@@ -260,7 +334,7 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 	// If the reservation specifies a secret source namespace, copy secrets from it
 	if res.Spec.SecretSourceNamespace != "" {
 		r.log.Info(fmt.Sprintf("copying secrets from [%s] into namespace [%s] per reservation spec", res.Spec.SecretSourceNamespace, readyNsName))
-		if err := helpers.CopySecretsFrom(ctx, r.client, res.Spec.SecretSourceNamespace, readyNsName); err != nil {
+		if err := helpers.CopySecretsFrom(ctx, r.client, res.Spec.SecretSourceNamespace, readyNsName, true); err != nil {
 			r.log.Error(err, "could not copy secrets from reservation secret source namespace", "source", res.Spec.SecretSourceNamespace, "namespace", readyNsName)
 			return err
 		}
