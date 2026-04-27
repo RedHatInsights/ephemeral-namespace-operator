@@ -7,7 +7,7 @@ require (
 	github.com/RedHatInsights/frontend-operator v0.2.0
 	github.com/RedHatInsights/rhc-osdk-utils v0.14.0
 	github.com/go-logr/logr v1.4.3
-	github.com/onsi/ginkgo/v2 v2.28.1
+	github.com/onsi/ginkgo/v2 v2.28.2
 	github.com/onsi/gomega v1.39.1
 	github.com/openshift/api v0.0.0-20260330162214-96f1f5ac7ff2
 	github.com/prometheus/client_golang v1.23.2
