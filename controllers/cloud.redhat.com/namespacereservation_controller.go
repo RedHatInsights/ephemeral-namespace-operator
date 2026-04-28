@@ -52,7 +52,6 @@ type NamespaceReservationReconciler struct {
 }
 
 const capiCleanupFinalizer = "capi-cleanup.cloud.redhat.com"
-const capiCleanupTimeout = 1 * time.Hour
 
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/status,verbs=get;update;patch
@@ -282,14 +281,12 @@ func (r *NamespaceReservationReconciler) handleCAPICleanup(ctx context.Context, 
 		return ctrl.Result{}, nil
 	}
 
-	if time.Since(res.DeletionTimestamp.Time) > capiCleanupTimeout {
-		log.Info("CAPI cleanup timed out, releasing finalizer to unblock deletion", "namespace", namespace, "timeout", capiCleanupTimeout)
-		controllerutil.RemoveFinalizer(res, capiCleanupFinalizer)
-		if err := r.client.Update(ctx, res); err != nil {
-			log.Error(err, "could not remove CAPI cleanup finalizer", "res-name", res.Name)
+	if res.Status.State != "deleting" {
+		res.Status.State = "deleting"
+		if err := r.client.Status().Update(ctx, res); err != nil {
+			log.Error(err, "could not update reservation state to deleting", "res-name", res.Name)
 			return ctrl.Result{}, err
 		}
-		return ctrl.Result{}, nil
 	}
 
 	log.Info("Deleting CAPI resources before releasing namespace", "namespace", namespace)
