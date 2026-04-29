@@ -1,6 +1,7 @@
 """Tests for NamespaceReservation lifecycle."""
 
 import logging
+from datetime import datetime
 
 import pytest
 from wait_for import wait_for
@@ -47,14 +48,24 @@ class TestReservationLifecycle:
         assert ns["metadata"]["annotations"]["reserved"] == "true"
         cleanup_reservation(res_name)
 
-    def test_expiration_is_set(self, ready_pool):
+    def test_expiration_matches_requested_duration(self, ready_pool):
         res_name = "e2e-test-res-expiry"
-        create_reservation(res_name, ready_pool)
+        duration = "30m"
+        create_reservation(res_name, ready_pool, duration=duration)
         wait_for_reservation_active(res_name)
 
         res = oc_json("get", "namespacereservation", res_name)
         expiration = res["status"].get("expiration", "")
         assert expiration != "", "expiration should be set"
+
+        created = datetime.fromisoformat(
+            res["metadata"]["creationTimestamp"].replace("Z", "+00:00")
+        )
+        expires = datetime.fromisoformat(expiration.replace("Z", "+00:00"))
+        delta_seconds = (expires - created).total_seconds()
+        assert 1500 <= delta_seconds <= 1920, (
+            f"expected ~1800s (30m), got {delta_seconds}s"
+        )
         cleanup_reservation(res_name)
 
     def test_namespace_owner_changes_to_reservation(self, ready_pool):
@@ -74,7 +85,7 @@ class TestReservationLifecycle:
 
         res_name = "e2e-test-res-expire"
         create_reservation(res_name, ready_pool, duration="30s")
-        wait_for_reservation_active(res_name)
+        ns_name = wait_for_reservation_active(res_name)
 
         def _is_deleted():
             try:
@@ -85,3 +96,32 @@ class TestReservationLifecycle:
 
         wait_for(_is_deleted, timeout=120, delay=10,
                  message=f"waiting for reservation {res_name} to be deleted after expiry")
+
+    def test_namespace_released_after_reservation_deletion(self, ready_pool):
+        wait_for_pool_ready(POOL_NAME, expected_ready=2)
+
+        res_name = "e2e-test-res-release"
+        create_reservation(res_name, ready_pool, duration="30s")
+        ns_name = wait_for_reservation_active(res_name)
+
+        def _reservation_deleted():
+            try:
+                oc_json("get", "namespacereservation", res_name)
+                return False
+            except Exception:
+                return True
+
+        wait_for(_reservation_deleted, timeout=120, delay=10,
+                 message=f"waiting for reservation {res_name} to expire")
+
+        def _namespace_gone():
+            try:
+                ns = oc_json("get", "namespace", ns_name)
+                return ns.get("status", {}).get("phase") != "Active"
+            except Exception:
+                return True
+
+        wait_for(_namespace_gone, timeout=120, delay=10,
+                 message=f"waiting for namespace {ns_name} to be deleted after reservation expired")
+
+        wait_for_pool_ready(POOL_NAME, expected_ready=2)
