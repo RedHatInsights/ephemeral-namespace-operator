@@ -57,6 +57,7 @@ const capiCleanupFinalizer = "capi-cleanup.cloud.redhat.com"
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=namespacereservations/finalizers,verbs=update
 //+kubebuilder:rbac:groups=cluster.x-k8s.io,resources=clusters,verbs=get;list;watch;delete
+//+kubebuilder:rbac:groups=infrastructure.cluster.x-k8s.io,resources=rosamachinepools,verbs=get;list;update
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=clowdenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cloud.redhat.com,resources=frontendenvironments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=secrets;events;namespaces;limitranges;resourcequotas,verbs=get;list;watch;create;update;patch;delete
@@ -295,6 +296,15 @@ func (r *NamespaceReservationReconciler) handleCAPICleanup(ctx context.Context, 
 	if err != nil {
 		log.Error(err, "error deleting CAPI resources", "namespace", namespace)
 		return ctrl.Result{}, err
+	}
+
+	patched, err := helpers.RemoveStuckROSAMachinePoolFinalizers(ctx, r.client, namespace)
+	if err != nil {
+		log.Error(err, "error removing stuck ROSAMachinePool finalizers", "namespace", namespace)
+		return ctrl.Result{}, err
+	}
+	if patched {
+		log.Info("Removed stuck ROSAMachinePool finalizers, requeueing", "namespace", namespace)
 	}
 
 	if remaining {
