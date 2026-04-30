@@ -67,14 +67,6 @@ rules:
   - list
   - watch
 - apiGroups:
-  - infrastructure.cluster.x-k8s.io
-  resources:
-  - rosamachinepools
-  verbs:
-  - get
-  - list
-  - update
-- apiGroups:
   - config.openshift.io
   resources:
   - ingresses
@@ -82,6 +74,14 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - rosamachinepools
+  verbs:
+  - get
+  - list
+  - update
 - apiGroups:
   - operators.coreos.com
   resources:
