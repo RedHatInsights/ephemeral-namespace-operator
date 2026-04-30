@@ -28,3 +28,9 @@ controllers/cloud.redhat.com/version.txt
 junit-eno.xml
 /artifacts
 
+# Python E2E tests
+*.egg-info/
+__pycache__/
+.pytest_cache/
+pytest.log
+

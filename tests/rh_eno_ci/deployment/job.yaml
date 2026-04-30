@@ -1,0 +1,40 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: eno-e2e-tests
+parameters:
+- name: IMAGE_TAG
+  value: latest
+- name: IMAGE
+  value: quay.io/redhat-services-prod/hcm-eng-prod-tenant/rh-eno-ci
+- name: ENO_NAMESPACE
+  value: ephemeral-namespace-operator-system
+objects:
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: eno-e2e-tests-${IMAGE_TAG}
+    namespace: ${ENO_NAMESPACE}
+  spec:
+    backoffLimit: 0
+    activeDeadlineSeconds: 900
+    template:
+      spec:
+        serviceAccountName: ephemeral-namespace-operator-controller-manager
+        restartPolicy: Never
+        containers:
+          - name: e2e
+            image: ${IMAGE}:${IMAGE_TAG}
+            imagePullPolicy: Always
+            env:
+              - name: TEST_NS
+                value: ${ENO_NAMESPACE}
+            command: ["pytest"]
+            args: ["-vv", "-s"]
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
