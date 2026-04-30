@@ -12,7 +12,9 @@ import (
 	. "github.com/onsi/gomega"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -932,6 +934,147 @@ var _ = Describe("Helper Functions", func() {
 
 			err := CopySecretsFrom(ctx, fakeClient, "empty-base", "target-ns", false)
 			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+
+	Describe("RemoveStuckROSAMachinePoolFinalizers", func() {
+		const (
+			testNamespace = "test-ns"
+			clusterName   = "test-cluster"
+			poolFinalizer = "rosamachinepools.infrastructure.cluster.x-k8s.io"
+		)
+
+		var rosaScheme *runtime.Scheme
+
+		BeforeEach(func() {
+			rosaScheme = runtime.NewScheme()
+			Expect(core.AddToScheme(rosaScheme)).To(Succeed())
+			Expect(clusterv1.AddToScheme(rosaScheme)).To(Succeed())
+			rosaScheme.AddKnownTypeWithName(
+				schema.GroupVersionKind{Group: "infrastructure.cluster.x-k8s.io", Version: "v1beta2", Kind: "ROSAMachinePool"},
+				&unstructured.Unstructured{},
+			)
+			rosaScheme.AddKnownTypeWithName(
+				schema.GroupVersionKind{Group: "infrastructure.cluster.x-k8s.io", Version: "v1beta2", Kind: "ROSAMachinePoolList"},
+				&unstructured.UnstructuredList{},
+			)
+			rosaScheme.AddKnownTypeWithName(
+				schema.GroupVersionKind{Group: "cluster.x-k8s.io", Version: "v1beta2", Kind: "Cluster"},
+				&unstructured.Unstructured{},
+			)
+		})
+
+		// makePool builds an unstructured ROSAMachinePool with a deletionTimestamp, the CAPA
+		// finalizer, and a dummy extra finalizer (so the object is not GC'd when we remove the
+		// real one, allowing us to assert on the resulting finalizer list).
+		makePool := func(withImmutableError bool) *unstructured.Unstructured {
+			now := metav1.Now()
+			pool := &unstructured.Unstructured{}
+			pool.SetGroupVersionKind(schema.GroupVersionKind{
+				Group:   "infrastructure.cluster.x-k8s.io",
+				Version: "v1beta2",
+				Kind:    "ROSAMachinePool",
+			})
+			pool.SetName("workers")
+			pool.SetNamespace(testNamespace)
+			pool.SetLabels(map[string]string{"cluster.x-k8s.io/cluster-name": clusterName})
+			pool.SetDeletionTimestamp(&now)
+			pool.SetFinalizers([]string{poolFinalizer, "dummy-finalizer"})
+
+			if withImmutableError {
+				Expect(unstructured.SetNestedSlice(pool.Object, []interface{}{
+					map[string]interface{}{
+						"type":    "RosaMachinePoolReady",
+						"status":  "False",
+						"reason":  "ReconciliationFailed",
+						"message": "Attribute 'aws_node_pool.root_volume.size' is not allowed",
+					},
+				}, "status", "conditions")).To(Succeed())
+			}
+			return pool
+		}
+
+		makeCluster := func(deletingReason string) *unstructured.Unstructured {
+			cluster := &unstructured.Unstructured{}
+			cluster.SetGroupVersionKind(schema.GroupVersionKind{
+				Group:   "cluster.x-k8s.io",
+				Version: "v1beta2",
+				Kind:    "Cluster",
+			})
+			cluster.SetName(clusterName)
+			cluster.SetNamespace(testNamespace)
+			if deletingReason != "" {
+				Expect(unstructured.SetNestedSlice(cluster.Object, []interface{}{
+					map[string]interface{}{
+						"type":   "Deleting",
+						"reason": deletingReason,
+						"status": "True",
+					},
+				}, "status", "conditions")).To(Succeed())
+			}
+			return cluster
+		}
+
+		It("should remove finalizer when cluster is gone and pool has immutable field error", func() {
+			pool := makePool(true)
+			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool).Build()
+
+			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(patched).To(BeTrue())
+
+			fetched := &unstructured.Unstructured{}
+			fetched.SetGroupVersionKind(pool.GroupVersionKind())
+			Expect(c.Get(ctx, types.NamespacedName{Name: "workers", Namespace: testNamespace}, fetched)).To(Succeed())
+			Expect(fetched.GetFinalizers()).To(ConsistOf("dummy-finalizer"))
+		})
+
+		It("should remove finalizer when cluster is WaitingForWorkersDeletion", func() {
+			pool := makePool(true)
+			cluster := makeCluster("WaitingForWorkersDeletion")
+			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool, cluster).Build()
+
+			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(patched).To(BeTrue())
+
+			fetched := &unstructured.Unstructured{}
+			fetched.SetGroupVersionKind(pool.GroupVersionKind())
+			Expect(c.Get(ctx, types.NamespacedName{Name: "workers", Namespace: testNamespace}, fetched)).To(Succeed())
+			Expect(fetched.GetFinalizers()).To(ConsistOf("dummy-finalizer"))
+		})
+
+		It("should not remove finalizer when cluster exists but is not WaitingForWorkersDeletion", func() {
+			pool := makePool(true)
+			cluster := makeCluster("WaitingForControlPlaneDeletion")
+			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool, cluster).Build()
+
+			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(patched).To(BeFalse())
+
+			fetched := &unstructured.Unstructured{}
+			fetched.SetGroupVersionKind(pool.GroupVersionKind())
+			Expect(c.Get(ctx, types.NamespacedName{Name: "workers", Namespace: testNamespace}, fetched)).To(Succeed())
+			Expect(fetched.GetFinalizers()).To(ConsistOf(poolFinalizer, "dummy-finalizer"))
+		})
+
+		It("should not remove finalizer when pool lacks the immutable field error", func() {
+			pool := makePool(false)
+			cluster := makeCluster("WaitingForWorkersDeletion")
+			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool, cluster).Build()
+
+			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(patched).To(BeFalse())
+		})
+
+		It("should return false when no ROSAMachinePool resources exist", func() {
+			c := fake.NewClientBuilder().WithScheme(rosaScheme).Build()
+
+			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(patched).To(BeFalse())
 		})
 	})
 

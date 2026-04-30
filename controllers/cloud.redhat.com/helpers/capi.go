@@ -124,7 +124,9 @@ func rosaPoolHasImmutableFieldError(pool *unstructured.Unstructured) bool {
 }
 
 // clusterWaitingForWorkersDeletion returns true when the named Cluster's Deleting condition
-// indicates it is blocked waiting for MachinePool deletion to complete.
+// indicates it is blocked waiting for MachinePool deletion to complete, or when the Cluster
+// itself no longer exists (the entire ownership chain above the pool is gone, so no controller
+// will ever reconcile the pool's finalizer away).
 func clusterWaitingForWorkersDeletion(ctx context.Context, cl client.Client, namespace, clusterName string) (bool, error) {
 	cluster := &unstructured.Unstructured{}
 	cluster.SetGroupVersionKind(schema.GroupVersionKind{
@@ -134,7 +136,7 @@ func clusterWaitingForWorkersDeletion(ctx context.Context, cl client.Client, nam
 	})
 	if err := cl.Get(ctx, types.NamespacedName{Name: clusterName, Namespace: namespace}, cluster); err != nil {
 		if k8serr.IsNotFound(err) {
-			return false, nil
+			return true, nil
 		}
 		return false, fmt.Errorf("could not get Cluster [%s/%s]: %w", namespace, clusterName, err)
 	}
