@@ -1,0 +1,38 @@
+version: 0.2
+
+env:
+  variables:
+    CLUSTER_NAME: eno-e2e
+    K8S_VERSION: v1.29.4
+    KINDEST_NODE_IMAGE: kindest/node:v1.29.4
+    KUTTL_VERSION: "0.19.0"
+    ARTIFACTS_DIR: /tmp/artifacts
+    CODEBUILD_BUILD_TIMEOUT: 60
+
+phases:
+  install:
+    commands:
+      - bash build/buildspec_steps/install_dependencies.sh
+      - mkdir -p "${ARTIFACTS_DIR}"
+
+  pre_build:
+    commands:
+      - bash build/buildspec_steps/create_kind_cluster.sh
+
+  build:
+    commands:
+      - bash build/buildspec_steps/install_operators.sh
+      - bash build/buildspec_steps/build_eno.sh
+      - bash build/buildspec_steps/deploy_eno.sh
+      - bash build/buildspec_steps/run_kuttl_tests.sh
+
+  post_build:
+    commands:
+      - echo "Deleting kind cluster ${CLUSTER_NAME}..."
+      - kind delete cluster --name "${CLUSTER_NAME}" || true
+
+artifacts:
+  files:
+    - ${ARTIFACTS_DIR}/**/*
+  discard-paths: no
+  name: eno-e2e-pr-${GITHUB_PR_NUMBER:-manual}-${GITHUB_SHA:-$CODEBUILD_RESOLVED_SOURCE_VERSION}
