@@ -1,0 +1,14 @@
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespacePool
+metadata:
+  name: pool-alpha
+status:
+  ready: 1
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespacePool
+metadata:
+  name: pool-beta
+status:
+  ready: 1

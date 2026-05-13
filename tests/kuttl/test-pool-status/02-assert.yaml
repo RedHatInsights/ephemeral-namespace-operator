@@ -1,0 +1,15 @@
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespaceReservation
+metadata:
+  name: test-status-res-2
+status:
+  state: active
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespacePool
+metadata:
+  name: test-pool-status
+status:
+  ready: 0
+  reserved: 2
