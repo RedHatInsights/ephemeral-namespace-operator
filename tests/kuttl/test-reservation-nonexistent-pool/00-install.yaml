@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ephemeral-base
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespaceReservation
+metadata:
+  name: test-res-no-pool
+spec:
+  requester: kuttl-test
+  duration: "1h"
+  pool: this-pool-does-not-exist

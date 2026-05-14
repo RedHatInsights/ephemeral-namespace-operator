@@ -1,0 +1,9 @@
+---
+apiVersion: cloud.redhat.com/v1alpha1
+kind: NamespaceReservation
+metadata:
+  name: test-exhaust-res-2
+spec:
+  requester: kuttl-test
+  duration: "1h"
+  pool: test-exhausted-pool

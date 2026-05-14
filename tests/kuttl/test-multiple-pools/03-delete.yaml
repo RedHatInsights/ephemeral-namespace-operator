@@ -1,0 +1,13 @@
+---
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+delete:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: NamespaceReservation
+  name: test-multi-pool-res
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: NamespacePool
+  name: pool-alpha
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: NamespacePool
+  name: pool-beta
