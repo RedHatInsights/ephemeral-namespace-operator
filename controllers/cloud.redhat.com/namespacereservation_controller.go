@@ -290,6 +290,15 @@ func (r *NamespaceReservationReconciler) handleCAPICleanup(ctx context.Context, 
 		}
 	}
 
+	// Update CAPI cleanup duration metric
+	if res.DeletionTimestamp != nil {
+		elapsedSeconds := time.Since(res.DeletionTimestamp.Time).Seconds()
+		capiCleanupDurationMetrics.With(prometheus.Labels{
+			"namespace":   namespace,
+			"reservation": res.Name,
+		}).Set(elapsedSeconds)
+	}
+
 	log.Info("Deleting CAPI resources before releasing namespace", "namespace", namespace)
 
 	remaining, err := helpers.DeleteCAPIResources(ctx, r.client, namespace)
@@ -313,6 +322,10 @@ func (r *NamespaceReservationReconciler) handleCAPICleanup(ctx context.Context, 
 	}
 
 	log.Info("All CAPI resources removed, releasing finalizer", "namespace", namespace)
+
+	// Delete CAPI cleanup duration metric before removing finalizer
+	capiCleanupDurationMetrics.DeleteLabelValues(namespace, res.Name)
+
 	controllerutil.RemoveFinalizer(res, capiCleanupFinalizer)
 	if err := r.client.Update(ctx, res); err != nil {
 		log.Error(err, "could not remove CAPI cleanup finalizer", "res-name", res.Name)

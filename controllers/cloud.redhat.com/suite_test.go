@@ -536,6 +536,10 @@ var _ = Describe("Metrics", func() {
 		It("should have enoVersion defined", func() {
 			Expect(enoVersion).ToNot(BeNil())
 		})
+
+		It("should have capiCleanupDurationMetrics defined", func() {
+			Expect(capiCleanupDurationMetrics).ToNot(BeNil())
+		})
 	})
 
 	Describe("userNamespaceReservationCount map", func() {

@@ -75,6 +75,14 @@ var (
 		},
 		[]string{"version"},
 	)
+
+	capiCleanupDurationMetrics = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "capi_cleanup_duration_seconds",
+			Help: "Time elapsed since namespace entered CAPI cleanup state (deletion timestamp to now)",
+		},
+		[]string{"namespace", "reservation"},
+	)
 )
 
 func init() {
@@ -87,5 +95,6 @@ func init() {
 		activeReservationTotalMetrics,
 		resQuantityByUserMetrics,
 		enoVersion,
+		capiCleanupDurationMetrics,
 	)
 }
