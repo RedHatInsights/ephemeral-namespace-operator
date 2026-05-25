@@ -11,7 +11,7 @@ RUN curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VER}/
     install -m 0755 /tmp/openshift-client/kubectl /usr/local/bin/kubectl && \
     rm -rf /tmp/openshift-client*
 
-RUN dnf -y install git && dnf clean all && rm -rf /var/cache/dnf
+RUN dnf -y install git && dnf clean all && rm -rf /var/cache/dnf 
 
 ADD . /opt/app-root/src
 
