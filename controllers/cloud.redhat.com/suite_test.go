@@ -79,11 +79,15 @@ func populateClowdEnvStatus(client client.Client) {
 						{
 							Type:               clowder.ReconciliationSuccessful,
 							Status:             metav1.ConditionTrue,
+							Reason:             "Initialized",
+							Message:            "",
 							LastTransitionTime: metav1.Now(),
 						},
 						{
 							Type:               clowder.DeploymentsReady,
 							Status:             metav1.ConditionTrue,
+							Reason:             "Initialized",
+							Message:            "",
 							LastTransitionTime: metav1.Now(),
 						},
 					},
