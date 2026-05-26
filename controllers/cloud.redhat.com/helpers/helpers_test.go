@@ -309,7 +309,7 @@ var _ = Describe("Helper Functions", func() {
 						Namespace: "test-namespace",
 					},
 					Status: clowder.ClowdEnvironmentStatus{
-						Conditions: []clusterv1.Condition{
+						Conditions: []metav1.Condition{
 							{
 								Type:   "ReconciliationSuccessful",
 								Status: "True",
@@ -336,7 +336,7 @@ var _ = Describe("Helper Functions", func() {
 			It("should return true when all conditions are met", func() {
 				env := clowder.ClowdEnvironment{
 					Status: clowder.ClowdEnvironmentStatus{
-						Conditions: []clusterv1.Condition{
+						Conditions: []metav1.Condition{
 							{
 								Type:   "ReconciliationSuccessful",
 								Status: "True",
@@ -356,7 +356,7 @@ var _ = Describe("Helper Functions", func() {
 			It("should return false when ReconciliationSuccessful is false", func() {
 				env := clowder.ClowdEnvironment{
 					Status: clowder.ClowdEnvironmentStatus{
-						Conditions: []clusterv1.Condition{
+						Conditions: []metav1.Condition{
 							{
 								Type:   "ReconciliationSuccessful",
 								Status: "False",
@@ -376,7 +376,7 @@ var _ = Describe("Helper Functions", func() {
 			It("should return false when DeploymentsReady is false", func() {
 				env := clowder.ClowdEnvironment{
 					Status: clowder.ClowdEnvironmentStatus{
-						Conditions: []clusterv1.Condition{
+						Conditions: []metav1.Condition{
 							{
 								Type:   "ReconciliationSuccessful",
 								Status: "True",
@@ -396,7 +396,7 @@ var _ = Describe("Helper Functions", func() {
 			It("should return false when conditions are missing", func() {
 				env := clowder.ClowdEnvironment{
 					Status: clowder.ClowdEnvironmentStatus{
-						Conditions: []clusterv1.Condition{},
+						Conditions: []metav1.Condition{},
 					},
 				}
 
@@ -415,7 +415,7 @@ var _ = Describe("Helper Functions", func() {
 					},
 					Status: clowder.ClowdEnvironmentStatus{
 						Hostname: "",
-						Conditions: []clusterv1.Condition{
+						Conditions: []metav1.Condition{
 							{
 								Type:   "ReconciliationSuccessful",
 								Status: "True",
@@ -443,7 +443,7 @@ var _ = Describe("Helper Functions", func() {
 					},
 					Status: clowder.ClowdEnvironmentStatus{
 						Hostname: "test.example.com",
-						Conditions: []clusterv1.Condition{
+						Conditions: []metav1.Condition{
 							{
 								Type:   "ReconciliationSuccessful",
 								Status: "True",
