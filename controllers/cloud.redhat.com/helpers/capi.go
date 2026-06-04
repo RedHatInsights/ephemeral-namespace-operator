@@ -3,7 +3,7 @@ package helpers
 import (
 	"context"
 	"fmt"
-	"strings"
+	"time"
 
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	apimeta "k8s.io/apimachinery/pkg/api/meta"
@@ -40,10 +40,16 @@ func DeleteCAPIResources(ctx context.Context, cl client.Client, namespace string
 	return len(clusterList.Items) > 0, nil
 }
 
+// stuckDeletionThreshold is how long a ROSAMachinePool must have been in deletion before its
+// finalizer is force-removed. This covers transient OCM errors (e.g. 429 rate-limiting) that
+// the controller cannot recover from on its own within a reasonable window.
+const stuckDeletionThreshold = time.Hour
+
 // RemoveStuckROSAMachinePoolFinalizers removes the controller finalizer from ROSAMachinePool
-// resources that are stuck in deletion due to the OCM API rejecting an update with HTTP 400 for
-// an immutable field (e.g. 'aws_node_pool.root_volume.size' is not allowed), AND whose owning
-// Cluster confirms it is blocked waiting on that MachinePool deletion. Both conditions must hold.
+// resources that have been stuck in deletion for longer than stuckDeletionThreshold, and whose
+// owning Cluster confirms it is blocked waiting on that MachinePool deletion. Both conditions
+// must hold.
+//
 // Returns (false, nil) when the ROSAMachinePool CRD is not installed on the cluster.
 func RemoveStuckROSAMachinePoolFinalizers(ctx context.Context, cl client.Client, namespace string) (bool, error) {
 	const (
@@ -73,8 +79,8 @@ func RemoveStuckROSAMachinePoolFinalizers(ctx context.Context, cl client.Client,
 			continue
 		}
 
-		// Only act when the pool is stuck due to an OCM 400 error on an immutable field.
-		if !rosaPoolHasImmutableFieldError(pool) {
+		// Only act when deletion has been stuck long enough to rule out transient errors.
+		if time.Since(pool.GetDeletionTimestamp().Time) < stuckDeletionThreshold {
 			continue
 		}
 
@@ -99,28 +105,6 @@ func RemoveStuckROSAMachinePoolFinalizers(ctx context.Context, cl client.Client,
 	}
 
 	return patched, nil
-}
-
-// rosaPoolHasImmutableFieldError returns true when the ROSAMachinePool's RosaMachinePoolReady
-// condition shows a ReconciliationFailed caused by the OCM API rejecting the immutable field
-// 'aws_node_pool.root_volume.size' with HTTP 400.
-func rosaPoolHasImmutableFieldError(pool *unstructured.Unstructured) bool {
-	conditions, _, _ := unstructured.NestedSlice(pool.Object, "status", "conditions")
-	for _, c := range conditions {
-		cond, ok := c.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		condType, _ := cond["type"].(string)
-		condStatus, _ := cond["status"].(string)
-		condReason, _ := cond["reason"].(string)
-		if condType != "RosaMachinePoolReady" || condStatus != "False" || condReason != "ReconciliationFailed" {
-			continue
-		}
-		msg, _ := cond["message"].(string)
-		return strings.Contains(msg, "Attribute 'aws_node_pool.root_volume.size' is not allowed")
-	}
-	return false
 }
 
 // clusterWaitingForWorkersDeletion returns true when the named Cluster's Deleting condition
