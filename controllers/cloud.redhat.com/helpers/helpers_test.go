@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"testing"
+	"time"
 
 	clowder "github.com/RedHatInsights/clowder/apis/cloud.redhat.com/v1alpha1"
 	crd "github.com/RedHatInsights/ephemeral-namespace-operator/apis/cloud.redhat.com/v1alpha1"
@@ -964,12 +965,11 @@ var _ = Describe("Helper Functions", func() {
 			)
 		})
 
-		// makePool builds an unstructured ROSAMachinePool with a deletionTimestamp, the CAPA
-		// finalizer, and a dummy extra finalizer (so the object is not GC'd when we remove the
-		// real one, allowing us to assert on the resulting finalizer list).
-		// errorType controls which stuck condition is set: "immutable", "lastNodePool", or "" for none.
-		makePool := func(errorType string) *unstructured.Unstructured {
-			now := metav1.Now()
+		// makePool builds an unstructured ROSAMachinePool with a deletionTimestamp set
+		// deletionAge ago, the CAPA finalizer, and a dummy extra finalizer (so the object is
+		// not GC'd when we remove the real one, allowing us to assert on the resulting finalizer list).
+		makePool := func(deletionAge time.Duration) *unstructured.Unstructured {
+			deletionTime := metav1.NewTime(time.Now().Add(-deletionAge))
 			pool := &unstructured.Unstructured{}
 			pool.SetGroupVersionKind(schema.GroupVersionKind{
 				Group:   "infrastructure.cluster.x-k8s.io",
@@ -979,28 +979,8 @@ var _ = Describe("Helper Functions", func() {
 			pool.SetName("workers")
 			pool.SetNamespace(testNamespace)
 			pool.SetLabels(map[string]string{"cluster.x-k8s.io/cluster-name": clusterName})
-			pool.SetDeletionTimestamp(&now)
+			pool.SetDeletionTimestamp(&deletionTime)
 			pool.SetFinalizers([]string{poolFinalizer, "dummy-finalizer"})
-
-			switch errorType {
-			case "immutable":
-				Expect(unstructured.SetNestedSlice(pool.Object, []interface{}{
-					map[string]interface{}{
-						"type":    "RosaMachinePoolReady",
-						"status":  "False",
-						"reason":  "ReconciliationFailed",
-						"message": "Attribute 'aws_node_pool.root_volume.size' is not allowed",
-					},
-				}, "status", "conditions")).To(Succeed())
-			case "lastNodePool":
-				Expect(unstructured.SetNestedSlice(pool.Object, []interface{}{
-					map[string]interface{}{
-						"type":   "RosaMachinePoolReady",
-						"status": "False",
-						"reason": "WaitingForRosaControlPlane",
-					},
-				}, "status", "conditions")).To(Succeed())
-			}
 			return pool
 		}
 
@@ -1025,8 +1005,8 @@ var _ = Describe("Helper Functions", func() {
 			return cluster
 		}
 
-		It("should remove finalizer when cluster is gone and pool has immutable field error", func() {
-			pool := makePool("immutable")
+		It("should remove finalizer when cluster is gone and pool has been deleting for >1h", func() {
+			pool := makePool(2 * time.Hour)
 			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool).Build()
 
 			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
@@ -1039,8 +1019,8 @@ var _ = Describe("Helper Functions", func() {
 			Expect(fetched.GetFinalizers()).To(ConsistOf("dummy-finalizer"))
 		})
 
-		It("should remove finalizer when cluster is WaitingForWorkersDeletion and pool has immutable field error", func() {
-			pool := makePool("immutable")
+		It("should remove finalizer when cluster is WaitingForWorkersDeletion and pool has been deleting for >1h", func() {
+			pool := makePool(2 * time.Hour)
 			cluster := makeCluster("WaitingForWorkersDeletion")
 			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool, cluster).Build()
 
@@ -1054,38 +1034,9 @@ var _ = Describe("Helper Functions", func() {
 			Expect(fetched.GetFinalizers()).To(ConsistOf("dummy-finalizer"))
 		})
 
-		It("should remove finalizer when cluster is WaitingForWorkersDeletion and pool has last-node-pool error", func() {
-			pool := makePool("lastNodePool")
+		It("should not remove finalizer when pool has been deleting for less than 1h", func() {
+			pool := makePool(30 * time.Minute)
 			cluster := makeCluster("WaitingForWorkersDeletion")
-			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool, cluster).Build()
-
-			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(patched).To(BeTrue())
-
-			fetched := &unstructured.Unstructured{}
-			fetched.SetGroupVersionKind(pool.GroupVersionKind())
-			Expect(c.Get(ctx, types.NamespacedName{Name: "workers", Namespace: testNamespace}, fetched)).To(Succeed())
-			Expect(fetched.GetFinalizers()).To(ConsistOf("dummy-finalizer"))
-		})
-
-		It("should remove finalizer when cluster is gone and pool has last-node-pool error", func() {
-			pool := makePool("lastNodePool")
-			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool).Build()
-
-			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(patched).To(BeTrue())
-
-			fetched := &unstructured.Unstructured{}
-			fetched.SetGroupVersionKind(pool.GroupVersionKind())
-			Expect(c.Get(ctx, types.NamespacedName{Name: "workers", Namespace: testNamespace}, fetched)).To(Succeed())
-			Expect(fetched.GetFinalizers()).To(ConsistOf("dummy-finalizer"))
-		})
-
-		It("should not remove finalizer when cluster exists but is not WaitingForWorkersDeletion", func() {
-			pool := makePool("immutable")
-			cluster := makeCluster("WaitingForControlPlaneDeletion")
 			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool, cluster).Build()
 
 			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
@@ -1098,24 +1049,19 @@ var _ = Describe("Helper Functions", func() {
 			Expect(fetched.GetFinalizers()).To(ConsistOf(poolFinalizer, "dummy-finalizer"))
 		})
 
-		It("should not remove finalizer when pool has no known stuck condition", func() {
-			pool := makePool("")
-			cluster := makeCluster("WaitingForWorkersDeletion")
-			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool, cluster).Build()
-
-			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(patched).To(BeFalse())
-		})
-
-		It("should not remove finalizer when pool with last-node-pool error has no matching cluster condition", func() {
-			pool := makePool("lastNodePool")
+		It("should not remove finalizer when cluster exists but is not WaitingForWorkersDeletion", func() {
+			pool := makePool(2 * time.Hour)
 			cluster := makeCluster("WaitingForControlPlaneDeletion")
 			c := fake.NewClientBuilder().WithScheme(rosaScheme).WithObjects(pool, cluster).Build()
 
 			patched, err := RemoveStuckROSAMachinePoolFinalizers(ctx, c, testNamespace)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(patched).To(BeFalse())
+
+			fetched := &unstructured.Unstructured{}
+			fetched.SetGroupVersionKind(pool.GroupVersionKind())
+			Expect(c.Get(ctx, types.NamespacedName{Name: "workers", Namespace: testNamespace}, fetched)).To(Succeed())
+			Expect(fetched.GetFinalizers()).To(ConsistOf(poolFinalizer, "dummy-finalizer"))
 		})
 
 		It("should return false when no ROSAMachinePool resources exist", func() {
