@@ -509,10 +509,6 @@ var _ = Describe("Poller", func() {
 // Additional tests for Metrics functionality
 var _ = Describe("Metrics", func() {
 	Describe("Prometheus Metrics", func() {
-		It("should have totalSuccessfulPoolReservationsCountMetrics defined", func() {
-			Expect(totalSuccessfulPoolReservationsCountMetrics).ToNot(BeNil())
-		})
-
 		It("should have totalFailedPoolReservationsCountMetrics defined", func() {
 			Expect(totalFailedPoolReservationsCountMetrics).ToNot(BeNil())
 		})
@@ -533,8 +529,8 @@ var _ = Describe("Metrics", func() {
 			Expect(activeReservationTotalMetrics).ToNot(BeNil())
 		})
 
-		It("should have resQuantityByUserMetrics defined", func() {
-			Expect(resQuantityByUserMetrics).ToNot(BeNil())
+		It("should have reservationsByRequesterTotalMetrics defined", func() {
+			Expect(reservationsByRequesterTotalMetrics).ToNot(BeNil())
 		})
 
 		It("should have enoVersion defined", func() {
@@ -546,11 +542,4 @@ var _ = Describe("Metrics", func() {
 		})
 	})
 
-	Describe("userNamespaceReservationCount map", func() {
-		It("should allow adding and retrieving values", func() {
-			// Test the map functionality
-			userNamespaceReservationCount["test-user"] = 5
-			Expect(userNamespaceReservationCount["test-user"]).To(Equal(5))
-		})
-	})
 })
