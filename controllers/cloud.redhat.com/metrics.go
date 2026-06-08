@@ -83,6 +83,14 @@ var (
 		},
 		[]string{"namespace", "reservation"},
 	)
+
+	reservationsByRequesterTotalMetrics = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "reservations_by_requester_total",
+			Help: "Total number of namespace reservations by requester and pool",
+		},
+		[]string{"requester", "pool"},
+	)
 )
 
 func init() {
@@ -96,5 +104,6 @@ func init() {
 		resQuantityByUserMetrics,
 		enoVersion,
 		capiCleanupDurationMetrics,
+		reservationsByRequesterTotalMetrics,
 	)
 }
