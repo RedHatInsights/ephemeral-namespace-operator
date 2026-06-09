@@ -239,13 +239,7 @@ func (r *NamespaceReservationReconciler) Reconcile(ctx context.Context, req ctrl
 			return ctrl.Result{}, err
 		}
 
-		if _, ok := userNamespaceReservationCount[res.Spec.Requester]; !ok {
-			userNamespaceReservationCount[res.Spec.Requester] = 0
-		}
-
-		userNamespaceReservationCount[res.Spec.Requester]++
-
-		resQuantityByUserMetrics.With(prometheus.Labels{"user": res.Spec.Requester}).Set(float64(userNamespaceReservationCount[res.Spec.Requester]))
+		reservationsByRequesterTotalMetrics.With(prometheus.Labels{"requester": res.Spec.Requester, "pool": res.Status.Pool}).Inc()
 
 		averageRequestedDurationMetrics.With(prometheus.Labels{"controller": "namespacereservation", "pool": res.Spec.Pool}).Observe(float64(duration.Hours()))
 
@@ -384,8 +378,6 @@ func (r *NamespaceReservationReconciler) reserveNamespace(ctx context.Context, r
 		r.log.Error(err, "could not apply rolebindings for namespace", "namespace", readyNsName)
 		return err
 	}
-
-	totalSuccessfulPoolReservationsCountMetrics.With(prometheus.Labels{"pool": res.Spec.Pool}).Inc()
 
 	return nil
 }

@@ -92,7 +92,7 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum(successful_pool_reservations_total{pool=~\"$pools\"})",
+              "expr": "sum(reservations_by_requester_total{pool=~\"$pools\"})",
               "format": "time_series",
               "legendFormat": "{{pool}}",
               "range": true,
@@ -352,25 +352,12 @@ data:
               "dimensions": {},
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user!~\".*smoke-test.*|.*pr-check-.*|automation-.*|.*-check-bot|.*ephemeral-base.*|edge-api.*|notifications.*\"}))",
-              "expression": "",
+              "expr": "sort_desc(sum by(requester) (reservations_by_requester_total{requester!~\".*smoke-test.*|.*pr-check-.*|automation-.*|.*-check-bot|.*ephemeral-base.*|edge-api.*|notifications.*\"}))",
               "format": "table",
-              "id": "",
-              "instant": false,
-              "label": "",
-              "legendFormat": "{{user}}",
-              "matchExact": true,
-              "metricEditorMode": 0,
-              "metricName": "",
-              "metricQueryType": 0,
-              "namespace": "",
-              "period": "",
-              "queryMode": "Metrics",
-              "range": true,
-              "refId": "A",
-              "region": "default",
-              "sqlExpression": "",
-              "statistic": "Average"
+              "instant": true,
+              "legendFormat": "{{requester}}",
+              "range": false,
+              "refId": "A"
             }
           ],
           "title": "Reservation Total By User",
@@ -1502,40 +1489,15 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": {
-                "mode": "palette-classic"
+                "mode": "thresholds"
               },
               "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 50,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
+                "align": "center",
+                "cellOptions": {
+                  "type": "auto"
                 },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "normal"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
+                "filterable": true,
+                "inspect": false
               },
               "mappings": [],
               "thresholds": {
@@ -1543,38 +1505,49 @@ data:
                 "steps": [
                   {
                     "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
-              },
-              "unit": "short"
+              }
             },
-            "overrides": []
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Total Reservations"
+                  }
+                ]
+              }
+            ]
           },
           "gridPos": {
             "h": 10,
-            "w": 24,
+            "w": 12,
             "x": 0,
             "y": 40
           },
-          "id": 54,
+          "id": 58,
           "options": {
-            "legend": {
-              "calcs": ["last", "max"],
-              "displayMode": "table",
-              "placement": "right",
-              "showLegend": true,
-              "sortBy": "Last",
-              "sortDesc": true
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
             },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "desc"
-            }
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "Total Reservations"
+              }
+            ]
           },
           "pluginVersion": "11.6.3",
           "targets": [
@@ -1584,15 +1557,18 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(user_group) (label_replace(res_quantity_by_user_count{user!~\"^[a-z]+$\"}, \"user_group\", \"$1\", \"user\", \"^(.+?)(?:-(?:bonfire-tekton|tekton-insights|pr-check|iqe-integration-test|pipelinerun|gh-pr-and-build|PR-\\\\d+|\\\\d{3,}|[a-z0-9]{5,6}))+$\"))",
-              "legendFormat": "{{user_group}}",
-              "range": true,
+              "exemplar": false,
+              "expr": "sort_desc(sum by(requester) (reservations_by_requester_total))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "{{requester}}",
+              "range": false,
               "refId": "A"
             }
           ],
-          "title": "Active Reservations by App (CI/Automation)",
+          "title": "Total Reservations by Requester",
           "transparent": true,
-          "type": "timeseries"
+          "type": "table"
         },
         {
           "datasource": {
@@ -1620,11 +1596,11 @@ data:
                   },
                   {
                     "color": "yellow",
-                    "value": 5
+                    "value": 50
                   },
                   {
                     "color": "red",
-                    "value": 10
+                    "value": 100
                   }
                 ]
               },
@@ -1635,10 +1611,10 @@ data:
           "gridPos": {
             "h": 10,
             "w": 12,
-            "x": 0,
-            "y": 50
+            "x": 12,
+            "y": 40
           },
-          "id": 55,
+          "id": 59,
           "options": {
             "displayMode": "gradient",
             "maxVizHeight": 300,
@@ -1666,16 +1642,101 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(sum by(user_group) (label_replace(res_quantity_by_user_count{user!~\"^[a-z]+$\"}, \"user_group\", \"$1\", \"user\", \"^(.+?)(?:-(?:bonfire-tekton|tekton-insights|pr-check|iqe-integration-test|pipelinerun|gh-pr-and-build|PR-\\\\d+|\\\\d{3,}|[a-z0-9]{5,6}))+$\")))",
+              "expr": "topk(10, sum by(requester) (reservations_by_requester_total))",
               "instant": true,
-              "legendFormat": "{{user_group}}",
+              "legendFormat": "{{requester}}",
               "range": false,
               "refId": "A"
             }
           ],
-          "title": "Top Apps by Active Reservations (CI/Automation)",
+          "title": "Top Requesters (All Time)",
           "transparent": true,
           "type": "bargauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 50
+          },
+          "id": 60,
+          "options": {
+            "displayLabels": [
+              "name",
+              "percent"
+            ],
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "values": [
+                "value",
+                "percent"
+              ]
+            },
+            "pieType": "donut",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.6.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum by(pool) (reservations_by_requester_total)",
+              "instant": true,
+              "legendFormat": "{{pool}}",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "Reservations by Pool",
+          "transparent": true,
+          "type": "piechart"
         },
         {
           "datasource": {
@@ -1691,12 +1752,12 @@ data:
                 "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
-                "axisLabel": "",
+                "axisLabel": "Reservations",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "barWidthFactor": 0.6,
                 "drawStyle": "line",
-                "fillOpacity": 50,
+                "fillOpacity": 30,
                 "gradientMode": "none",
                 "hideFrom": {
                   "legend": false,
@@ -1726,10 +1787,6 @@ data:
                 "steps": [
                   {
                     "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
                   }
                 ]
               },
@@ -1743,7 +1800,7 @@ data:
             "x": 12,
             "y": 50
           },
-          "id": 56,
+          "id": 61,
           "options": {
             "legend": {
               "calcs": ["last", "max"],
@@ -1767,98 +1824,15 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(user) (res_quantity_by_user_count{user=~\"^[a-z]+$\"})",
-              "legendFormat": "{{user}}",
+              "expr": "sum by(pool) (increase(reservations_by_requester_total[1h]))",
+              "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Active Reservations by User (Stacked)",
+          "title": "Reservations per Hour by Pool",
           "transparent": true,
           "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "yellow",
-                    "value": 3
-                  },
-                  {
-                    "color": "red",
-                    "value": 5
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 10,
-            "w": 12,
-            "x": 0,
-            "y": 60
-          },
-          "id": 57,
-          "options": {
-            "displayMode": "gradient",
-            "maxVizHeight": 300,
-            "minVizHeight": 16,
-            "minVizWidth": 8,
-            "namePlacement": "auto",
-            "orientation": "horizontal",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showUnfilled": true,
-            "sizing": "auto",
-            "valueMode": "color"
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "sort_desc(sum by(user) (res_quantity_by_user_count{user=~\"^[a-z]+$\"}))",
-              "instant": true,
-              "legendFormat": "{{user}}",
-              "range": false,
-              "refId": "A"
-            }
-          ],
-          "title": "Top Users by Active Reservations",
-          "transparent": true,
-          "type": "bargauge"
         }
       ],
       "preload": false,

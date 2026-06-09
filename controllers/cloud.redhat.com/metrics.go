@@ -5,17 +5,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
-var userNamespaceReservationCount = map[string]int{}
-
 var (
-	totalSuccessfulPoolReservationsCountMetrics = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "successful_pool_reservations_total",
-			Help: "Total successful reservations from each pool",
-		},
-		[]string{"pool"},
-	)
-
 	totalFailedPoolReservationsCountMetrics = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "failed_pool_reservations_total",
@@ -60,14 +50,6 @@ var (
 		[]string{"controller"},
 	)
 
-	resQuantityByUserMetrics = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "res_quantity_by_user_count",
-			Help: "Quantity of reservations by user",
-		},
-		[]string{"user"},
-	)
-
 	enoVersion = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "eno_version",
@@ -83,18 +65,25 @@ var (
 		},
 		[]string{"namespace", "reservation"},
 	)
+
+	reservationsByRequesterTotalMetrics = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "reservations_by_requester_total",
+			Help: "Total number of namespace reservations by requester and pool",
+		},
+		[]string{"requester", "pool"},
+	)
 )
 
 func init() {
 	metrics.Registry.MustRegister(
-		totalSuccessfulPoolReservationsCountMetrics,
 		totalFailedPoolReservationsCountMetrics,
 		averageRequestedDurationMetrics,
 		averageNamespaceCreationMetrics,
 		averageReservationToDeploymentMetrics,
 		activeReservationTotalMetrics,
-		resQuantityByUserMetrics,
 		enoVersion,
 		capiCleanupDurationMetrics,
+		reservationsByRequesterTotalMetrics,
 	)
 }
