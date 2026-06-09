@@ -1,0 +1,4 @@
+FROM python:3.12-slim
+RUN pip install --no-cache-dir prometheus_client
+COPY mock-metrics.py /app/mock-metrics.py
+CMD ["python", "/app/mock-metrics.py"]
