@@ -9,7 +9,7 @@ View the ENO Grafana dashboard locally with mock metric data.
 ## Usage
 
 ```bash
-cd dashboards/local
+cd tests/grafana-preview
 docker compose up -d      # or: podman-compose up -d
 ```
 
