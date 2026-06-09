@@ -38,6 +38,19 @@ data:
       "links": [],
       "panels": [
         {
+          "type": "row",
+          "title": "Summary",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "panels": []
+        },
+        {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
@@ -62,9 +75,9 @@ data:
           },
           "gridPos": {
             "h": 4,
-            "w": 3,
+            "w": 4,
             "x": 0,
-            "y": 0
+            "y": 1
           },
           "id": 10,
           "options": {
@@ -128,9 +141,9 @@ data:
           },
           "gridPos": {
             "h": 4,
-            "w": 3,
-            "x": 3,
-            "y": 0
+            "w": 4,
+            "x": 4,
+            "y": 1
           },
           "id": 38,
           "options": {
@@ -179,198 +192,6 @@ data:
           "fieldConfig": {
             "defaults": {
               "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "Number of Active Reservations",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 42,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 9,
-            "x": 7,
-            "y": 0
-          },
-          "id": 35,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "expr": "sum(active_reservation_total{controller=\"namespacereservation\"})",
-              "format": "time_series",
-              "hide": false,
-              "legendFormat": "__auto",
-              "range": true,
-              "refId": "B"
-            }
-          ],
-          "title": "Active Reservations Over Time",
-          "transparent": true,
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "custom": {
-                "align": "center",
-                "cellOptions": {
-                  "type": "auto"
-                },
-                "filterable": false,
-                "inspect": false,
-                "width": 300
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Time"
-                },
-                "properties": [
-                  {
-                    "id": "custom.width",
-                    "value": 157
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Value"
-                },
-                "properties": [
-                  {
-                    "id": "custom.width",
-                    "value": 142
-                  }
-                ]
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 15,
-            "w": 8,
-            "x": 16,
-            "y": 0
-          },
-          "id": 37,
-          "options": {
-            "cellHeight": "sm",
-            "footer": {
-              "countRows": false,
-              "fields": "",
-              "reducer": [
-                "sum"
-              ],
-              "show": false
-            },
-            "showHeader": true,
-            "sortBy": []
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "dimensions": {},
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "sort_desc(sum by(requester) (reservations_by_requester_total{requester!~\".*smoke-test.*|.*pr-check-.*|automation-.*|.*-check-bot|.*ephemeral-base.*|edge-api.*|notifications.*\"}))",
-              "format": "table",
-              "instant": true,
-              "legendFormat": "{{requester}}",
-              "range": false,
-              "refId": "A"
-            }
-          ],
-          "title": "Reservation Total By User",
-          "type": "table"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
                 "mode": "thresholds"
               },
               "mappings": [],
@@ -396,9 +217,9 @@ data:
           },
           "gridPos": {
             "h": 4,
-            "w": 3,
-            "x": 0,
-            "y": 4
+            "w": 4,
+            "x": 8,
+            "y": 1
           },
           "id": 12,
           "options": {
@@ -463,12 +284,12 @@ data:
             "overrides": []
           },
           "gridPos": {
-            "h": 3,
-            "w": 6,
-            "x": 0,
-            "y": 8
+            "h": 4,
+            "w": 4,
+            "x": 12,
+            "y": 1
           },
-          "id": 40,
+          "id": 62,
           "options": {
             "colorMode": "value",
             "graphMode": "none",
@@ -504,14 +325,27 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Development version",
+          "title": "ENO Version",
           "transparent": true,
           "type": "stat"
         },
         {
+          "type": "row",
+          "title": "Usage",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 5
+          },
+          "id": 101,
+          "panels": []
+        },
+        {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "${datasource}"
           },
           "fieldConfig": {
             "defaults": {
@@ -522,12 +356,12 @@ data:
                 "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
-                "axisLabel": "",
+                "axisLabel": "Number of Active Reservations",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
                 "barWidthFactor": 0.6,
                 "drawStyle": "line",
-                "fillOpacity": 10,
+                "fillOpacity": 42,
                 "gradientMode": "none",
                 "hideFrom": {
                   "legend": false,
@@ -541,7 +375,7 @@ data:
                 "scaleDistribution": {
                   "type": "linear"
                 },
-                "showPoints": "never",
+                "showPoints": "auto",
                 "spanNulls": false,
                 "stacking": {
                   "group": "A",
@@ -552,78 +386,25 @@ data:
                 }
               },
               "mappings": [],
-              "min": 0,
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
                   {
                     "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "clowdapp"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "light-blue",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "clowdenvironment"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "semi-dark-purple",
-                      "mode": "fixed"
-                    }
-                  }
-                ]
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "clowdjobinvocation"
-                },
-                "properties": [
-                  {
-                    "id": "color",
-                    "value": {
-                      "fixedColor": "light-green",
-                      "mode": "fixed"
-                    }
                   }
                 ]
               }
-            ]
+            },
+            "overrides": []
           },
           "gridPos": {
             "h": 8,
-            "w": 9,
-            "x": 7,
-            "y": 8
+            "w": 12,
+            "x": 0,
+            "y": 6
           },
-          "id": 48,
+          "id": 35,
           "options": {
-            "alertThreshold": true,
             "legend": {
               "calcs": [],
               "displayMode": "list",
@@ -632,7 +413,7 @@ data:
             },
             "tooltip": {
               "hideZeros": false,
-              "mode": "multi",
+              "mode": "single",
               "sort": "none"
             }
           },
@@ -641,88 +422,20 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "mOIyqZB7k"
-              },
-              "exemplar": true,
-              "expr": "sum(increase(controller_runtime_reconcile_total{controller=~\"clowdenvironment|namespacepool|namespacereservation\"}[1m])) by (controller)",
-              "interval": "",
-              "legendFormat": "{{controller}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Reconciliations Per Minute",
-          "transparent": true,
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "mappings": [],
-              "noValue": "No version found",
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "light-blue"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 3,
-            "w": 6,
-            "x": 0,
-            "y": 11
-          },
-          "id": 42,
-          "options": {
-            "colorMode": "value",
-            "graphMode": "none",
-            "justifyMode": "auto",
-            "orientation": "auto",
-            "percentChangeColorMode": "standard",
-            "reduceOptions": {
-              "calcs": [
-                "mean"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showPercentChange": false,
-            "text": {
-              "valueSize": 40
-            },
-            "textMode": "name",
-            "wideLayout": true
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
                 "uid": "${datasource}"
               },
-              "exemplar": true,
-              "expr": "sum(eno_version) by (version)",
-              "instant": true,
-              "interval": "",
-              "legendFormat": "{{version}}",
-              "refId": "A"
+              "editorMode": "code",
+              "expr": "sum(active_reservation_total{controller=\"namespacereservation\"})",
+              "format": "time_series",
+              "hide": false,
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "B"
             }
           ],
-          "title": "Ephemeral version",
+          "title": "Active Reservations Over Time",
           "transparent": true,
-          "type": "stat"
+          "type": "timeseries"
         },
         {
           "datasource": {
@@ -788,9 +501,9 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 7,
-            "x": 0,
-            "y": 14
+            "w": 12,
+            "x": 12,
+            "y": 6
           },
           "id": 18,
           "options": {
@@ -929,6 +642,712 @@ data:
         {
           "datasource": {
             "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 14
+          },
+          "id": 53,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.6.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "increase(namespace_reservation_duration_average_count{pool=\"default\", controller=\"namespacereservation\"}[1h])",
+              "legendFormat": "Reservations per hour",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Reservations per Hour (default pool)",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Reservations",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 30,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "normal"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 14
+          },
+          "id": 61,
+          "options": {
+            "legend": {
+              "calcs": [
+                "last",
+                "max"
+              ],
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "sortBy": "Last",
+              "sortDesc": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "11.6.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by(pool) (increase(reservations_by_requester_total[1h]))",
+              "legendFormat": "{{pool}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Reservations per Hour by Pool",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "center",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": true,
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Total Reservations"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 22
+          },
+          "id": 58,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "Total Reservations"
+              }
+            ]
+          },
+          "pluginVersion": "11.6.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sort_desc(sum by(requester) (reservations_by_requester_total))",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "{{requester}}",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "Total Reservations by Requester",
+          "transparent": true,
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 50
+                  },
+                  {
+                    "color": "red",
+                    "value": 100
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 22
+          },
+          "id": 59,
+          "options": {
+            "displayMode": "gradient",
+            "maxVizHeight": 300,
+            "minVizHeight": 16,
+            "minVizWidth": 8,
+            "namePlacement": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showUnfilled": true,
+            "sizing": "auto",
+            "valueMode": "color"
+          },
+          "pluginVersion": "11.6.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "topk(10, sum by(requester) (reservations_by_requester_total))",
+              "instant": true,
+              "legendFormat": "{{requester}}",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "Top Requesters (All Time)",
+          "transparent": true,
+          "type": "bargauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 6,
+            "y": 32
+          },
+          "id": 60,
+          "options": {
+            "displayLabels": [
+              "name",
+              "percent"
+            ],
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "values": [
+                "value",
+                "percent"
+              ]
+            },
+            "pieType": "donut",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.6.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum by(pool) (reservations_by_requester_total)",
+              "instant": true,
+              "legendFormat": "{{pool}}",
+              "range": false,
+              "refId": "A"
+            }
+          ],
+          "title": "Reservations by Pool",
+          "transparent": true,
+          "type": "piechart"
+        },
+        {
+          "type": "row",
+          "title": "Performance",
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 42
+          },
+          "id": 102,
+          "panels": []
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "clowdapp"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "light-blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "clowdenvironment"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "semi-dark-purple",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "clowdjobinvocation"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "light-green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 43
+          },
+          "id": 48,
+          "options": {
+            "alertThreshold": true,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.6.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "mOIyqZB7k"
+              },
+              "exemplar": true,
+              "expr": "sum(increase(controller_runtime_reconcile_total{controller=~\"clowdenvironment|namespacepool|namespacereservation\"}[1m])) by (controller)",
+              "interval": "",
+              "legendFormat": "{{controller}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Reconciliations Per Minute",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "uid": "$datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 43
+          },
+          "id": 50,
+          "options": {
+            "alertThreshold": true,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.6.3",
+          "targets": [
+            {
+              "expr": "sum by (method) (rate(rest_client_requests_total[1m]))",
+              "interval": "",
+              "legendFormat": "{{operation}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Operation Rates per minute",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
             "uid": "$datasource"
           },
           "fieldConfig": {
@@ -1020,9 +1439,9 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 15
+            "w": 12,
+            "x": 0,
+            "y": 51
           },
           "id": 44,
           "options": {
@@ -1065,99 +1484,6 @@ data:
             }
           ],
           "title": "ENO Memory Usage",
-          "transparent": true,
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "uid": "$datasource"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "never",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 9,
-            "x": 7,
-            "y": 16
-          },
-          "id": 50,
-          "options": {
-            "alertThreshold": true,
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "expr": "sum by (method) (rate(rest_client_requests_total[1m]))",
-              "interval": "",
-              "legendFormat": "{{operation}}",
-              "refId": "A"
-            }
-          ],
-          "title": "Operation Rates per minute",
           "transparent": true,
           "type": "timeseries"
         },
@@ -1238,9 +1564,9 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 8,
-            "x": 16,
-            "y": 23
+            "w": 12,
+            "x": 12,
+            "y": 51
           },
           "id": 46,
           "options": {
@@ -1347,9 +1673,9 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 9,
-            "x": 7,
-            "y": 24
+            "w": 24,
+            "x": 0,
+            "y": 59
           },
           "id": 52,
           "options": {
@@ -1380,457 +1706,6 @@ data:
             }
           ],
           "title": "WorkQueue Depth",
-          "transparent": true,
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 32
-          },
-          "id": 53,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "expr": "increase(namespace_reservation_duration_average_count{pool=\"default\", controller=\"namespacereservation\"}[1h])",
-              "legendFormat": "Reservations per hour",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Reservations per Hour (default pool)",
-          "transparent": true,
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "thresholds"
-              },
-              "custom": {
-                "align": "center",
-                "cellOptions": {
-                  "type": "auto"
-                },
-                "filterable": true,
-                "inspect": false
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              }
-            },
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Value"
-                },
-                "properties": [
-                  {
-                    "id": "displayName",
-                    "value": "Total Reservations"
-                  }
-                ]
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 10,
-            "w": 12,
-            "x": 0,
-            "y": 40
-          },
-          "id": 58,
-          "options": {
-            "cellHeight": "sm",
-            "footer": {
-              "countRows": false,
-              "fields": "",
-              "reducer": [
-                "sum"
-              ],
-              "show": false
-            },
-            "showHeader": true,
-            "sortBy": [
-              {
-                "desc": true,
-                "displayName": "Total Reservations"
-              }
-            ]
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "sort_desc(sum by(requester) (reservations_by_requester_total))",
-              "format": "table",
-              "instant": true,
-              "legendFormat": "{{requester}}",
-              "range": false,
-              "refId": "A"
-            }
-          ],
-          "title": "Total Reservations by Requester",
-          "transparent": true,
-          "type": "table"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "yellow",
-                    "value": 50
-                  },
-                  {
-                    "color": "red",
-                    "value": 100
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 10,
-            "w": 12,
-            "x": 12,
-            "y": 40
-          },
-          "id": 59,
-          "options": {
-            "displayMode": "gradient",
-            "maxVizHeight": 300,
-            "minVizHeight": 16,
-            "minVizWidth": 8,
-            "namePlacement": "auto",
-            "orientation": "horizontal",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "showUnfilled": true,
-            "sizing": "auto",
-            "valueMode": "color"
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "topk(10, sum by(requester) (reservations_by_requester_total))",
-              "instant": true,
-              "legendFormat": "{{requester}}",
-              "range": false,
-              "refId": "A"
-            }
-          ],
-          "title": "Top Requesters (All Time)",
-          "transparent": true,
-          "type": "bargauge"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 10,
-            "w": 12,
-            "x": 0,
-            "y": 50
-          },
-          "id": 60,
-          "options": {
-            "displayLabels": [
-              "name",
-              "percent"
-            ],
-            "legend": {
-              "displayMode": "table",
-              "placement": "right",
-              "showLegend": true,
-              "values": [
-                "value",
-                "percent"
-              ]
-            },
-            "pieType": "donut",
-            "reduceOptions": {
-              "calcs": [
-                "lastNotNull"
-              ],
-              "fields": "",
-              "values": false
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "exemplar": false,
-              "expr": "sum by(pool) (reservations_by_requester_total)",
-              "instant": true,
-              "legendFormat": "{{pool}}",
-              "range": false,
-              "refId": "A"
-            }
-          ],
-          "title": "Reservations by Pool",
-          "transparent": true,
-          "type": "piechart"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "Reservations",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 30,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "normal"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 10,
-            "w": 12,
-            "x": 12,
-            "y": 50
-          },
-          "id": 61,
-          "options": {
-            "legend": {
-              "calcs": ["last", "max"],
-              "displayMode": "table",
-              "placement": "right",
-              "showLegend": true,
-              "sortBy": "Last",
-              "sortDesc": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "multi",
-              "sort": "desc"
-            }
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "expr": "sum by(pool) (increase(reservations_by_requester_total[1h]))",
-              "legendFormat": "{{pool}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Reservations per Hour by Pool",
           "transparent": true,
           "type": "timeseries"
         }
