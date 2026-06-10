@@ -790,6 +790,18 @@ data:
                     "value": true
                   }
                 ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "requester_base"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "Requester"
+                  }
+                ]
               }
             ]
           },
@@ -827,10 +839,10 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(sum by(requester) (label_replace(reservations_by_requester_total, \"requester\", \"$1\", \"requester\", \"(.*)-[^-]+\")))",
+              "expr": "sort_desc(sum by(requester_base) (label_replace(label_replace(reservations_by_requester_total, \"requester_base\", \"$1\", \"requester\", \"(.*)-[^-]+\"), \"requester_base\", \"$1\", \"requester\", \"^([^-]+)$\")))",
               "format": "table",
               "instant": true,
-              "legendFormat": "{{requester}}",
+              "legendFormat": "{{requester_base}}",
               "range": false,
               "refId": "A"
             }
@@ -911,9 +923,9 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "topk(10, sum by(requester) (label_replace(reservations_by_requester_total, \"requester\", \"$1\", \"requester\", \"(.*)-[^-]+\")))",
+              "expr": "topk(10, sum by(requester_base) (label_replace(label_replace(reservations_by_requester_total, \"requester_base\", \"$1\", \"requester\", \"(.*)-[^-]+\"), \"requester_base\", \"$1\", \"requester\", \"^([^-]+)$\")))",
               "instant": true,
-              "legendFormat": "{{requester}}",
+              "legendFormat": "{{requester_base}}",
               "range": false,
               "refId": "A"
             }
