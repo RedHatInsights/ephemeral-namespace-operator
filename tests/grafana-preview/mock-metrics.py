@@ -5,6 +5,7 @@ panels render with meaningful values when running locally.
 """
 
 import random
+import string
 import time
 import threading
 from prometheus_client import (
@@ -18,10 +19,20 @@ from prometheus_client import (
 # -- Configuration ----------------------------------------------------------
 
 POOLS = ["default", "minimal", "minimal-secure", "managed-kafka"]
-REQUESTERS = [
-    "bsquizza", "jdoe", "asmith", "platform-ci", "qe-team",
-    "inventory-service", "advisor-service", "vulnerability-engine",
-    "compliance-backend", "ros-backend", "patch-service",
+HUMAN_REQUESTERS = [
+    "jdoe", "asmith", "mjones",
+]
+# CI job requesters with trailing UIDs (the dashboard strips the last segment)
+CI_REQUESTER_PREFIXES = [
+    "insights-hbi-smoke",
+    "insights-hbi-rbac",
+    "insights-hbi-all",
+    "bonfire-component-tests-pipelinerun",
+    "bonfire-integration-tests-pipelinerun",
+    "rbac-bonfire-tekton",
+    "compliance-backend-bonfire-tekton",
+    "koku-ci",
+    "content-sources-backend-bonfire-tekton",
 ]
 CONTROLLERS = ["clowdenvironment", "namespacepool", "namespacereservation"]
 REST_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "LIST", "WATCH"]
@@ -117,6 +128,16 @@ capi_cleanup_duration = Gauge(
 )
 
 
+def random_uid():
+    return "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
+
+
+def random_requester():
+    if random.random() < 0.15:
+        return random.choice(HUMAN_REQUESTERS)
+    return f"{random.choice(CI_REQUESTER_PREFIXES)}-{random_uid()}"
+
+
 # -- Seed initial state -----------------------------------------------------
 
 def seed():
@@ -125,11 +146,10 @@ def seed():
     for pool in POOLS:
         failed_pool_reservations.labels(pool=pool).set(random.randint(0, 3))
 
-    for req in REQUESTERS:
+    for _ in range(80):
+        req = random_requester()
         pool = random.choice(POOLS)
-        reservations_by_requester.labels(requester=req, pool=pool).inc(
-            random.randint(5, 120)
-        )
+        reservations_by_requester.labels(requester=req, pool=pool).inc(1)
 
     active_reservations.labels(controller="namespacereservation").set(
         random.randint(3, 15)
@@ -176,8 +196,8 @@ def update_loop():
     while True:
         time.sleep(5)
 
-        # Simulate new reservations trickling in
-        req = random.choice(REQUESTERS)
+        # Simulate new reservations trickling in (with unique CI UIDs)
+        req = random_requester()
         pool = random.choice(POOLS)
         reservations_by_requester.labels(requester=req, pool=pool).inc(1)
 
@@ -219,8 +239,8 @@ def update_loop():
                 service="ephemeral-namespace-operator-controller-metrics-non-auth",
             ).set(random.randint(0, 5))
 
-        # Occasional new reservation duration observation
-        if random.random() < 0.3:
+        # Record reservation duration (drives 'Reservations per Hour by Pool')
+        if random.random() < 0.6:
             pool = random.choice(POOLS)
             hours = random.choice([1, 1, 2, 4, 8, 24])
             reservation_duration.labels(
