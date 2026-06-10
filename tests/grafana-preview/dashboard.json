@@ -848,14 +848,16 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
+            "align": "auto",
+            "cellOptions": {
+              "type": "gauge",
+              "mode": "gradient"
+            },
+            "filterable": true,
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -876,7 +878,44 @@
           },
           "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "requester_base"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Requester"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Total Reservations"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 10,
@@ -886,22 +925,22 @@
       },
       "id": 59,
       "options": {
-        "displayMode": "gradient",
-        "maxVizHeight": 300,
-        "minVizHeight": 16,
-        "minVizWidth": 8,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "valueMode": "color"
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Total Reservations"
+          }
+        ]
       },
       "pluginVersion": "11.6.3",
       "targets": [
@@ -912,7 +951,8 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "topk(10, sum by(requester_base) (label_replace(label_replace(reservations_by_requester_total, \"requester_base\", \"$1\", \"requester\", \"(.*)-[^-]+\"), \"requester_base\", \"$1\", \"requester\", \"^([^-]+)$\")))",
+          "expr": "topk(50, sum by(requester_base) (label_replace(label_replace(reservations_by_requester_total, \"requester_base\", \"$1\", \"requester\", \"(.*)-[^-]+\"), \"requester_base\", \"$1\", \"requester\", \"^([^-]+)$\")))",
+          "format": "table",
           "instant": true,
           "legendFormat": "{{requester_base}}",
           "range": false,
@@ -921,7 +961,7 @@
       ],
       "title": "Top Requesters (All Time)",
       "transparent": true,
-      "type": "bargauge"
+      "type": "table"
     },
     {
       "datasource": {
