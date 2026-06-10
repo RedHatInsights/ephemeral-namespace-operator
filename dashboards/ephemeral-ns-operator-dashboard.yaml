@@ -653,104 +653,6 @@ data:
                 "axisBorderShow": false,
                 "axisCenteredZero": false,
                 "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 10,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green"
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "short"
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 14
-          },
-          "id": 53,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "11.6.3",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-              },
-              "editorMode": "code",
-              "expr": "increase(namespace_reservation_duration_average_count{pool=\"default\", controller=\"namespacereservation\"}[1h])",
-              "legendFormat": "Reservations per hour",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Reservations per Hour (default pool)",
-          "transparent": true,
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
                 "axisLabel": "Reservations",
                 "axisPlacement": "auto",
                 "barAlignment": 0,
@@ -795,8 +697,8 @@ data:
           },
           "gridPos": {
             "h": 8,
-            "w": 12,
-            "x": 12,
+            "w": 24,
+            "x": 0,
             "y": 14
           },
           "id": 61,
@@ -826,7 +728,7 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(pool) (increase(reservations_by_requester_total[1h]))",
+              "expr": "sum by(pool) (increase(namespace_reservation_duration_average_count{controller=\"namespacereservation\"}[1h]))",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
@@ -876,6 +778,18 @@ data:
                     "value": "Total Reservations"
                   }
                 ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Time"
+                },
+                "properties": [
+                  {
+                    "id": "custom.hidden",
+                    "value": true
+                  }
+                ]
               }
             ]
           },
@@ -913,7 +827,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(sum by(requester) (reservations_by_requester_total))",
+              "expr": "sort_desc(sum by(requester) (label_replace(reservations_by_requester_total, \"requester\", \"$1\", \"requester\", \"(.*)-[^-]+\")))",
               "format": "table",
               "instant": true,
               "legendFormat": "{{requester}}",
@@ -997,7 +911,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "topk(10, sum by(requester) (reservations_by_requester_total))",
+              "expr": "topk(10, sum by(requester) (label_replace(reservations_by_requester_total, \"requester\", \"$1\", \"requester\", \"(.*)-[^-]+\")))",
               "instant": true,
               "legendFormat": "{{requester}}",
               "range": false,
