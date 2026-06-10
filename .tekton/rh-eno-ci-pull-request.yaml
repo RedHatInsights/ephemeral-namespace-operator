@@ -8,9 +8,7 @@ metadata:
     build.appstudio.redhat.com/target_branch: '{{target_branch}}'
     pipelinesascode.tekton.dev/cancel-in-progress: "true"
     pipelinesascode.tekton.dev/max-keep-runs: "3"
-    pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch
-      == "main" && ( "tests/rh_eno_ci/***".pathChanged() || ".tekton/rh-eno-ci-pull-request.yaml".pathChanged()
-      )
+    pipelinesascode.tekton.dev/on-cel-expression: event == "pull_request" && target_branch == "main"
   creationTimestamp: null
   labels:
     appstudio.openshift.io/application: ephemeral-namespace-operator
