@@ -74,6 +74,7 @@ func (p *Poller) populateActiveReservations(ctx context.Context) error {
 	for _, res := range resList.Items {
 		if res.Status.State == "active" {
 			p.activeReservations[res.Name] = res.Status.Expiration
+			reservationsByRequesterTotalMetrics.With(prometheus.Labels{"requester": res.Spec.Requester, "pool": res.Status.Pool}).Inc()
 			p.log.Info("Added active reservation to poller", "res-name", res.Name)
 		}
 	}
