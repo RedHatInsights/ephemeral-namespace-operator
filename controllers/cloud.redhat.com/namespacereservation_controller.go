@@ -322,6 +322,10 @@ func (r *NamespaceReservationReconciler) handleCAPICleanup(ctx context.Context, 
 
 	controllerutil.RemoveFinalizer(res, capiCleanupFinalizer)
 	if err := r.client.Update(ctx, res); err != nil {
+		if k8serr.IsNotFound(err) {
+			log.Info("reservation already deleted, skipping finalizer removal", "res-name", res.Name)
+			return ctrl.Result{}, nil
+		}
 		log.Error(err, "could not remove CAPI cleanup finalizer", "res-name", res.Name)
 		return ctrl.Result{}, err
 	}
