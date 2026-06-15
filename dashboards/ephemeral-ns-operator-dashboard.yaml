@@ -728,13 +728,13 @@ data:
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(pool) (increase(namespace_reservation_duration_average_count{controller=\"namespacereservation\"}[1h]))",
+              "expr": "sum by(pool) (reservations_by_requester_total)",
               "legendFormat": "{{pool}}",
               "range": true,
               "refId": "A"
             }
           ],
-          "title": "Reservations per Hour by Pool",
+          "title": "Reservation Requests by Pool",
           "transparent": true,
           "type": "timeseries"
         },
@@ -839,7 +839,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "sort_desc(sum by(requester_base) (label_replace(label_replace(reservations_by_requester_total, \"requester_base\", \"$1\", \"requester\", \"(.*)-[^-]+\"), \"requester_base\", \"$1\", \"requester\", \"^([^-]+)$\")))",
+              "expr": "sort_desc(sum by(requester_base) (label_replace(label_replace(label_replace(label_replace(reservations_by_requester_total, \"requester_base\", \"$1\", \"requester\", \"^([^-]+)$\"), \"requester_base\", \"$1\", \"requester\", \"(.*)-[^-]+\"), \"requester_base\", \"$1\", \"requester\", \"(.*)-PR-[0-9]+\"), \"requester_base\", \"aap-aa\", \"requester\", \"^aap-aa-.*\")))",
               "format": "table",
               "instant": true,
               "legendFormat": "{{requester_base}}",
@@ -962,7 +962,7 @@ data:
               },
               "editorMode": "code",
               "exemplar": false,
-              "expr": "topk(50, sum by(requester_base) (label_replace(label_replace(reservations_by_requester_total, \"requester_base\", \"$1\", \"requester\", \"(.*)-[^-]+\"), \"requester_base\", \"$1\", \"requester\", \"^([^-]+)$\")))",
+              "expr": "topk(50, sum by(requester_base) (label_replace(label_replace(label_replace(label_replace(reservations_by_requester_total, \"requester_base\", \"$1\", \"requester\", \"^([^-]+)$\"), \"requester_base\", \"$1\", \"requester\", \"(.*)-[^-]+\"), \"requester_base\", \"$1\", \"requester\", \"(.*)-PR-[0-9]+\"), \"requester_base\", \"aap-aa\", \"requester\", \"^aap-aa-.*\")))",
               "format": "table",
               "instant": true,
               "legendFormat": "{{requester_base}}",
