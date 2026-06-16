@@ -1,48 +1,84 @@
 # Ephemeral Namespace Operator (ENO)
 
-![image:https://img.shields.io/github/v/release/redhatinsights/ephemeral-namespace-operator[Release]](https://img.shields.io/github/v/release/RedHatInsights/ephemeral-namespace-operator)
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/RedHatInsights/ephemeral-namespace-operator)
+A Kubernetes operator that manages pools of pre-provisioned, ready-to-use OpenShift namespaces with
+deployed ClowdEnvironments. Users request namespaces via reservations, and the operator handles
+lifecycle management including automatic expiration.
 
-## Purpose
-The purpose of the ephemeral namespace operator is to have namespaces queued up and ready to be utilized. These namespaces  
-will have `Clowdenvironments` deployed, and specific resources corresponding to the type of namespace pool a user requests from, ready to go.  
-<p align="center">
-  <img width="600" height="400" src="operator_diagram.png">
-</p>
+## How It Works
 
-## Benefits For This Approach
-- Cuts user's wait-time down since namespaces will already be ready-to-go.
-- Ensures that namespaces are not forgotten therefore reducing resource utilization.
-- Long-running environments require work to maintain, therefore, having a time limit on them will reduce this issue from happening.
+The operator maintains pools of namespaces with pre-deployed resources. When a user creates a
+reservation, a namespace is checked out from the appropriate pool and made available for the
+specified duration (default: 1 hour). After expiration, the namespace is reclaimed and recycled.
 
-## How does it work?
-A user will request a namespace which creates a reservation request. From there a namespace is selected from the pool and checked out by that user.  
-The user will have that pool for the specified duration (Or for 1 hour if duration was not specified).
+### Reservation Flags
 
-A user can use any of the following optional flags to specify their needs:
+- `--name` — specify a reservation name (e.g., `--name my-reservation`)
+- `-d, --duration` — reservation duration (e.g., `-d 3h`)
+- `--pool` — target pool (e.g., `--pool minimal`)
 
-- `--name`: Specify a reservation name. Ex. `--name my-namespace-reservation`
-- `-d, --duration`: Specify the length of time a user wants to reserve the namespace for. Ex. `-d 3h`
-- `--pool`: Specify the pool a user wants a namespace from. Ex. `--pool minimal`
+### Namespace Pools
 
-## What Are Namespace Pools?
-Given the various needs of our users, we incorporated different pools of ready namespaces that contain specific resources.  
-This is to help ensure that when users request a namespace they aren't getting any unnecessary resources within their namespace.  
-The current list of pools are `default`, `minimal`, and `managed-kafka`.
+Different pools provide different pre-deployed resources:
 
-An optional configuration can be added to the pool spec for limiting the number of namespaces that a pool can have at once. This would  
-include `ready`, `creating`, and `reserved` namespaces. Add the following to utilize this feature: `sizeLimit: <int>`
+| Pool            | Resources                                             |
+| --------------- | ----------------------------------------------------- |
+| `default`       | Full ClowdEnvironment (Kafka, Minio, Prometheus, etc) |
+| `minimal`       | Minimal ClowdEnvironment                              |
+| `managed-kafka` | ClowdEnvironment with managed Kafka                   |
 
-## CRDs Added on Namespace Creation
+Pools support a `sizeLimit` configuration to cap the total number of namespaces (ready, creating,
+and reserved combined).
 
-- `ClowdEnvironment`:  This will create deployments for Kafka, Kafka Connect, Minio, Prometheus, and feature flags.  
-- `FrontendEnvironment`: This sets up environment configurations for the github.com/RedHatInsights/frontend-operator[frontend operator]  
-- `RoleBindings`: Access is granted to devs to edit resources in the namespace  
-- Secrets are copied from the base namespace.  
+### CRDs Created Per Namespace
+
+- **ClowdEnvironment** — deployments for Kafka, Kafka Connect, Minio, Prometheus, feature flags
+- **FrontendEnvironment** — configuration for the [frontend operator][frontend-operator]
+- **RoleBindings** — edit access for developers
+- **Secrets** — copied from the base namespace
+
+## Prerequisites
+
+- Go 1.25+
+- OpenShift cluster with Clowder installed
+- `make` for build tooling
+
+## Development Setup
+
+```sh
+# Run tests
+make test
+
+# Run linter
+make lint
+
+# Build the operator
+make build
+
+# Generate manifests
+make manifests
+
+# Generate deep copy implementations
+make generate
+```
+
+### CI/CD
+
+The repository uses GitHub Actions for:
+
+- `lint.yml` — runs golangci-lint
+- `test.yml` — runs unit tests
+- `pr-e2e-codebuild.yml` — end-to-end tests via AWS CodeBuild
+- `platsec.yml` — platform security scanning
+
+A Jenkinsfile is also present for legacy CI integration.
 
 ## Contributing
 
-Check this [CONTRIBUTING.md](CONTRIBUTING.md) for deploying the ENO on your local machine.
+See [CONTRIBUTING.md][contributing] for local development setup and contribution guidelines.
 
----
-Made with ❤️ @ Red Hat
+## License
+
+Apache License 2.0
+
+[frontend-operator]: https://github.com/RedHatInsights/frontend-operator
+[contributing]: ./CONTRIBUTING.md
