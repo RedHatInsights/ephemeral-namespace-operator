@@ -49,8 +49,6 @@ func CreateFrontendEnv(ctx context.Context, cl client.Client, namespaceName stri
 			IngressClass:          clowdEnv.Spec.Providers.Web.IngressClass,
 			GenerateNavJSON:       true,
 			EnableAkamaiCacheBust: false,
-			EnablePushCache:       true,
-			ValpopImage:           "quay.io/redhat-services-prod/hcc-platex-services-tenant/valpop:123a7db964c72f827dde73ec29647fdcf314cad0",
 			DefaultReplicas:       func(i int32) *int32 { return &i }(1),
 		},
 	}
