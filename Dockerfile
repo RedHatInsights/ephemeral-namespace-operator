@@ -1,30 +1,14 @@
-# Build the manager binary
-FROM registry.access.redhat.com/ubi9/go-toolset:1.25.9-1778675823 as builder
-
+FROM registry.access.redhat.com/hi/go:1.25-builder@sha256:db5db15365c285be83c57c6eb450b7b3517764b8629e3a0106587f62ee019b4a AS build
 WORKDIR /workspace
-# Copy the Go Modules manifests
-COPY go.mod go.mod
-COPY go.sum go.sum
-# cache deps before building and copying source so that we don't need to re-download as much
-# and so that source changes don't invalidate our downloaded layer
+COPY --chown=65532:0 go.mod go.sum ./
 RUN go mod download
-
-# Copy the go source
-COPY main.go main.go
-COPY apis/ apis/
-COPY controllers/ controllers/
-COPY config/ config/
-
-USER 0
-
-# Build
+COPY --chown=65532:0 main.go ./
+COPY --chown=65532:0 apis/ apis/
+COPY --chown=65532:0 controllers/ controllers/
+COPY --chown=65532:0 config/ config/
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o manager main.go
 
-# Use distroless as minimal base image to package the manager binary
-# Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.7-1773939694
-WORKDIR /
-COPY --from=builder /workspace/manager .
-USER 65534:65534
-
+FROM registry.access.redhat.com/hi/go:1.25@sha256:531ecf9be0e01b6d1c9f2172d194fb84149bff925aad1ff28c1de030620ab82e
+COPY --from=build --chown=65532:0 /workspace/manager /manager
+USER 65532:65532
 ENTRYPOINT ["/manager"]

@@ -9,7 +9,8 @@
 	"dockerfile": {
 		"managerFilePatterns": [
 			"/Dockerfile$/",
-			"/Dockerfile-local$/"
+			"/Dockerfile-local$/",
+			"/Dockerfile\\.mock$/"
 		]
 	},
 	"ignoreDeps": [
@@ -19,8 +20,8 @@
 		{
 			"matchDatasources": [ "docker" ],
 			"matchPackageNames": [
-				"registry.access.redhat.com/ubi9/go-toolset",
-				"registry.access.redhat.com/ubi9/ubi-minimal"
+				"registry.access.redhat.com/hi/go",
+				"registry.access.redhat.com/hi/python"
 			],
 			"versioning": "redhat"
 		}

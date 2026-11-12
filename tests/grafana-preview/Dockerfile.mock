@@ -1,4 +1,12 @@
-FROM python:3.12-slim
-RUN pip install --no-cache-dir prometheus_client
-COPY mock-metrics.py /app/mock-metrics.py
-CMD ["python", "/app/mock-metrics.py"]
+FROM registry.access.redhat.com/hi/python:3.12-builder@sha256:9e8f996764dd3231cd49b6bc6847d4b2b6bbd140880c213a5a72e8ebe639dffb AS build
+WORKDIR /opt/app-root/src
+COPY --chown=65532:0 mock-metrics.py ./
+RUN python3.12 -m venv .venv && \
+    .venv/bin/pip install --no-cache-dir prometheus_client
+
+FROM registry.access.redhat.com/hi/python:3.12@sha256:7f4cfba00a0d385d4616671845e9ecf3e5e8019b6610abcd52db5061a1b43aea
+WORKDIR /opt/app-root/src
+ENV PATH=/opt/app-root/src/.venv/bin:$PATH
+COPY --from=build --chown=65532:0 /opt/app-root/src/.venv/ .venv/
+COPY --chown=65532:0 mock-metrics.py ./
+ENTRYPOINT ["python3", "mock-metrics.py"]
