@@ -38,9 +38,9 @@ spec:
       taskRef:
         params:
         - name: name
-          value: show-sbom
+          value: show-sbom-rhdh
         - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-show-sbom:0.3@sha256:1302cc71501829ae4ae8947619a4daf97294e40c8f4c46a54ce15f3ce78b3b1b
+          value: quay.io/konflux-ci/tekton-catalog/task-show-sbom-rhdh:0.1@sha256:a26752150160b7ac9db0e47c8d3948fecffc9b7349ec0f2458cc958961085d67
         - name: kind
           value: task
         resolver: bundles
