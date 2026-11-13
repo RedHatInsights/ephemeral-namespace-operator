@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/hi/go:1.25-builder@sha256:db5db15365c285be83c57c6eb450b7b3517764b8629e3a0106587f62ee019b4a AS build
+FROM registry.access.redhat.com/hi/go:1.25-builder@sha256:e5a39920edca5c565aab1ffde285367de4d90ea9882663e8e474156fae95d487 AS build
 WORKDIR /workspace
 COPY --chown=65532:0 go.mod go.sum ./
 RUN go mod download
